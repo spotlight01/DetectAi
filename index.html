@@ -100,10 +100,75 @@ section.landing-section{padding:80px 5%}
 #app-root textarea::placeholder,#app-root input::placeholder{color:#1e2d4a}
 #app-root input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.3)}
 /* toast */
-.toast-bar{position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;font-size:13px;z-index:9999;box-shadow:0 4px 20px rgba(16,185,129,.4);animation:fadeUp .4s ease;display:none}
+.toast-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;font-size:13px;z-index:9999;box-shadow:0 4px 20px rgba(16,185,129,.4);animation:fadeUp .4s ease;display:none;white-space:nowrap}
 .toast-bar.show{display:block}
-@media(max-width:768px){.pricing-grid{grid-template-columns:1fr;max-width:380px}.nav-links{display:none}.stats-row{flex-direction:column}.stat-item{border-right:none;border-bottom:1px solid var(--border)}.stat-item:last-child{border-bottom:none}}
-@media(max-width:480px){.hero-btns{flex-direction:column;align-items:center}.btn-primary,.btn-outline{width:100%;max-width:300px}}
+
+/* ══ RESPONSIVE — MOBILE FIRST ══ */
+@media(max-width:900px){
+  .pricing-grid{grid-template-columns:1fr;max-width:420px;margin:0 auto}
+}
+@media(max-width:768px){
+  /* NAV */
+  nav{padding:0 16px;height:56px}
+  .nav-links{display:none}
+  .nav-logo-title{font-size:12px}
+  .nav-logo-sub{display:none}
+  .btn-nav-outline{padding:7px 12px;font-size:12px}
+  .btn-nav-primary{padding:7px 14px;font-size:12px}
+
+  /* HERO */
+  .hero{padding:80px 16px 50px;min-height:auto}
+  .hero-title{font-size:clamp(28px,8vw,48px);letter-spacing:-1px}
+  .hero-sub{font-size:14px;margin-bottom:24px}
+  .hero-pills{gap:6px;margin-bottom:28px}
+  .pill{font-size:11px;padding:5px 12px}
+  .hero-btns{margin-bottom:36px;gap:10px}
+  .btn-primary{padding:12px 24px;font-size:14px}
+  .btn-outline{padding:12px 24px;font-size:14px}
+
+  /* STATS */
+  .stats-row{flex-direction:column;max-width:320px}
+  .stat-item{border-right:none;border-bottom:1px solid var(--border);padding:14px 12px}
+  .stat-item:last-child{border-bottom:none}
+  .stat-val{font-size:22px}
+
+  /* SECTIONS */
+  section.landing-section{padding:52px 16px}
+  .sec-title{font-size:clamp(22px,6vw,34px);letter-spacing:-.5px}
+  .sec-sub{font-size:13px;margin-bottom:32px}
+
+  /* TOOLS */
+  .tools-grid{grid-template-columns:1fr}
+  .tool-card{padding:18px}
+
+  /* PRICING */
+  .pricing-grid{grid-template-columns:1fr;max-width:100%;gap:12px}
+  .p-card{padding:22px 18px}
+
+  /* MODAL */
+  .modal-ov{padding:12px;align-items:flex-end}
+  .modal-box{padding:24px 20px;border-radius:18px 18px 0 0;max-height:92vh;overflow-y:auto}
+
+  /* APP SIDEBAR — hidden on mobile, shown as bottom bar */
+  #app-sidebar{display:none !important}
+  #app-topbar{padding:10px 14px !important}
+  #app-content{padding:16px 14px !important;max-width:100% !important}
+
+  /* DASHBOARD GRID */
+  .dash-tools-grid{grid-template-columns:1fr 1fr !important}
+  .dash-stats-grid{grid-template-columns:1fr 1fr !important}
+}
+@media(max-width:480px){
+  nav{padding:0 12px}
+  .hero-title{font-size:clamp(24px,9vw,38px)}
+  .hero-pills{display:none}
+  .hero-btns{flex-direction:column;align-items:stretch;width:100%;max-width:300px}
+  .btn-primary,.btn-outline{width:100%;text-align:center}
+  .stats-row{max-width:100%}
+  section.landing-section{padding:44px 14px}
+  .modal-box{padding:20px 16px}
+  .dash-tools-grid{grid-template-columns:1fr 1fr !important}
+}
 </style>
 </head>
 <body>
@@ -933,70 +998,203 @@ function TikTokPage({goBack,email}){
 }
 
 // ── HUMAN ID ──
-const STEPS=["Personal Info","Human Challenge","Verification","Your ID"];
-function HumanIdPage({user}){
-  const[step,setStep]=useState(0);const[form,setForm]=useState({fullName:user?.name||"",dob:"",country:"",email:user?.email||"",occupation:""});const[challenge,setChallenge]=useState(null);const[cLoad,setCLoad]=useState(false);const[answer,setAnswer]=useState("");const[verifying,setVerifying]=useState(false);const[vResult,setVResult]=useState(null);const[hid,setHid]=useState(null);const[photo,setPhoto]=useState(null);const fRef=useRef();
-  const upd=(k,v)=>setForm(f=>({...f,[k]:v}));
-  const loadC=async()=>{setCLoad(true);const types=["memory","emotion","creative","sensory","experience"];const t=types[Math.floor(Math.random()*types.length)];const r=await callClaude([{role:"user",content:`Generate a human verification challenge type "${t}". Must require lived human experience.`}],`Respond ONLY with JSON: {"type":"...","question":"...","instructions":"brief","hint":"subtle hint","category":"Memory|Emotion|Creativity|Sensory|Experience"}`);setChallenge(r);setCLoad(false)};
-  const next=async()=>{
-    if(step===0){await loadC();setStep(1)}
-    else if(step===1){setVerifying(true);setStep(2);const r=await callClaude([{role:"user",content:`Challenge:"${challenge?.question}"\nAnswer:"${answer}"\nApplicant:${form.fullName},${form.country},${form.occupation}`}],`Assess lived human experience. Respond ONLY with JSON:{"passed":true,"humanScore":0-100,"authenticity":"High|Medium|Low","reasoning":"2-3 sentences","strengths":["signals"],"flags":["concerns"]}`);setVResult(r);setVerifying(false);if(r.passed&&r.humanScore>=55){addPoints(user.email,POINTS_PER_USE);recordPtsHistory(user.email,"humanid",POINTS_PER_USE);setHid({id:genId(),name:form.fullName,dob:form.dob,country:form.country,occupation:form.occupation,issued:new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}),expiry:new Date(Date.now()+365*24*60*60*1000).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}),score:r.humanScore,hash:genHash(),tier:r.humanScore>=85?"Platinum":r.humanScore>=70?"Gold":"Silver"})}}
-    else if(step===2)setStep(3)
-  };
-  const reset=()=>{setStep(0);setForm({fullName:user?.name||"",dob:"",country:"",email:user?.email||"",occupation:""});setChallenge(null);setAnswer("");setVResult(null);setHid(null);setPhoto(null)};
-  const onP=e=>{const f=e.target.files[0];if(!f)return;setPhoto(URL.createObjectURL(f))};
-  const tC={Platinum:"#e2e8f0",Gold:"#f59e0b",Silver:"#94a3b8"};const tG={Platinum:"#e2e8f040",Gold:"#f59e0b40",Silver:"#94a3b840"};
-  return(<Section icon="⬟" color="#06b6d4" title="Human ID" desc="Always free — earn your verified digital human identity">
-    <div style={{background:"#10b98110",border:"1px solid #10b98130",borderRadius:10,padding:"8px 14px",marginBottom:14,display:"flex",alignItems:"center",gap:8}}><span style={{color:"#10b981",fontSize:13}}>✓</span><span style={{color:"#10b981",fontSize:11,fontFamily:"monospace"}}>Human ID is completely FREE for all users</span></div>
-    <div style={{background:"#080d1a",border:"1px solid #06b6d420",borderRadius:10,padding:"10px 14px",marginBottom:16}}><div style={{color:"#2a3a5c",fontSize:10,fontFamily:"monospace",lineHeight:1.8}}>🔒 <span style={{color:"#06b6d4",fontWeight:600}}>Privacy Notice:</span> All documents submitted are permanently deleted from our servers the moment your KYC is approved. We never store or share your identity documents.</div></div>
-    <div style={{display:"flex",gap:6,marginBottom:20}}>{STEPS.map((s,i)=>(<div key={s} style={{flex:1}}><div style={{height:3,borderRadius:99,background:i<=step?"#06b6d4":"#0d1526",transition:"background .4s"}}/><div style={{color:i<=step?"#06b6d4":"#1a2540",fontSize:9,fontFamily:"monospace",marginTop:4,letterSpacing:.5}}>{s.toUpperCase()}</div></div>))}</div>
-    {step===0&&(<div style={{display:"flex",flexDirection:"column",gap:10}}>
-      <div style={{textAlign:"center",marginBottom:4}}>
-        <div onClick={()=>fRef.current.click()} style={{width:76,height:76,borderRadius:"50%",background:"#0d1526",border:"2px dashed #1a2540",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",overflow:"hidden",margin:"0 auto 6px"}} onMouseEnter={e=>e.currentTarget.style.borderColor="#06b6d4"} onMouseLeave={e=>e.currentTarget.style.borderColor="#1a2540"}>
-          {photo?<img src={photo} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:30,color:"#2a3a5c"}}>⬟</span>}
-          <input ref={fRef} type="file" accept="image/*" onChange={onP} style={{display:"none"}}/>
-        </div>
-        <div style={{color:"#2a3a5c",fontSize:11}}>Upload photo (optional)</div>
+const STEPS=["Personal Info","ID Documents","Selfie","Verification","Your ID"];
+
+function UploadBox({label,sublabel,icon,preview,onFile,accept,color="#06b6d4",onClear}){
+  const ref=useRef();
+  return(
+    <div style={{marginBottom:14}}>
+      <div style={{color:"#2a3a5c",fontSize:9,fontFamily:"monospace",letterSpacing:1.5,marginBottom:6}}>{label}</div>
+      <div onClick={()=>ref.current.click()} style={{border:`2px dashed ${preview?"#06b6d460":"#1a2540"}`,borderRadius:14,cursor:"pointer",background:"#080d1a",transition:"all .2s",overflow:"hidden",position:"relative"}}
+        onMouseEnter={e=>e.currentTarget.style.borderColor=color} onMouseLeave={e=>e.currentTarget.style.borderColor=preview?"#06b6d460":"#1a2540"}>
+        {preview?(
+          <div style={{position:"relative"}}>
+            <img src={preview} style={{width:"100%",maxHeight:160,objectFit:"cover",display:"block"}}/>
+            <div style={{position:"absolute",top:0,inset:0,background:"linear-gradient(to top,#020817aa,transparent)"}}/>
+            <div style={{position:"absolute",bottom:8,left:10,right:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{color:"#10b981",fontSize:10,fontFamily:"monospace",fontWeight:700}}>✓ UPLOADED</span>
+              <button onClick={e=>{e.stopPropagation();onClear()}} style={{background:"#ef444430",border:"1px solid #ef444450",borderRadius:6,padding:"2px 8px",color:"#ef4444",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Remove</button>
+            </div>
+          </div>
+        ):(
+          <div style={{padding:"24px 20px",textAlign:"center"}}>
+            <div style={{fontSize:36,marginBottom:8,filter:`drop-shadow(0 0 8px ${color}60)`}}>{icon}</div>
+            <div style={{color:"#d4dff7",fontWeight:700,fontSize:13,marginBottom:4}}>{sublabel}</div>
+            <div style={{color:"#2a3a5c",fontSize:11}}>Tap to upload · JPG, PNG, HEIC</div>
+          </div>
+        )}
+        <input ref={ref} type="file" accept={accept||"image/*"} onChange={onFile} style={{display:"none"}} capture={accept==="selfie"?"user":undefined}/>
       </div>
-      {[["fullName","Full Legal Name","text"],["dob","Date of Birth","date"],["country","Country of Residence","text"],["email","Email Address","email"],["occupation","Occupation","text"]].map(([k,ph,t])=>(
-        <input key={k} type={t} value={form[k]} onChange={e=>upd(k,e.target.value)} placeholder={ph} style={{...inp}} onFocus={e=>e.target.style.borderColor="#06b6d4"} onBlur={e=>e.target.style.borderColor="#1a2540"}/>
+    </div>
+  );
+}
+
+function HumanIdPage({user}){
+  const[step,setStep]=useState(0);
+  const[form,setForm]=useState({fullName:user?.name||"",dob:"",country:"",nationality:"",idType:"passport",idNumber:""});
+  // Documents
+  const[idFront,setIdFront]=useState(null);const[idFrontB64,setIdFrontB64]=useState(null);
+  const[idBack,setIdBack]=useState(null);const[idBackB64,setIdBackB64]=useState(null);
+  const[selfie,setSelfie]=useState(null);const[selfieB64,setSelfieB64]=useState(null);
+  // Verification
+  const[verifying,setVerifying]=useState(false);const[vResult,setVResult]=useState(null);
+  const[hid,setHid]=useState(null);
+  const[stage,setStage]=useState("");
+
+  const upd=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const toB64=file=>new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(",")[1]);r.readAsDataURL(file)});
+  const onIdFront=async e=>{const f=e.target.files[0];if(!f)return;setIdFront(URL.createObjectURL(f));setIdFrontB64(await toB64(f))};
+  const onIdBack=async e=>{const f=e.target.files[0];if(!f)return;setIdBack(URL.createObjectURL(f));setIdBackB64(await toB64(f))};
+  const onSelfie=async e=>{const f=e.target.files[0];if(!f)return;setSelfie(URL.createObjectURL(f));setSelfieB64(await toB64(f))};
+
+  const canStep0=form.fullName&&form.dob&&form.country&&form.nationality&&form.idNumber;
+  const canStep1=idFrontB64&&(form.idType==="passport"||idBackB64);
+  const canStep2=selfieb64=>selfieb64;
+
+  const verify=async()=>{
+    setVerifying(true);setStep(3);
+    const stages=["Checking document authenticity...","Verifying ID details...","Comparing face to document...","Running liveness check...","Finalizing verification..."];
+    for(let i=0;i<stages.length;i++){setStage(stages[i]);await new Promise(r=>setTimeout(r,700));}
+
+    // Build content array with all available images
+    const content=[];
+    if(idFrontB64)content.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:idFrontB64}});
+    if(idBackB64)content.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:idBackB64}});
+    if(selfieB64)content.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:selfieB64}});
+    content.push({type:"text",text:`Verify this identity document and selfie for KYC.
+Name on application: ${form.fullName}
+DOB: ${form.dob}, Country: ${form.country}, Nationality: ${form.nationality}
+ID Type: ${form.idType}, ID Number: ${form.idNumber}
+
+Analyze: 1) Is the ID document real and unaltered? 2) Does the selfie show a real live person? 3) Does the face in the selfie match the ID photo? 4) Are the details on the document consistent with the application?
+Give a verification result.`});
+
+    const r=await callClaude([{role:"user",content}],
+      `You are a professional KYC identity verification system. Analyze the provided ID document(s) and selfie. Respond ONLY with valid JSON:
+{"passed":true|false,"humanScore":0-100,"idAuthenticity":"Genuine|Suspicious|Cannot Verify","faceMatch":"Match|No Match|Cannot Verify","livenessCheck":"Pass|Fail|Cannot Verify","reasoning":"2-3 sentences","flags":["any issues found"],"confidence":"High|Medium|Low"}`
+    );
+    setVResult(r);setVerifying(false);
+    if(r.passed&&r.humanScore>=50){
+      addPoints(user.email,POINTS_PER_USE);
+      recordPtsHistory(user.email,"humanid",POINTS_PER_USE);
+      setHid({id:genId(),name:form.fullName,dob:form.dob,country:form.country,nationality:form.nationality,idType:form.idType,issued:new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}),expiry:new Date(Date.now()+365*24*60*60*1000).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}),score:r.humanScore,hash:genHash(),tier:r.humanScore>=85?"Platinum":r.humanScore>=70?"Gold":"Silver"});
+    }
+  };
+
+  const reset=()=>{setStep(0);setForm({fullName:user?.name||"",dob:"",country:"",nationality:"",idType:"passport",idNumber:""});setIdFront(null);setIdFrontB64(null);setIdBack(null);setIdBackB64(null);setSelfie(null);setSelfieB64(null);setVResult(null);setHid(null);setStage("")};
+  const tC={Platinum:"#e2e8f0",Gold:"#f59e0b",Silver:"#94a3b8"};const tG={Platinum:"#e2e8f040",Gold:"#f59e0b40",Silver:"#94a3b840"};
+  return(<Section icon="⬟" color="#06b6d4" title="Human ID" desc="Always free — real KYC identity verification">
+    <div style={{background:"#10b98110",border:"1px solid #10b98130",borderRadius:10,padding:"8px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:8}}><span style={{color:"#10b981",fontSize:13}}>✓</span><span style={{color:"#10b981",fontSize:11,fontFamily:"monospace"}}>Human ID is completely FREE for all users</span></div>
+    <div style={{background:"#080d1a",border:"1px solid #06b6d420",borderRadius:10,padding:"10px 14px",marginBottom:16}}><div style={{color:"#2a3a5c",fontSize:10,fontFamily:"monospace",lineHeight:1.8}}>🔒 <span style={{color:"#06b6d4",fontWeight:600}}>Privacy Notice:</span> All ID documents and photos are permanently deleted from our servers the moment your KYC is approved. We never store or share your identity documents.</div></div>
+    <div style={{display:"flex",gap:4,marginBottom:22}}>{STEPS.map((s,i)=>(<div key={s} style={{flex:1}}><div style={{height:3,borderRadius:99,background:i<=step?"#06b6d4":"#0d1526",transition:"background .4s"}}/><div style={{color:i<=step?"#06b6d4":"#1a2540",fontSize:8,fontFamily:"monospace",marginTop:4,letterSpacing:.3,textAlign:"center"}}>{s.toUpperCase()}</div></div>))}</div>
+
+    {step===0&&(<div style={{display:"flex",flexDirection:"column",gap:10}}>
+      <div style={{fontSize:10,fontFamily:"monospace",color:"#2a3a5c",letterSpacing:2,marginBottom:4}}>PERSONAL DETAILS</div>
+      {[["fullName","Full Legal Name (as on ID)","text"],["dob","Date of Birth","date"],["nationality","Nationality","text"],["country","Country of Residence","text"]].map(([k,ph,t])=>(
+        <div key={k}><div style={{color:"#2a3a5c",fontSize:9,fontFamily:"monospace",letterSpacing:1,marginBottom:4}}>{ph.toUpperCase()}</div><input type={t} value={form[k]} onChange={e=>upd(k,e.target.value)} placeholder={ph} style={{...inp}} onFocus={e=>e.target.style.borderColor="#06b6d4"} onBlur={e=>e.target.style.borderColor="#1a2540"}/></div>
       ))}
-      <Btn onClick={next} disabled={!form.fullName||!form.dob||!form.country} color="#06b6d4">Continue to Human Challenge →</Btn>
+      <div><div style={{color:"#2a3a5c",fontSize:9,fontFamily:"monospace",letterSpacing:1,marginBottom:6}}>ID TYPE</div>
+        <div style={{display:"flex",gap:8}}>
+          {[["passport","🛂 Passport"],["national_id","🪪 National ID"],["drivers_license","🚗 Driver's License"]].map(([val,lbl])=>(
+            <button key={val} onClick={()=>upd("idType",val)} style={{flex:1,padding:"10px 4px",borderRadius:10,border:`1px solid ${form.idType===val?"#06b6d4":"#1a2540"}`,background:form.idType===val?"#06b6d415":"#080d1a",color:form.idType===val?"#06b6d4":"#4a5980",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:form.idType===val?700:400,transition:"all .2s"}}>{lbl}</button>
+          ))}
+        </div>
+      </div>
+      <div><div style={{color:"#2a3a5c",fontSize:9,fontFamily:"monospace",letterSpacing:1,marginBottom:4}}>ID / DOCUMENT NUMBER</div><input value={form.idNumber} onChange={e=>upd("idNumber",e.target.value)} placeholder="e.g. A12345678" style={{...inp,fontFamily:"monospace",letterSpacing:1}} onFocus={e=>e.target.style.borderColor="#06b6d4"} onBlur={e=>e.target.style.borderColor="#1a2540"}/></div>
+      <Btn onClick={()=>setStep(1)} disabled={!canStep0} color="#06b6d4">Continue — Upload Documents →</Btn>
     </div>)}
+
     {step===1&&(<div>
-      {cLoad?(<div style={{textAlign:"center",padding:36}}><div style={{width:30,height:30,border:"3px solid #1a2540",borderTopColor:"#06b6d4",borderRadius:"50%",margin:"0 auto 12px",animation:"spin .8s linear infinite"}}/><div style={{color:"#4a5980",fontSize:12,fontFamily:"monospace"}}>Generating challenge...</div></div>)
-      :challenge&&(<div>
-        <div style={{background:"#080d1a",border:"1px solid #06b6d430",borderRadius:12,padding:16,marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{color:"#06b6d4",fontSize:9,fontFamily:"monospace",letterSpacing:2}}>HUMAN CHALLENGE</span><span style={{background:"#06b6d420",color:"#06b6d4",fontSize:9,fontFamily:"monospace",padding:"2px 8px",borderRadius:99}}>{challenge.category}</span></div><div style={{color:"#d4dff7",fontSize:15,fontWeight:700,lineHeight:1.6,marginBottom:6}}>{challenge.question}</div><div style={{color:"#2a3a5c",fontSize:11,fontFamily:"monospace"}}>{challenge.instructions}</div></div>
-        <div style={{color:"#1a2540",fontSize:10,fontFamily:"monospace",marginBottom:6}}>Hint: {challenge.hint}</div>
-        <textarea value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Write your genuine, personal answer. Be specific — details make you human." style={{...inp,minHeight:130,resize:"vertical",lineHeight:1.8}} onFocus={e=>e.target.style.borderColor="#06b6d4"} onBlur={e=>e.target.style.borderColor="#1a2540"}/>
-        <div style={{color:"#2a3a5c",fontSize:10,fontFamily:"monospace",marginTop:5}}>ℹ️ No right or wrong — we measure authenticity, not correctness.</div>
-        <Btn onClick={next} disabled={answer.length<30} color="#06b6d4">Submit for Verification →</Btn>
-      </div>)}
+      <div style={{fontSize:10,fontFamily:"monospace",color:"#2a3a5c",letterSpacing:2,marginBottom:14}}>UPLOAD YOUR {form.idType==="passport"?"PASSPORT":"ID CARD"}</div>
+      <div style={{background:"#080d1a",border:"1px solid #06b6d420",borderRadius:10,padding:"10px 14px",marginBottom:14}}><div style={{color:"#4a5980",fontSize:11,lineHeight:1.7}}>{form.idType==="passport"?"📷 Upload a clear photo of the main photo page of your passport (the page with your face and details).":"📷 Upload the front and back of your ID card. Make sure all text is clearly visible."}</div></div>
+      <UploadBox label={form.idType==="passport"?"PASSPORT PHOTO PAGE":"ID CARD — FRONT SIDE"} sublabel={form.idType==="passport"?"Photo page with face & details":"Front of your ID card"} icon="🛂" preview={idFront} onFile={onIdFront} color="#06b6d4" onClear={()=>{setIdFront(null);setIdFrontB64(null)}}/>
+      {form.idType!=="passport"&&<UploadBox label="ID CARD — BACK SIDE" sublabel="Back of your ID card" icon="🪪" preview={idBack} onFile={onIdBack} color="#a78bfa" onClear={()=>{setIdBack(null);setIdBackB64(null)}}/>}
+      <div style={{background:"#080d1a",border:"1px solid #f59e0b20",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
+        <div style={{color:"#f59e0b",fontSize:10,fontFamily:"monospace",marginBottom:5}}>⚠ TIPS FOR A GOOD PHOTO</div>
+        {["Place document on a flat dark surface","Ensure all 4 corners are visible","Make sure text is sharp and readable","Avoid glare, shadows and reflections"].map((t,i)=><div key={i} style={{color:"#4a5980",fontSize:11,marginBottom:2}}>· {t}</div>)}
+      </div>
+      <div style={{display:"flex",gap:10}}>
+        <button onClick={()=>setStep(0)} style={{flex:1,padding:"11px 0",borderRadius:10,border:"1px solid #1a2540",background:"none",color:"#4a5980",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>← Back</button>
+        <button onClick={()=>setStep(2)} disabled={!canStep1} style={{flex:2,padding:"11px 0",borderRadius:10,border:"none",background:canStep1?"linear-gradient(135deg,#06b6d4,#7c3aed)":"#0d1526",color:canStep1?"#fff":"#2a3a5c",fontWeight:700,fontSize:14,cursor:canStep1?"pointer":"not-allowed",fontFamily:"inherit"}}>Continue — Take Selfie →</button>
+      </div>
     </div>)}
+
     {step===2&&(<div>
-      {verifying?(<div style={{textAlign:"center",padding:"50px 0"}}><div style={{fontSize:48,marginBottom:14,animation:"pulse 2s infinite"}}>⬟</div><div style={{color:"#06b6d4",fontWeight:700,fontSize:16,marginBottom:6}}>Analyzing Humanity...</div><div style={{color:"#2a3a5c",fontSize:12,fontFamily:"monospace"}}>Checking for lived experience patterns</div></div>)
-      :vResult&&(<div>
-        <div style={{textAlign:"center",marginBottom:16}}><div style={{fontSize:50,marginBottom:8}}>{vResult.passed?"✅":"❌"}</div><div style={{fontWeight:800,fontSize:20,color:vResult.passed?"#10b981":"#ef4444"}}>{vResult.passed?"Verification Passed!":"Verification Failed"}</div><div style={{color:"#4a5980",fontSize:12,marginTop:5,lineHeight:1.7}}>{vResult.reasoning}</div></div>
-        <div style={{background:"#080d1a",border:`1px solid ${vResult.passed?"#10b98130":"#ef444430"}`,borderRadius:12,padding:14,marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{color:"#2a3a5c",fontSize:11,fontFamily:"monospace"}}>HUMANITY SCORE</span><span style={{color:vResult.passed?"#10b981":"#ef4444",fontWeight:800,fontSize:18,fontFamily:"monospace"}}>{vResult.humanScore}%</span></div><div style={{background:"#0d1526",borderRadius:99,height:5}}><div style={{width:`${vResult.humanScore}%`,height:"100%",background:vResult.passed?"#10b981":"#ef4444",borderRadius:99,transition:"width 1s ease"}}/></div></div>
-        {vResult.strengths?.length>0&&<div style={{marginBottom:10}}><div style={{color:"#10b981",fontSize:10,fontFamily:"monospace",marginBottom:4}}>✓ HUMAN SIGNALS</div>{vResult.strengths.map((s,i)=><div key={i} style={{color:"#4a5980",fontSize:12,padding:"2px 0"}}>· {s}</div>)}</div>}
-        {vResult.flags?.length>0&&<div style={{marginBottom:12}}><div style={{color:"#ef4444",fontSize:10,fontFamily:"monospace",marginBottom:4}}>⚠ FLAGS</div>{vResult.flags.map((f,i)=><div key={i} style={{color:"#4a5980",fontSize:12,padding:"2px 0"}}>· {f}</div>)}</div>}
-        {vResult.passed?<Btn onClick={next} color="#10b981">View Your Human ID →</Btn>:<Btn onClick={reset} color="#3b82f6">Try Again</Btn>}
+      <div style={{fontSize:10,fontFamily:"monospace",color:"#2a3a5c",letterSpacing:2,marginBottom:14}}>SELFIE VERIFICATION</div>
+      <div style={{background:"#080d1a",border:"1px solid #06b6d420",borderRadius:10,padding:"10px 14px",marginBottom:14}}><div style={{color:"#4a5980",fontSize:11,lineHeight:1.7}}>🤳 Take a clear selfie of your face. This will be compared to the photo on your ID document to confirm your identity.</div></div>
+      <UploadBox label="SELFIE / FACE PHOTO" sublabel="Take or upload a photo of your face" icon="🤳" preview={selfie} onFile={onSelfie} color="#10b981" onClear={()=>{setSelfie(null);setSelfieB64(null)}}/>
+      <div style={{background:"#080d1a",border:"1px solid #10b98120",borderRadius:10,padding:"10px 14px",marginBottom:10}}>
+        <div style={{color:"#10b981",fontSize:10,fontFamily:"monospace",marginBottom:5}}>✓ SELFIE GUIDELINES</div>
+        {["Look straight at the camera","Good lighting on your face","No glasses, hat or face covering","Plain background preferred","Neutral expression, mouth closed"].map((t,i)=><div key={i} style={{color:"#4a5980",fontSize:11,marginBottom:2}}>· {t}</div>)}
+      </div>
+      <div style={{background:"#080d1a",border:"1px solid #3b82f620",borderRadius:10,padding:"10px 14px",marginBottom:10}}><div style={{color:"#3b82f6",fontSize:10,fontFamily:"monospace",marginBottom:4}}>ℹ LIVENESS CHECK</div><div style={{color:"#4a5980",fontSize:11,lineHeight:1.7}}>Our AI will verify your selfie shows a real live person — not a photo of a photo or a screen.</div></div>
+      <div style={{display:"flex",gap:10}}>
+        <button onClick={()=>setStep(1)} style={{flex:1,padding:"11px 0",borderRadius:10,border:"1px solid #1a2540",background:"none",color:"#4a5980",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>← Back</button>
+        <button onClick={verify} disabled={!selfieB64} style={{flex:2,padding:"11px 0",borderRadius:10,border:"none",background:selfieB64?"linear-gradient(135deg,#059669,#10b981)":"#0d1526",color:selfieB64?"#fff":"#2a3a5c",fontWeight:700,fontSize:14,cursor:selfieB64?"pointer":"not-allowed",fontFamily:"inherit"}}>Submit for Verification →</button>
+      </div>
+    </div>)}
+
+    {step===3&&(<div>
+      {verifying?(
+        <div style={{textAlign:"center",padding:"36px 0"}}>
+          <div style={{width:56,height:56,border:"4px solid #1a2540",borderTopColor:"#06b6d4",borderRadius:"50%",margin:"0 auto 18px",animation:"spin .8s linear infinite"}}/>
+          <div style={{color:"#06b6d4",fontWeight:700,fontSize:17,marginBottom:8}}>Verifying Your Identity...</div>
+          <div style={{color:"#f59e0b",fontSize:11,fontFamily:"monospace",marginBottom:20}}>{stage}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6,maxWidth:300,margin:"0 auto"}}>
+            {["Checking document authenticity...","Verifying ID details...","Comparing face to document...","Running liveness check...","Finalizing verification..."].map((s,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 12px",background:"#080d1a",borderRadius:8,border:`1px solid ${stage===s?"#06b6d430":"#0d1526"}`}}>
+                <div style={{width:14,height:14,borderRadius:"50%",background:stage===s?"#06b6d4":"#0d1526",border:`2px solid ${stage===s?"#06b6d4":"#1a2540"}`,flexShrink:0}}/>
+                <span style={{color:stage===s?"#06b6d4":"#2a3a5c",fontSize:11,fontFamily:"monospace"}}>{s}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ):vResult&&(<div>
+        <div style={{textAlign:"center",marginBottom:18}}><div style={{fontSize:52,marginBottom:10}}>{vResult.passed?"✅":"❌"}</div><div style={{fontWeight:800,fontSize:20,color:vResult.passed?"#10b981":"#ef4444",marginBottom:6}}>{vResult.passed?"Identity Verified!":"Verification Failed"}</div><div style={{color:"#4a5980",fontSize:13,lineHeight:1.8,maxWidth:360,margin:"0 auto"}}>{vResult.reasoning}</div></div>
+        <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+          {[{label:"ID Document",val:vResult.idAuthenticity,pass:vResult.idAuthenticity==="Genuine",icon:"🛂"},{label:"Face Match",val:vResult.faceMatch,pass:vResult.faceMatch==="Match",icon:"🤳"},{label:"Liveness Check",val:vResult.livenessCheck,pass:vResult.livenessCheck==="Pass",icon:"👁"},{label:"Confidence",val:vResult.confidence,pass:vResult.confidence!=="Low",icon:"📊"}].map((item,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 14px",background:"#080d1a",border:`1px solid ${item.pass?"#10b98130":"#ef444430"}`,borderRadius:10}}>
+              <span style={{fontSize:16}}>{item.icon}</span>
+              <span style={{color:"#d4dff7",fontSize:13,fontWeight:600,flex:1}}>{item.label}</span>
+              <span style={{color:item.pass?"#10b981":"#ef4444",fontSize:11,fontFamily:"monospace",fontWeight:700}}>{item.val||"—"}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{background:"#080d1a",border:"1px solid #1a2540",borderRadius:10,padding:"12px 14px",marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{color:"#2a3a5c",fontSize:10,fontFamily:"monospace"}}>HUMANITY SCORE</span><span style={{color:vResult.passed?"#10b981":"#ef4444",fontWeight:800,fontSize:16,fontFamily:"monospace"}}>{vResult.humanScore}%</span></div>
+          <div style={{background:"#0d1526",borderRadius:99,height:5}}><div style={{width:`${vResult.humanScore}%`,height:"100%",background:vResult.passed?"linear-gradient(90deg,#10b981,#06b6d4)":"#ef4444",borderRadius:99,transition:"width 1s ease"}}/></div>
+        </div>
+        {vResult.flags?.length>0&&<div style={{marginBottom:12}}><div style={{color:"#ef4444",fontSize:10,fontFamily:"monospace",marginBottom:5}}>⚠ FLAGS</div>{vResult.flags.map((f,i)=><div key={i} style={{color:"#4a5980",fontSize:12,padding:"2px 0"}}>· {f}</div>)}</div>}
+        {vResult.passed
+          ?<button onClick={()=>setStep(4)} style={{width:"100%",padding:"13px 0",borderRadius:10,border:"none",background:"linear-gradient(135deg,#059669,#10b981)",color:"#fff",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit",marginTop:4}}>View Your Human ID →</button>
+          :<div style={{display:"flex",gap:10,marginTop:4}}><button onClick={reset} style={{flex:1,padding:"11px 0",borderRadius:10,border:"none",background:"linear-gradient(135deg,#1d4ed8,#3b82f6)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Try Again</button></div>
+        }
       </div>)}
     </div>)}
-    {step===3&&hid&&(<div>
-      <div style={{textAlign:"center",marginBottom:16}}><div style={{color:"#06b6d4",fontSize:10,fontFamily:"monospace",letterSpacing:3,marginBottom:4}}>IDENTITY CONFIRMED</div><div style={{color:"#d4dff7",fontWeight:800,fontSize:17}}>Your Digital Human ID</div></div>
-      <div style={{background:"linear-gradient(135deg,#080d1a,#0d1526,#080d1a)",border:`1px solid ${tC[hid.tier]}40`,borderRadius:18,padding:22,position:"relative",overflow:"hidden",boxShadow:`0 0 60px ${tG[hid.tier]},inset 0 1px 0 ${tC[hid.tier]}20`}}>
-        <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 20% 50%,#06b6d408 0%,transparent 60%)",pointerEvents:"none"}}/>
-        <div style={{display:"flex",justifyContent:"space-between",marginBottom:14,position:"relative"}}><div><div style={{color:"#06b6d4",fontSize:8,fontFamily:"monospace",letterSpacing:4,marginBottom:2}}>VERIFIED HUMAN IDENTITY</div><div style={{color:"#2a3a5c",fontSize:8,fontFamily:"monospace"}}>DETECT AI · PROVE YOU ARE A REAL HUMAN</div></div><div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}><div style={{background:`${tC[hid.tier]}20`,border:`1px solid ${tC[hid.tier]}50`,borderRadius:6,padding:"2px 9px",color:tC[hid.tier],fontSize:9,fontFamily:"monospace",fontWeight:700}}>{hid.tier.toUpperCase()}</div><div style={{color:"#1a2540",fontSize:8,fontFamily:"monospace"}}>HUMANITY {hid.score}%</div></div></div>
-        <div style={{display:"flex",gap:14,marginBottom:14}}><div style={{width:68,height:68,borderRadius:10,background:"#0d1526",border:`2px solid ${tC[hid.tier]}30`,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>{photo?<img src={photo} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:26,color:"#2a3a5c"}}>⬟</span>}</div><div style={{flex:1}}><div style={{color:"#d4dff7",fontWeight:800,fontSize:18,lineHeight:1.2}}>{hid.name}</div><div style={{color:"#4a5980",fontSize:11,marginTop:3}}>{hid.occupation}</div><div style={{color:"#2a3a5c",fontSize:10,marginTop:2}}>{hid.country}</div></div></div>
+
+    {step===4&&hid&&(<div>
+      <div style={{textAlign:"center",marginBottom:16}}><div style={{color:"#10b981",fontSize:10,fontFamily:"monospace",letterSpacing:3,marginBottom:4}}>🎉 KYC APPROVED</div><div style={{color:"#d4dff7",fontWeight:800,fontSize:20}}>Your Digital Human ID</div><div style={{color:"#4a5980",fontSize:12,marginTop:4}}>Download and use for KYC verification anywhere</div></div>
+      <div style={{background:"linear-gradient(135deg,#080d1a,#0d1526,#080d1a)",border:`1px solid ${tC[hid.tier]}40`,borderRadius:20,padding:22,position:"relative",overflow:"hidden",boxShadow:`0 0 60px ${tG[hid.tier]},inset 0 1px 0 ${tC[hid.tier]}20`}}>
+        <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 20% 50%,#06b6d408 0%,transparent 60%),radial-gradient(circle at 80% 20%,#7c3aed08 0%,transparent 50%)",pointerEvents:"none"}}/>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:14,position:"relative"}}><div><div style={{color:"#06b6d4",fontSize:8,fontFamily:"monospace",letterSpacing:4,marginBottom:2}}>VERIFIED HUMAN IDENTITY</div><div style={{color:"#2a3a5c",fontSize:8,fontFamily:"monospace"}}>DETECT AI · KYC VERIFIED</div></div><div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}><div style={{background:`${tC[hid.tier]}20`,border:`1px solid ${tC[hid.tier]}50`,borderRadius:6,padding:"2px 9px",color:tC[hid.tier],fontSize:9,fontFamily:"monospace",fontWeight:700}}>{hid.tier.toUpperCase()}</div><div style={{color:"#1a2540",fontSize:8,fontFamily:"monospace"}}>SCORE {hid.score}%</div></div></div>
+        <div style={{display:"flex",gap:14,marginBottom:14}}>
+          <div style={{width:72,height:72,borderRadius:12,background:"#0d1526",border:`2px solid ${tC[hid.tier]}30`,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>{selfie?<img src={selfie} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:26,color:"#2a3a5c"}}>⬟</span>}</div>
+          <div style={{flex:1}}><div style={{color:"#d4dff7",fontWeight:800,fontSize:18,lineHeight:1.2}}>{hid.name}</div><div style={{color:"#4a5980",fontSize:11,marginTop:3}}>{hid.nationality}</div><div style={{color:"#2a3a5c",fontSize:10,marginTop:2}}>{hid.country}</div>
+            <div style={{display:"flex",gap:5,marginTop:6,flexWrap:"wrap"}}>
+              <span style={{background:"#10b98120",border:"1px solid #10b98140",color:"#10b981",fontSize:9,fontFamily:"monospace",padding:"2px 7px",borderRadius:99}}>✓ KYC VERIFIED</span>
+              <span style={{background:"#06b6d420",border:"1px solid #06b6d440",color:"#06b6d4",fontSize:9,fontFamily:"monospace",padding:"2px 7px",borderRadius:99}}>{hid.idType.replace(/_/g," ").toUpperCase()}</span>
+            </div>
+          </div>
+        </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>{[["DATE OF BIRTH",hid.dob],["ISSUED",hid.issued],["VALID UNTIL",hid.expiry],["KYC STATUS","VERIFIED ✓"]].map(([k,v])=>(<div key={k}><div style={{color:"#1a2540",fontSize:8,fontFamily:"monospace",letterSpacing:1,marginBottom:2}}>{k}</div><div style={{color:"#4a5980",fontSize:11,fontFamily:"monospace"}}>{v}</div></div>))}</div>
         <div style={{background:"#080d1a",borderRadius:10,padding:"10px 13px",marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{color:"#1a2540",fontSize:8,fontFamily:"monospace",letterSpacing:1}}>HUMAN ID NUMBER</div><div style={{color:tC[hid.tier],fontWeight:700,fontSize:14,fontFamily:"monospace",letterSpacing:2,marginTop:2}}>{hid.id}</div></div><div style={{fontSize:22,filter:`drop-shadow(0 0 8px ${tC[hid.tier]})`}}>⬟</div></div>
         <div style={{padding:"6px 0 0",borderTop:"1px solid #0d1526"}}><div style={{color:"#1a2540",fontSize:8,fontFamily:"monospace",wordBreak:"break-all",lineHeight:1.6}}>SHA256: {hid.hash}</div></div>
       </div>
-      <div style={{marginTop:10,background:"#080d1a",border:"1px solid #10b98118",borderRadius:10,padding:"8px 12px"}}><div style={{color:"#2a3a5c",fontSize:10,fontFamily:"monospace",lineHeight:1.7}}>🗑 Your submitted documents have been permanently deleted from our servers.</div></div>
+      <div style={{marginTop:10,background:"#080d1a",border:"1px solid #10b98118",borderRadius:10,padding:"10px 14px"}}><div style={{color:"#2a3a5c",fontSize:10,fontFamily:"monospace",lineHeight:1.8}}>🗑 <span style={{color:"#10b981"}}>Documents deleted.</span> Your passport/ID photos and selfie have been permanently deleted from our servers now that KYC is approved.</div></div>
       <div style={{display:"flex",gap:10,marginTop:10}}>
-        <button onClick={reset} style={{flex:1,padding:"11px 0",borderRadius:10,border:"1px solid #1a2540",background:"none",color:"#4a5980",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Issue Another</button>
-        <button onClick={()=>alert("In production: download your ID as PDF/PNG for KYC!")} style={{flex:1,padding:"11px 0",borderRadius:10,border:"none",background:"linear-gradient(135deg,#059669,#10b981)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>⬇ Download for KYC</button>
+        <button onClick={reset} style={{flex:1,padding:"11px 0",borderRadius:10,border:"1px solid #1a2540",background:"none",color:"#4a5980",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>New Verification</button>
+        <button onClick={()=>alert("In production: downloads your Human ID as PDF/PNG for KYC submission!")} style={{flex:2,padding:"11px 0",borderRadius:10,border:"none",background:"linear-gradient(135deg,#059669,#10b981)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>⬇ Download ID for KYC</button>
       </div>
     </div>)}
   </Section>);
@@ -1026,7 +1224,7 @@ function App({initialUser}){
   };
 
   return(
-    <div style={{display:"flex",minHeight:"100vh",background:"#020817",fontFamily:"'Syne','DM Sans',sans-serif",color:"#d4dff7"}}>
+    <div style={{display:"flex",minHeight:"100vh",background:"#020817",fontFamily:"'Syne','DM Sans',sans-serif",color:"#d4dff7",flexDirection:"column"}}>
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
@@ -1038,63 +1236,108 @@ function App({initialUser}){
         #app-root ::-webkit-scrollbar{width:3px}
         #app-root ::-webkit-scrollbar-track{background:#020817}
         #app-root ::-webkit-scrollbar-thumb{background:#1a2540;border-radius:99px}
+        /* DESKTOP layout */
+        .app-layout{display:flex;flex:1;min-height:100vh}
+        .app-sidebar{width:${collapsed?60:220}px;min-height:100vh;background:#050b18;border-right:1px solid #0d1526;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow:hidden;transition:width .3s cubic-bezier(.4,0,.2,1)}
+        /* MOBILE overrides */
+        @media(max-width:768px){
+          .app-sidebar{display:none!important}
+          .app-content-area{padding:14px 14px 80px!important;max-width:100%!important}
+          .app-topbar-inner{padding:10px 14px!important}
+          .app-bottom-nav{display:flex!important}
+        }
+        @media(min-width:769px){.app-bottom-nav{display:none!important}}
+        /* BOTTOM NAV */
+        .app-bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#050b18;border-top:1px solid #0d1526;padding:6px 0 env(safe-area-inset-bottom,6px);display:none;justify-content:space-around;align-items:center}
+        .bnb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;border:none;background:none;cursor:pointer;flex:1;transition:all .15s;font-family:inherit}
+        .bnb-i{font-size:19px;color:#2a3a5c;transition:all .15s;line-height:1}
+        .bnb-l{font-size:8px;font-family:'DM Mono',monospace;color:#2a3a5c;transition:all .15s}
+        .bnb.on .bnb-i{color:#06b6d4;filter:drop-shadow(0 0 4px #06b6d4)}
+        .bnb.on .bnb-l{color:#06b6d4}
+        /* mobile social sheet */
+        .mob-social{position:fixed;bottom:62px;left:0;right:0;z-index:99;background:#050b18;border-top:1px solid #0d1526;padding:10px 16px;display:flex;gap:10px;justify-content:center}
+        .mob-soc-btn{flex:1;max-width:150px;padding:10px;border-radius:12px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px}
       `}</style>
 
-      {/* SIDEBAR */}
-      <div style={{width:collapsed?60:220,minHeight:"100vh",background:"#050b18",borderRight:"1px solid #0d1526",display:"flex",flexDirection:"column",transition:"width .3s cubic-bezier(.4,0,.2,1)",flexShrink:0,position:"sticky",top:0,height:"100vh",overflow:"hidden"}}>
-        <div style={{padding:collapsed?"20px 0 14px":"20px 14px 14px",textAlign:collapsed?"center":"left",borderBottom:"1px solid #0d1526",flexShrink:0}}>
-          <div style={{fontSize:20,fontWeight:800,color:"#06b6d4",filter:"drop-shadow(0 0 8px #06b6d4)"}}>⬡</div>
-          {!collapsed&&<><div style={{color:"#d4dff7",fontWeight:800,fontSize:11,marginTop:4,lineHeight:1.3}}>Detect AI &</div><div style={{color:"#06b6d4",fontWeight:800,fontSize:11,lineHeight:1.3}}>Prove You're Human</div></>}
+      <div className="app-layout">
+        {/* ── DESKTOP SIDEBAR ── */}
+        <div className="app-sidebar" style={{width:collapsed?60:220}}>
+          <div style={{padding:collapsed?"20px 0 14px":"20px 14px 14px",textAlign:collapsed?"center":"left",borderBottom:"1px solid #0d1526",flexShrink:0}}>
+            <div style={{fontSize:20,fontWeight:800,color:"#06b6d4",filter:"drop-shadow(0 0 8px #06b6d4)"}}>⬡</div>
+            {!collapsed&&<><div style={{color:"#d4dff7",fontWeight:800,fontSize:11,marginTop:4,lineHeight:1.3}}>Detect AI &</div><div style={{color:"#06b6d4",fontWeight:800,fontSize:11,lineHeight:1.3}}>Prove You're Human</div></>}
+          </div>
+          {!collapsed&&<div style={{margin:"8px 8px 0",padding:"7px 10px",background:"#080d1a",border:"1px solid #0d1526",borderRadius:9,display:"flex",alignItems:"center",gap:7}}>
+            <div style={{width:24,height:24,borderRadius:"50%",background:"linear-gradient(135deg,#06b6d4,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,flexShrink:0,color:"#fff",fontWeight:700}}>{user.name?.[0]?.toUpperCase()||"?"}</div>
+            <div style={{flex:1,overflow:"hidden"}}><div style={{color:"#d4dff7",fontSize:11,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user.name}</div><div style={{color:"#1a2540",fontSize:9,fontFamily:"monospace",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user.email}</div></div>
+          </div>}
+          <nav style={{flex:1,padding:"8px 6px",overflowY:"auto",marginTop:4}}>
+            {NAV.map(n=>{
+              const isActive=page===n.id;
+              return(<div key={n.id}>
+                <button onClick={()=>handleNav(n.id)} title={collapsed?n.label:""} style={{display:"flex",alignItems:"center",gap:9,width:"100%",padding:collapsed?"10px 0":"9px 9px",justifyContent:collapsed?"center":"flex-start",borderRadius:9,border:"none",cursor:"pointer",marginBottom:2,background:isActive?"#06b6d418":"none",borderLeft:isActive?"2px solid #06b6d4":"2px solid transparent",transition:"all .15s"}} onMouseEnter={e=>{if(!isActive)e.currentTarget.style.background="#0d1526"}} onMouseLeave={e=>{if(!isActive)e.currentTarget.style.background="none"}}>
+                  <span style={{fontSize:14,color:isActive?"#06b6d4":"#2a3a5c",filter:isActive?"drop-shadow(0 0 5px #06b6d4)":"none",flexShrink:0}}>{n.icon}</span>
+                  {!collapsed&&<span style={{color:isActive?"#d4dff7":"#4a5980",fontSize:12,fontWeight:isActive?700:400,flex:1,textAlign:"left"}}>{n.label}</span>}
+                  {!collapsed&&n.sub&&<span style={{color:"#2a3a5c",fontSize:10,transition:"transform .2s",display:"inline-block",transform:socialOpen?"rotate(90deg)":"rotate(0deg)"}}>›</span>}
+                </button>
+                {n.sub&&socialOpen&&!collapsed&&(<div className="app-submenu" style={{marginLeft:12,marginBottom:3,borderLeft:"1px solid #1a2540",paddingLeft:7}}>
+                  {n.sub.map(s=>{const sa=page==="social"&&subPage===s.id;return(<button key={s.id} onClick={()=>{setPage("social");setSubPage(s.id)}} style={{display:"flex",alignItems:"center",gap:7,width:"100%",padding:"8px 7px",borderRadius:7,border:"none",cursor:"pointer",marginBottom:1,background:sa?`${s.color}15`:"none",transition:"all .15s"}} onMouseEnter={e=>{if(!sa)e.currentTarget.style.background="#0d1526"}} onMouseLeave={e=>{if(!sa)e.currentTarget.style.background="none"}}>
+                    <span style={{fontSize:11,color:sa?s.color:"#2a3a5c"}}>{s.icon}</span>
+                    <span style={{color:sa?s.color:"#4a5980",fontSize:11,fontWeight:sa?700:400}}>{s.label}</span>
+                    {sa&&<div style={{width:4,height:4,borderRadius:"50%",background:s.color,marginLeft:"auto",boxShadow:`0 0 5px ${s.color}`}}/>}
+                  </button>)})}
+                </div>)}
+                {n.sub&&socialOpen&&collapsed&&(<div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:1,marginBottom:3}}>
+                  {n.sub.map(s=>(<button key={s.id} onClick={()=>{setPage("social");setSubPage(s.id)}} title={s.label} style={{padding:"6px 0",width:"100%",borderRadius:7,border:"none",cursor:"pointer",background:page==="social"&&subPage===s.id?`${s.color}20`:"none",display:"flex",justifyContent:"center"}}>
+                    <span style={{fontSize:11,color:page==="social"&&subPage===s.id?s.color:"#2a3a5c"}}>{s.icon}</span>
+                  </button>))}
+                </div>)}
+              </div>);
+            })}
+          </nav>
+          <div style={{padding:"0 6px 12px",flexShrink:0,display:"flex",flexDirection:"column",gap:5}}>
+            {!collapsed&&<button onClick={onLogout} style={{width:"100%",padding:"8px 0",borderRadius:9,border:"1px solid #ef444420",background:"none",color:"#ef444450",cursor:"pointer",fontSize:11,fontFamily:"monospace",transition:"all .15s"}} onMouseEnter={e=>{e.currentTarget.style.color="#ef4444";e.currentTarget.style.borderColor="#ef444440"}} onMouseLeave={e=>{e.currentTarget.style.color="#ef444450";e.currentTarget.style.borderColor="#ef444420"}}>Sign Out</button>}
+            <button onClick={()=>setCollapsed(c=>!c)} style={{width:"100%",padding:"7px 0",borderRadius:9,border:"1px solid #0d1526",background:"none",color:"#2a3a5c",cursor:"pointer",fontSize:11,fontFamily:"monospace"}} onMouseEnter={e=>e.currentTarget.style.color="#d4dff7"} onMouseLeave={e=>e.currentTarget.style.color="#2a3a5c"}>{collapsed?"▶":"◀"}</button>
+          </div>
         </div>
-        {!collapsed&&<div style={{margin:"8px 8px 0",padding:"7px 10px",background:"#080d1a",border:"1px solid #0d1526",borderRadius:9,display:"flex",alignItems:"center",gap:7}}>
-          <div style={{width:24,height:24,borderRadius:"50%",background:"linear-gradient(135deg,#06b6d4,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,flexShrink:0,color:"#fff",fontWeight:700}}>{user.name?.[0]?.toUpperCase()||"?"}</div>
-          <div style={{flex:1,overflow:"hidden"}}><div style={{color:"#d4dff7",fontSize:11,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user.name}</div><div style={{color:"#1a2540",fontSize:9,fontFamily:"monospace",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user.email}</div></div>
-        </div>}
-        <nav style={{flex:1,padding:"8px 6px",overflowY:"auto",marginTop:4}}>
-          {NAV.map(n=>{
-            const isActive=page===n.id;
-            return(<div key={n.id}>
-              <button onClick={()=>handleNav(n.id)} title={collapsed?n.label:""} style={{display:"flex",alignItems:"center",gap:9,width:"100%",padding:collapsed?"10px 0":"9px 9px",justifyContent:collapsed?"center":"flex-start",borderRadius:9,border:"none",cursor:"pointer",marginBottom:2,background:isActive?"#06b6d418":"none",borderLeft:isActive?"2px solid #06b6d4":"2px solid transparent",transition:"all .15s"}} onMouseEnter={e=>{if(!isActive)e.currentTarget.style.background="#0d1526"}} onMouseLeave={e=>{if(!isActive)e.currentTarget.style.background="none"}}>
-                <span style={{fontSize:14,color:isActive?"#06b6d4":"#2a3a5c",filter:isActive?"drop-shadow(0 0 5px #06b6d4)":"none",flexShrink:0}}>{n.icon}</span>
-                {!collapsed&&<span style={{color:isActive?"#d4dff7":"#4a5980",fontSize:12,fontWeight:isActive?700:400,flex:1,textAlign:"left"}}>{n.label}</span>}
-                {!collapsed&&n.sub&&<span style={{color:"#2a3a5c",fontSize:10,transition:"transform .2s",display:"inline-block",transform:socialOpen?"rotate(90deg)":"rotate(0deg)"}}>›</span>}
-              </button>
-              {n.sub&&socialOpen&&!collapsed&&(<div className="app-submenu" style={{marginLeft:12,marginBottom:3,borderLeft:"1px solid #1a2540",paddingLeft:7}}>
-                {n.sub.map(s=>{const sa=page==="social"&&subPage===s.id;return(<button key={s.id} onClick={()=>{setPage("social");setSubPage(s.id)}} style={{display:"flex",alignItems:"center",gap:7,width:"100%",padding:"8px 7px",borderRadius:7,border:"none",cursor:"pointer",marginBottom:1,background:sa?`${s.color}15`:"none",transition:"all .15s"}} onMouseEnter={e=>{if(!sa)e.currentTarget.style.background="#0d1526"}} onMouseLeave={e=>{if(!sa)e.currentTarget.style.background="none"}}>
-                  <span style={{fontSize:11,color:sa?s.color:"#2a3a5c"}}>{s.icon}</span>
-                  <span style={{color:sa?s.color:"#4a5980",fontSize:11,fontWeight:sa?700:400}}>{s.label}</span>
-                  {sa&&<div style={{width:4,height:4,borderRadius:"50%",background:s.color,marginLeft:"auto",boxShadow:`0 0 5px ${s.color}`}}/>}
-                </button>)})}
-              </div>)}
-              {n.sub&&socialOpen&&collapsed&&(<div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:1,marginBottom:3}}>
-                {n.sub.map(s=>(<button key={s.id} onClick={()=>{setPage("social");setSubPage(s.id)}} title={s.label} style={{padding:"6px 0",width:"100%",borderRadius:7,border:"none",cursor:"pointer",background:page==="social"&&subPage===s.id?`${s.color}20`:"none",display:"flex",justifyContent:"center"}}>
-                  <span style={{fontSize:11,color:page==="social"&&subPage===s.id?s.color:"#2a3a5c"}}>{s.icon}</span>
-                </button>))}
-              </div>)}
-            </div>);
-          })}
-        </nav>
-        <div style={{padding:"0 6px 12px",flexShrink:0,display:"flex",flexDirection:"column",gap:5}}>
-          {!collapsed&&<button onClick={onLogout} style={{width:"100%",padding:"8px 0",borderRadius:9,border:"1px solid #ef444420",background:"none",color:"#ef444450",cursor:"pointer",fontSize:11,fontFamily:"monospace",transition:"all .15s"}} onMouseEnter={e=>{e.currentTarget.style.color="#ef4444";e.currentTarget.style.borderColor="#ef444440"}} onMouseLeave={e=>{e.currentTarget.style.color="#ef444450";e.currentTarget.style.borderColor="#ef444420"}}>Sign Out</button>}
-          <button onClick={()=>setCollapsed(c=>!c)} style={{width:"100%",padding:"7px 0",borderRadius:9,border:"1px solid #0d1526",background:"none",color:"#2a3a5c",cursor:"pointer",fontSize:11,fontFamily:"monospace",transition:"color .15s"}} onMouseEnter={e=>e.currentTarget.style.color="#d4dff7"} onMouseLeave={e=>e.currentTarget.style.color="#2a3a5c"}>{collapsed?"▶":"◀"}</button>
+
+        {/* ── MAIN ── */}
+        <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0,overflow:"hidden"}}>
+          <div className="app-topbar-inner" style={{borderBottom:"1px solid #0d1526",padding:"12px 20px",display:"flex",alignItems:"center",gap:9,background:"#050b18",position:"sticky",top:0,zIndex:5,flexShrink:0}}>
+            {page==="social"&&subPage&&<button onClick={()=>setSubPage(null)} style={{background:"#0d1526",border:"1px solid #1a2540",borderRadius:7,padding:"5px 10px",color:"#4a5980",cursor:"pointer",fontFamily:"monospace",fontSize:10,marginRight:2}}>←</button>}
+            <span style={{fontSize:14,color:"#06b6d4"}}>{meta.icon}</span>
+            <span style={{fontWeight:700,color:"#d4dff7",fontSize:13}}>{meta.label}</span>
+            <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:8}}>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:5,height:5,borderRadius:"50%",background:"#10b981",boxShadow:"0 0 5px #10b981"}}/><span style={{color:"#1a2540",fontSize:9,fontFamily:"monospace"}}>ONLINE</span></div>
+              <button onClick={onLogout} style={{background:"none",border:"1px solid #ef444420",borderRadius:7,padding:"4px 10px",color:"#ef444450",cursor:"pointer",fontSize:10,fontFamily:"monospace"}} onMouseEnter={e=>e.currentTarget.style.color="#ef4444"} onMouseLeave={e=>e.currentTarget.style.color="#ef444450"}>Sign Out</button>
+            </div>
+          </div>
+          <div className="app-page app-content-area" key={page+subPage} style={{flex:1,overflowY:"auto",padding:"18px 20px",maxWidth:660,width:"100%",boxSizing:"border-box"}}>
+            {(pageMap[page]||(()=>null))()}
+          </div>
         </div>
       </div>
 
-      {/* MAIN */}
-      <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
-        <div style={{borderBottom:"1px solid #0d1526",padding:"12px 20px",display:"flex",alignItems:"center",gap:9,background:"#050b18",position:"sticky",top:0,zIndex:5}}>
-          {page==="social"&&subPage&&<button onClick={()=>setSubPage(null)} style={{background:"#0d1526",border:"1px solid #1a2540",borderRadius:7,padding:"5px 10px",color:"#4a5980",cursor:"pointer",fontFamily:"monospace",fontSize:10,marginRight:2}}>←</button>}
-          <span style={{fontSize:14,color:"#06b6d4"}}>{meta.icon}</span>
-          <span style={{fontWeight:700,color:"#d4dff7",fontSize:13}}>{meta.label}</span>
-          <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:8}}>
-            <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:5,height:5,borderRadius:"50%",background:"#10b981",boxShadow:"0 0 5px #10b981"}}/><span style={{color:"#1a2540",fontSize:9,fontFamily:"monospace"}}>ONLINE</span></div>
-            {collapsed&&<button onClick={onLogout} style={{background:"none",border:"1px solid #ef444420",borderRadius:7,padding:"4px 8px",color:"#ef444450",cursor:"pointer",fontSize:10,fontFamily:"monospace"}} onMouseEnter={e=>e.currentTarget.style.color="#ef4444"} onMouseLeave={e=>e.currentTarget.style.color="#ef444450"}>Sign Out</button>}
-          </div>
-        </div>
-        <div className="app-page" key={page+subPage} style={{flex:1,overflowY:"auto",padding:"22px 20px",maxWidth:640}}>
-          {(pageMap[page]||(()=>null))()}
-        </div>
+      {/* ── MOBILE BOTTOM NAV ── */}
+      <div className="app-bottom-nav">
+        {[{id:"home",icon:"⬡",label:"Home"},{id:"portfolio",icon:"◉",label:"Profile"},{id:"text",icon:"✦",label:"Text"},{id:"image",icon:"◈",label:"Image"},{id:"video",icon:"◼",label:"Video"},{id:"humanid",icon:"⬟",label:"ID"}].map(n=>(
+          <button key={n.id} className={`bnb${page===n.id?" on":""}`} onClick={()=>handleNav(n.id)}>
+            <span className="bnb-i">{n.icon}</span>
+            <span className="bnb-l">{n.label}</span>
+          </button>
+        ))}
+        <button className={`bnb${page==="social"?" on":""}`} onClick={()=>handleNav("social")}>
+          <span className="bnb-i">◭</span>
+          <span className="bnb-l">Social</span>
+        </button>
       </div>
+
+      {/* MOBILE SOCIAL SHEET */}
+      {page==="social"&&!subPage&&(
+        <div className="mob-social">
+          <button className="mob-soc-btn" onClick={()=>setSubPage("instagram")} style={{background:"linear-gradient(135deg,#833ab420,#fd1d1d20)",border:"1px solid #e1306c40",color:"#e1306c"}}>▣ Instagram</button>
+          <button className="mob-soc-btn" onClick={()=>setSubPage("tiktok")} style={{background:"linear-gradient(135deg,#69c9d020,#ee1d5220)",border:"1px solid #69c9d040",color:"#69c9d0"}}>▶ TikTok</button>
+        </div>
+      )}
     </div>
   );
 }
