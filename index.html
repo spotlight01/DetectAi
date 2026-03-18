@@ -499,6 +499,110 @@ section.landing-section{padding:80px 5%}
 
 <!-- ══ LANDING JS ══ -->
 <script>
+// ── SUPABASE CONFIG ──
+const SUPA_URL = "https://xjwarcttqjwymebgvzgx.supabase.co";
+const SUPA_KEY = "sb_publishable_q88VjiymEvxB_jEIBv4Xwg_Z8jVIcFL";
+
+async function supaFetch(path, method, body){
+  method = method || "GET";
+  try{
+    const opts = {
+      method: method,
+      headers: {
+        "apikey": SUPA_KEY,
+        "Authorization": "Bearer " + SUPA_KEY,
+        "Content-Type": "application/json",
+        "Prefer": method==="POST" ? "resolution=merge-duplicates" : ""
+      }
+    };
+    if(body) opts.body = JSON.stringify(body);
+    const r = await fetch(SUPA_URL + "/rest/v1/" + path, opts);
+    if(!r.ok){ const t=await r.text(); console.warn("Supa error:",t); return null; }
+    const text = await r.text();
+    return text ? JSON.parse(text) : null;
+  } catch(e){ console.warn("supaFetch failed:", e); return null; }
+}
+
+// Load live stats from Supabase and update the page
+async function loadGlobalStats(){
+  const data = await supaFetch("stats?id=eq.global&select=scans,human_ids,bots");
+  if(data && data[0]){
+    const s = data[0];
+    const sc=document.getElementById('stat-scans');
+    const si=document.getElementById('stat-ids');
+    const sb=document.getElementById('stat-bots');
+    if(sc) sc.textContent = formatNum(s.scans||2400000);
+    if(si) si.textContent = formatNum(s.human_ids||14200);
+    if(sb) sb.textContent = formatNum(s.bots||340000);
+    localStorage.setItem('dai_global_stats', JSON.stringify({scans:s.scans, ids:s.human_ids, bots:s.bots}));
+    window.dispatchEvent(new Event('dai_stats_update'));
+  }
+}
+
+// Increment scan counter via SQL function
+async function supaIncrementScan(tool, email){
+  try{
+    // Increment the global scans counter
+    await fetch(SUPA_URL + "/rest/v1/rpc/increment_scans", {
+      method:"POST",
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify({})
+    });
+    // Log scan event
+    await supaFetch("scan_events", "POST", {
+      tool: tool||"scan",
+      email: email||"anonymous",
+      created_at: new Date().toISOString()
+    });
+    loadGlobalStats();
+  } catch(e){ console.warn("supaIncrementScan failed:", e); }
+}
+
+// Increment human_ids counter
+async function supaIncrementHID(){
+  try{
+    await fetch(SUPA_URL + "/rest/v1/rpc/increment_hids", {
+      method:"POST",
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify({})
+    });
+    loadGlobalStats();
+  } catch(e){ console.warn("supaIncrementHID failed:", e); }
+}
+
+// Save Human ID card to Supabase
+async function supaSaveHID(hid, email){
+  try{
+    await supaFetch("human_ids", "POST", {
+      id: hid.id,
+      name: hid.name,
+      email: email,
+      country: hid.country,
+      nationality: hid.nationality,
+      id_type: hid.idType||"passport",
+      tier: hid.tier,
+      score: hid.score,
+      issued: hid.issued,
+      expiry: hid.expiry,
+      hash: hid.hash,
+      created_at: new Date().toISOString()
+    });
+  } catch(e){ console.warn("supaSaveHID failed:", e); }
+}
+
+// Check if a user has a verified Human ID in Supabase
+async function supaCheckVerified(email){
+  try{
+    const data = await supaFetch("human_ids?email=eq."+encodeURIComponent(email)+"&select=id,tier,score,issued,expiry,name,country,nationality,id_type,hash");
+    return (data && data[0]) ? data[0] : null;
+  } catch(e){ return null; }
+}
+
+// Load stats when landing page opens
+window.addEventListener('DOMContentLoaded', function(){ 
+  setTimeout(loadGlobalStats, 500);
+});
+
 // ── Helpers ──
 function getUsers(){try{return JSON.parse(localStorage.getItem('dai_users')||'{}')}catch{return{}}}
 function genCode(){return Math.floor(100000+Math.random()*900000).toString()}
@@ -919,6 +1023,8 @@ function useToolUsage(email,toolId){
     addPoints(email,POINTS_PER_USE);
     recordPtsHistory(email,toolName,POINTS_PER_USE);
     incrementGlobalStat("scans");
+    // Also update Supabase global counter
+    if(typeof supaIncrementScan==="function") supaIncrementScan(toolName, email);
     if(isAdmin||isPro)return;
     const u=getUsage(email);u[toolId]=(u[toolId]||0)+1;
     localStorage.setItem(`dai_usage_${email}`,JSON.stringify(u));
@@ -1121,6 +1227,10 @@ function PortfolioPage({user}){
 // ── DASHBOARD ──
 function Dashboard({setPage,user}){
   const currentPts=getPoints(user.email);
+  // Load live stats from Supabase on mount
+  useEffect(()=>{
+    if(typeof loadGlobalStats==="function") loadGlobalStats();
+  },[]);
   const savedHid=(()=>{try{return JSON.parse(localStorage.getItem("dai_hid_"+user.email)||"null")}catch{return null}})();
   const isAdmin=ADMIN_EMAILS.includes((user.email||"").toLowerCase());
   const isPro=(()=>{try{return isAdmin||JSON.parse(localStorage.getItem("dai_pro_"+user.email)||"false")}catch{return isAdmin}})();
@@ -1453,6 +1563,18 @@ function HumanIdPage({user}){
   const getSaved=()=>{try{return JSON.parse(localStorage.getItem(savedKey)||"null")}catch{return null}};
 
   const[step,setStepRaw]=useState(()=>{const s=getSaved();return s?s.step:0});
+  // Check Supabase for existing verified Human ID
+  useEffect(()=>{
+    if(typeof supaCheckVerified==="function"){
+      supaCheckVerified(user.email).then(remote=>{
+        if(remote&&!hid){
+          const hydrated={id:remote.id,name:remote.name,country:remote.country,nationality:remote.nationality,idType:remote.id_type,tier:remote.tier,score:remote.score,issued:remote.issued,expiry:remote.expiry,hash:remote.hash};
+          setHid(hydrated);
+          localStorage.setItem("dai_hid_"+user.email, JSON.stringify(hydrated));
+        }
+      });
+    }
+  },[]);
   const[form,setForm]=useState(()=>{const s=getSaved();return s?s.form:{fullName:user?.name||"",dob:"",country:"",nationality:"",idType:"passport",idNumber:""}});
   const[vResult,setVResultRaw]=useState(()=>{const s=getSaved();return s?s.vResult:null});
   const[hid,setHidRaw]=useState(()=>{try{return JSON.parse(localStorage.getItem(savedHidKey)||"null")}catch{return null}});
@@ -1506,7 +1628,10 @@ function HumanIdPage({user}){
       const newHid={id:genId(),name:form.fullName,dob:form.dob,country:form.country,nationality:form.nationality,idType:form.idType,issued:new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}),expiry:new Date(Date.now()+10*365*24*60*60*1000).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}),score:r.humanScore,hash:genHash(),tier:r.humanScore>=85?"Platinum":r.humanScore>=70?"Gold":"Silver"};
       setHid(newHid);
       // Save Human ID to localStorage so it persists
-      localStorage.setItem("dai_hid_"+user.email, JSON.stringify(newHid)); incrementGlobalStat("ids");
+      localStorage.setItem("dai_hid_"+user.email, JSON.stringify(newHid));
+      incrementGlobalStat("ids");
+      if(typeof supaSaveHID==="function") supaSaveHID(newHid, user.email);
+      if(typeof supaIncrementHID==="function") supaIncrementHID();
     }
   };
 
