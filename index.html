@@ -317,8 +317,8 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
     <li><a href="#faq">FAQ</a></li>
   </ul>
   <div class="l-nav-btns">
-    <button class="btn btn-outline" id="nav-signin-btn" onclick="openModal('login')">Sign In</button>
-    <button class="btn btn-primary" onclick="openModal('register')">Get Started Free →</button>
+    <button class="btn btn-outline" id="nav-signin-btn" onclick="window.openModal('login')">Sign In</button>
+    <button class="btn btn-primary" id="btn-register-hero" onclick="window.openModal('register')">Get Started Free →</button>
   </div>
 </nav>
 
@@ -337,8 +337,8 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
     <span class="hero-pill" style="border-color:rgba(0,229,160,.3);color:var(--green);">⬟ Human ID · Free</span>
   </div>
   <div class="hero-btns">
-    <button class="btn btn-primary" style="font-size:16px;padding:14px 32px;" onclick="openModal('register')">Create Free Account →</button>
-    <a href="#tools" class="btn btn-outline" style="font-size:14px;padding:14px 28px;">Explore Tools</a>
+    <button class="btn btn-primary" id="btn-register-hero" style="font-size:16px;padding:14px 32px;" onclick="window.openModal('register')">Create Free Account →</button>
+    <button class="btn btn-outline" id="btn-explore" style="font-size:14px;padding:14px 28px;" onclick="document.getElementById('tools').scrollIntoView({behavior:'smooth'})">Explore Tools</button>
   </div>
 </section>
 
@@ -447,7 +447,7 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
         <li>Points & rewards system</li>
         <li>Portfolio & account dashboard</li>
       </ul>
-      <button class="btn btn-outline btn-block" onclick="openModal('register')">Get Started Free</button>
+      <button class="btn btn-outline btn-block" id="btn-free-tier" onclick="window.openModal('register')">Get Started Free</button>
     </div>
     <div class="price-card featured">
       <div class="price-badge">MOST POPULAR</div>
@@ -540,8 +540,8 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
   <h2 class="cta-title">Ready to Prove You're Human?</h2>
   <p class="cta-sub">Join thousands of users detecting AI content and verifying their humanity.<br/>Start with 5 free scans on every tool — no credit card needed.</p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-    <button class="btn btn-primary" style="font-size:15px;padding:14px 32px;" onclick="openModal('register')">Create Free Account →</button>
-    <button class="btn btn-outline" style="font-size:15px;padding:14px 28px;" onclick="openModal('login')">Sign In</button>
+    <button class="btn btn-primary" id="btn-cta-register" style="font-size:15px;padding:14px 32px;" onclick="window.openModal('register')">Create Free Account →</button>
+    <button class="btn btn-outline" id="btn-cta-signin" style="font-size:15px;padding:14px 28px;" onclick="window.openModal('login')">Sign In</button>
   </div>
   <div class="cta-note">⬟ Human ID is always free · No credit card required · Cancel anytime</div>
 </section>
@@ -574,7 +574,7 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
       <a href="#humanid">Human ID</a>
       <a href="#pricing">Pricing</a>
       <a href="#rewards">Rewards</a>
-      <a href="#" onclick="openModal('register');return false;">Get Started Free</a>
+      <a href="#" id="footer-get-started" onclick="window.openModal('register');return false;">Get Started Free</a>
     </div>
     <div class="footer-col">
       <h4>COMPANY</h4>
@@ -754,7 +754,7 @@ function toggleFaq(i){
 }
 
 // ── AUTH MODAL ──
-function openModal(mode){ document.getElementById("modal").classList.add("open"); renderModal(mode); }
+window.openModal = function openModal(mode){ document.getElementById("modal").classList.add("open"); renderModal(mode); }; function openModal(mode){ window.openModal(mode); }
 function closeModal(){ document.getElementById("modal").classList.remove("open"); }
 
 function renderModal(mode){
@@ -776,7 +776,7 @@ function renderModal(mode){
     +'<label for="remember-me" style="color:var(--text3);font-size:12px;cursor:pointer;">Keep me signed in</label>'
     +'</div>'
     +'<button class="btn btn-primary btn-block" id="l-btn" onclick="doLogin()">Sign In →</button>'
-    +'<div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3);">No account? <span style="color:var(--blue);cursor:pointer;font-weight:700;" onclick="renderModal(\'register\')">Register Free</span></div>';
+    +'<div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3);">No account? <span style="color:var(--blue);cursor:pointer;font-weight:700;" onclick="renderModal('register')">Register Free</span></div>';
     box.style.position="relative";
   } else if (mode === "register") {
     box.innerHTML = '<button onclick="closeModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;">×</button>'
@@ -793,7 +793,7 @@ function renderModal(mode){
     +'<div class="inp-label">PASSWORD</div>'
     +'<input class="inp" id="r-pass" type="password" placeholder="Min 6 characters" style="margin-bottom:16px;" onkeydown="if(event.key===\'Enter\')doRegister()"/>'
     +'<button class="btn btn-primary btn-block" id="r-btn" onclick="doRegister()">Register Free →</button>'
-    +'<div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3);">Have account? <span style="color:var(--blue);cursor:pointer;font-weight:700;" onclick="renderModal(\'login\')">Sign In</span></div>';
+    +'<div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3);">Have account? <span style="color:var(--blue);cursor:pointer;font-weight:700;" onclick="renderModal('login')">Sign In</span></div>';
     box.style.position="relative";
   } else if (mode === "verify") {
     box.innerHTML = '<div style="text-align:center;margin-bottom:22px;">'
@@ -1106,7 +1106,7 @@ function buildHome(user,pts,tier,pro,admin,hid,totalScans){
   h+='<div style="display:flex;align-items:center;gap:8px;"><span style="color:'+tier.color+';font-weight:800;">'+tier.icon+' '+tier.name+'</span>';
   if(tier.next) h+='<span style="color:var(--text4);font-size:10px;font-family:var(--mono);">'+(tier.nextPts-pts)+' pts to '+tier.next+'</span>';
   h+='</div>';
-  h+='<button onclick="navigate(\'portfolio\')" style="background:none;border:1px solid var(--border);color:var(--text3);font-size:11px;padding:4px 10px;border-radius:8px;cursor:pointer;font-family:\'Syne\',sans-serif;">Rewards →</button>';
+  h+='<button onclick="navigate('portfolio')" style="background:none;border:1px solid var(--border);color:var(--text3);font-size:11px;padding:4px 10px;border-radius:8px;cursor:pointer;font-family:\'Syne\',sans-serif;">Rewards →</button>';
   h+='</div>';
   h+='<div class="tier-bar"><div class="tier-fill" style="width:'+prog+'%;background:linear-gradient(90deg,'+tier.color+','+tier.color+'bb);"></div></div>';
   h+='</div>'; // end welcome card
@@ -1116,7 +1116,7 @@ function buildHome(user,pts,tier,pro,admin,hid,totalScans){
     h+='<div style="background:linear-gradient(135deg,#0a2a1a,#0e3a1f);border:1px solid rgba(0,229,160,.3);border-radius:14px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;">';
     h+='<div style="width:44px;height:44px;background:rgba(0,229,160,.15);border:1px solid rgba(0,229,160,.3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">⬟</div>';
     h+='<div style="flex:1;"><div style="font-weight:700;font-size:14px;color:var(--green);margin-bottom:3px;">Get Your Digital Human ID — Free</div><div style="font-size:11px;color:var(--text3);">Upload passport + selfie to get KYC verified. Used on DeFi, DAOs & more.</div></div>';
-    h+='<button onclick="navigate(\'humanid\')" style="background:linear-gradient(135deg,#00c88a,var(--green));border:none;border-radius:10px;padding:9px 14px;color:#07071a;font-weight:800;font-size:12px;cursor:pointer;flex-shrink:0;font-family:\'Syne\',sans-serif;">Verify →</button>';
+    h+='<button onclick="navigate('humanid')" style="background:linear-gradient(135deg,#00c88a,var(--green));border:none;border-radius:10px;padding:9px 14px;color:#07071a;font-weight:800;font-size:12px;cursor:pointer;flex-shrink:0;font-family:\'Syne\',sans-serif;">Verify →</button>';
     h+='</div>';
   }
 
@@ -1125,8 +1125,8 @@ function buildHome(user,pts,tier,pro,admin,hid,totalScans){
     h+='<div class="upgrade-banner">';
     h+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><span style="font-size:28px;">⚡</span><div><div style="font-weight:800;font-size:15px;">Upgrade to Pro</div><div style="color:var(--text3);font-size:11px;margin-top:2px;">Unlimited scans on all 6 tools forever</div></div></div>';
     h+='<div style="display:flex;gap:8px;">';
-    h+='<button onclick="window.open(\''+STRIPE_L+'\',\'_blank\');localStorage.setItem(\'dai_pending\',JSON.stringify({plan:\'lifetime\',email:\''+user.email+'\',ts:Date.now()}))" class="btn btn-green" style="flex:1;padding:11px;font-size:13px;border:none;cursor:pointer;">💳 Lifetime $9.99</button>';
-    h+='<button onclick="window.open(\''+STRIPE_M+'\',\'_blank\')" style="flex:1;padding:11px;background:rgba(79,143,255,.1);border:1px solid rgba(79,143,255,.3);color:var(--blue);font-weight:700;font-size:13px;border-radius:10px;cursor:pointer;font-family:\'Syne\',sans-serif;">$4.99/mo</button>';
+    h+='<button onclick="window.open(''+STRIPE_L+'','_blank');localStorage.setItem('dai_pending',JSON.stringify({plan:'lifetime',email:''+user.email+'',ts:Date.now()}))" class="btn btn-green" style="flex:1;padding:11px;font-size:13px;border:none;cursor:pointer;">💳 Lifetime $9.99</button>';
+    h+='<button onclick="window.open(''+STRIPE_M+'','_blank')" style="flex:1;padding:11px;background:rgba(79,143,255,.1);border:1px solid rgba(79,143,255,.3);color:var(--blue);font-weight:700;font-size:13px;border-radius:10px;cursor:pointer;font-family:\'Syne\',sans-serif;">$4.99/mo</button>';
     h+='</div></div>';
   }
 
@@ -1136,7 +1136,7 @@ function buildHome(user,pts,tier,pro,admin,hid,totalScans){
   var tools=[{id:"text",icon:"✦",name:"Text",desc:"Detect AI writing"},{id:"image",icon:"◈",name:"Image",desc:"AI-generated images"},{id:"voice",icon:"◎",name:"Voice",desc:"Synthetic voice"},{id:"video",icon:"🎬",name:"Video",desc:"Deepfakes & AI video"},{id:"instagram",icon:"▣",name:"Instagram",desc:"Bot detection"},{id:"tiktok",icon:"▶",name:"TikTok",desc:"AI content"}];
   for(var i=0;i<tools.length;i++){
     var t=tools[i], used=usage[t.id]||0, rem=(pro||admin)?"∞":Math.max(0,5-used)+" left";
-    h+='<div class="tool-app-card" onclick="navigate(\''+t.id+'\')">'
+    h+='<div class="tool-app-card" onclick="navigate(''+t.id+'')">'
       +'<div style="font-size:26px;margin-bottom:6px;">'+t.icon+'</div>'
       +'<div style="font-weight:700;font-size:14px;margin-bottom:2px;">'+t.name+'</div>'
       +'<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">'+t.desc+'</div>'
@@ -1149,8 +1149,8 @@ function buildHome(user,pts,tier,pro,admin,hid,totalScans){
   h+='<span class="section-label">PLATFORM PRICING</span>';
   h+='<div class="price-strip">';
   h+='<div class="price-strip-cell"><div style="color:var(--text3);font-weight:800;font-size:14px;">$0</div><div style="font-size:9px;font-family:var(--mono);color:var(--text4);margin-top:2px;">FREE</div></div>';
-  h+='<div class="price-strip-cell hl" onclick="window.open(\''+STRIPE_M+'\',\'_blank\')" style="cursor:pointer;"><div style="color:var(--blue);font-weight:800;font-size:14px;">$4.99<span style="font-size:10px;color:var(--text4);">/mo</span></div><div style="font-size:9px;font-family:var(--mono);color:var(--blue);margin-top:2px;">MONTHLY ↗</div></div>';
-  h+='<div class="price-strip-cell bl" onclick="window.open(\''+STRIPE_L+'\',\'_blank\')" style="cursor:pointer;"><div style="color:var(--green);font-weight:800;font-size:14px;">$9.99<span style="font-size:10px;color:var(--text4);"> once</span></div><div style="font-size:9px;font-family:var(--mono);color:var(--green);margin-top:2px;">LIFETIME ↗</div></div>';
+  h+='<div class="price-strip-cell hl" onclick="window.open(''+STRIPE_M+'','_blank')" style="cursor:pointer;"><div style="color:var(--blue);font-weight:800;font-size:14px;">$4.99<span style="font-size:10px;color:var(--text4);">/mo</span></div><div style="font-size:9px;font-family:var(--mono);color:var(--blue);margin-top:2px;">MONTHLY ↗</div></div>';
+  h+='<div class="price-strip-cell bl" onclick="window.open(''+STRIPE_L+'','_blank')" style="cursor:pointer;"><div style="color:var(--green);font-weight:800;font-size:14px;">$9.99<span style="font-size:10px;color:var(--text4);"> once</span></div><div style="font-size:9px;font-family:var(--mono);color:var(--green);margin-top:2px;">LIFETIME ↗</div></div>';
   h+='</div>';
 
   // Social links
@@ -1215,7 +1215,7 @@ function buildPortfolio(user,pts,tier,pro,admin,hid,totalScans){
     h+='<div style="font-size:40px;margin-bottom:10px;">⬟</div>';
     h+='<div style="font-weight:700;font-size:16px;color:var(--rose);margin-bottom:8px;">Not Yet Verified</div>';
     h+='<div style="color:var(--text3);font-size:13px;margin-bottom:14px;">Get your free Digital Human ID to prove your humanity.</div>';
-    h+='<button onclick="navigate(\'humanid\')" class="btn btn-green btn-block">Get Human ID — Free →</button>';
+    h+='<button onclick="navigate('humanid')" class="btn btn-green btn-block">Get Human ID — Free →</button>';
     h+='</div>';
   }
 
@@ -1255,7 +1255,7 @@ function buildDetectPage(toolId, user, pro, admin, usage){
   h+='<div style="font-size:11px;font-family:var(--mono);color:'+t.color+';">'+rem+'</div></div>';
   if(toolId==="image"){
     h+='<div id="img-prev-box" style="display:none;margin-bottom:10px;"><img id="img-prev" style="width:100%;border-radius:10px;max-height:200px;object-fit:cover;"/></div>';
-    h+='<label onclick="document.getElementById(\'img-file\').click()" style="display:block;border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;">';
+    h+='<label onclick="document.getElementById('img-file').click()" style="display:block;border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;">';
     h+='<div style="font-size:32px;margin-bottom:6px;">🖼</div><div style="font-weight:700;font-size:13px;">Upload Image</div><div style="color:var(--text3);font-size:11px;margin-top:4px;">JPG · PNG · WEBP</div></label>';
     h+='<input type="file" id="img-file" accept="image/*" style="display:none;" onchange="previewImg()"/>';
   }
@@ -1277,14 +1277,14 @@ function buildDetectPage(toolId, user, pro, admin, usage){
   }
   h+='<textarea id="detect-input" placeholder="'+t.ph+'" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px 14px;font-size:13px;outline:none;font-family:\'Syne\',sans-serif;min-height:100px;resize:vertical;line-height:1.7;margin-bottom:10px;" onfocus="this.style.borderColor=\''+t.color+'\'" onblur="this.style.borderColor=\'var(--border)\'"></textarea>';
   if(canUse){
-    h+='<button class="btn btn-primary btn-block" id="scan-btn" style="background:linear-gradient(135deg,'+t.color+','+t.color+'cc);" onclick="runScan(\''+toolId+'\')">🔍 Analyze Now</button>';
+    h+='<button class="btn btn-primary btn-block" id="scan-btn" style="background:linear-gradient(135deg,'+t.color+','+t.color+'cc);" onclick="runScan(''+toolId+'')">🔍 Analyze Now</button>';
   } else {
     h+='<div style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.2);border-radius:12px;padding:16px;text-align:center;">';
     h+='<div style="font-size:24px;margin-bottom:8px;">🔒</div>';
     h+='<div style="font-weight:700;font-size:14px;color:var(--rose);margin-bottom:6px;">Free scans used</div>';
     h+='<div style="color:var(--text3);font-size:12px;margin-bottom:12px;">Upgrade to continue scanning</div>';
-    h+='<button onclick="window.open(\''+STRIPE_L+'\',\'_blank\')" class="btn btn-green btn-block" style="margin-bottom:8px;border:none;cursor:pointer;">💳 Lifetime $9.99</button>';
-    h+='<button onclick="window.open(\''+STRIPE_M+'\',\'_blank\')" class="btn btn-outline btn-block" style="cursor:pointer;">$4.99/month</button>';
+    h+='<button onclick="window.open(''+STRIPE_L+'','_blank')" class="btn btn-green btn-block" style="margin-bottom:8px;border:none;cursor:pointer;">💳 Lifetime $9.99</button>';
+    h+='<button onclick="window.open(''+STRIPE_M+'','_blank')" class="btn btn-outline btn-block" style="cursor:pointer;">$4.99/month</button>';
     h+='</div>';
   }
   h+='</div><div id="scan-result"></div>';
@@ -1460,7 +1460,7 @@ function buildHumanID(user, hid){
     +'<button class="btn btn-primary btn-block" onclick="kycStep(1)">Continue →</button></div>'
     +'<div id="kyc-s2" style="display:none;">'
     +'<span class="section-label">STEP 2 — ID DOCUMENT</span>'
-    +'<div style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;" onclick="document.getElementById(\'kid\').click()">'
+    +'<div style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;" onclick="document.getElementById('kid').click()">'
     +'<div style="font-size:32px;margin-bottom:6px;">🪪</div><div style="font-weight:700;font-size:13px;">Upload ID Document</div>'
     +'<div style="color:var(--text3);font-size:11px;margin-top:4px;">Passport front or ID card · JPG, PNG</div></div>'
     +'<input type="file" id="kid" accept="image/*" style="display:none;" onchange="document.getElementById(\'kid-prev\').src=URL.createObjectURL(this.files[0]);document.getElementById(\'kid-box\').style.display=\'block\'"/>'
@@ -1468,7 +1468,7 @@ function buildHumanID(user, hid){
     +'<div style="display:flex;gap:8px;"><button class="btn btn-outline" style="flex:1;cursor:pointer;" onclick="kycBack(2)">← Back</button><button class="btn btn-primary" style="flex:2;cursor:pointer;" onclick="kycStep(2)">Continue →</button></div></div>'
     +'<div id="kyc-s3" style="display:none;">'
     +'<span class="section-label">STEP 3 — SELFIE</span>'
-    +'<div style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;" onclick="document.getElementById(\'kself\').click()">'
+    +'<div style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;" onclick="document.getElementById('kself').click()">'
     +'<div style="font-size:32px;margin-bottom:6px;">🤳</div><div style="font-weight:700;font-size:13px;">Take a Selfie</div>'
     +'<div style="color:var(--text3);font-size:11px;margin-top:4px;">Clear face · Good lighting · Look at camera</div></div>'
     +'<input type="file" id="kself" accept="image/*" capture="user" style="display:none;" onchange="document.getElementById(\'ks-prev\').src=URL.createObjectURL(this.files[0]);document.getElementById(\'ks-box\').style.display=\'block\'"/>'
@@ -1658,8 +1658,49 @@ function buildWhitepaperPage(){
 }
 
 // ── STARTUP ──
+// Make all critical functions globally accessible
+window.closeModal = function(){ document.getElementById("modal").classList.remove("open"); };
+window.doLogin = doLogin;
+window.doRegister = doRegister;
+window.doVerify = doVerify;
+window.signOut = signOut;
+window.navigate = navigate;
+window.toggleFaq = toggleFaq;
+window.toggleFaqApp = toggleFaqApp;
+window.toggleChat = toggleChat;
+window.sendChat = sendChat;
+window.sendEmail = sendEmail;
+window.runScan = runScan;
+window.previewImg = previewImg;
+window.previewVid = previewVid;
+window.kycStep = kycStep;
+window.kycBack = kycBack;
+window.editProfileName = editProfileName;
+window.saveProfileName = saveProfileName;
+window.cancelEditName = cancelEditName;
+
 window.addEventListener("DOMContentLoaded", function(){
   loadStats();
+
+  // Wire up all sign in / register buttons via event listeners
+  // (more reliable than inline onclick across all browsers)
+  function wireBtn(id, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", fn);
+  }
+  function wireBtns(selector, fn) {
+    var els = document.querySelectorAll(selector);
+    for (var i=0; i<els.length; i++) els[i].addEventListener("click", fn);
+  }
+  wireBtn("nav-signin-btn", function(){ openModal("login"); });
+  wireBtn("btn-register-hero", function(){ openModal("register"); });
+  wireBtn("btn-explore", function(){ document.getElementById("tools").scrollIntoView({behavior:"smooth"}); });
+  wireBtn("btn-cta-register", function(){ openModal("register"); });
+  wireBtn("btn-cta-signin", function(){ openModal("login"); });
+  wireBtn("btn-free-tier", function(){ openModal("register"); });
+  wireBtn("footer-get-started", function(){ openModal("register"); });
+
+
   // Check payment success
   var params=new URLSearchParams(window.location.search);
   if(params.get("payment")==="success"){
