@@ -274,9 +274,9 @@ section.landing-section{padding:80px 5%}
     <button class="btn-outline" onclick="document.getElementById('tools').scrollIntoView({behavior:'smooth'})">Explore Tools</button>
   </div>
   <div class="stats-row fade-up-4">
-    <div class="stat-item"><div class="stat-val" id="stat-scans">0</div><div class="stat-lbl">SCANS COMPLETED</div></div>
-    <div class="stat-item"><div class="stat-val" id="stat-ids">0</div><div class="stat-lbl">HUMAN IDs ISSUED</div></div>
-    <div class="stat-item"><div class="stat-val" id="stat-bots">0</div><div class="stat-lbl">BOTS CAUGHT</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-scans">—</div><div class="stat-lbl">TOTAL SCANS</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-ids">—</div><div class="stat-lbl">HUMAN IDs ISSUED</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-bots">—</div><div class="stat-lbl">BOTS DETECTED</div></div>
     <div class="stat-item"><div class="stat-val">98%</div><div class="stat-lbl">ACCURACY</div></div>
   </div>
 </div>
@@ -531,10 +531,10 @@ async function loadGlobalStats(){
     const sc=document.getElementById('stat-scans');
     const si=document.getElementById('stat-ids');
     const sb=document.getElementById('stat-bots');
-    if(sc) sc.textContent = formatNum(s.scans||2400000);
-    if(si) si.textContent = formatNum(s.human_ids||14200);
-    if(sb) sb.textContent = formatNum(s.bots||340000);
-    localStorage.setItem('dai_global_stats', JSON.stringify({scans:s.scans, ids:s.human_ids, bots:s.bots}));
+    if(sc) sc.textContent = formatNum(s.scans||0);
+    if(si) si.textContent = formatNum(s.human_ids||0);
+    if(sb) sb.textContent = formatNum(s.bots||0);
+    localStorage.setItem('dai_global_stats', JSON.stringify({scans:s.scans, ids:s.human_ids, bots:s.bots})); localStorage.setItem(typeof GLOBAL_KEY!=='undefined'?GLOBAL_KEY:'dai_global_stats', JSON.stringify({scans:s.scans, ids:s.human_ids, bots:s.bots}));
     window.dispatchEvent(new Event('dai_stats_update'));
   }
 }
@@ -797,11 +797,11 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('[data-target]').forEach(el=>obs.observe(el));
 });
 
-function formatNum(n){return n>=1000000?(n/1000000).toFixed(1)+'M+':n>=1000?(n/1000).toFixed(0)+'K+':String(n)}
+function formatNum(n){return n>=1000000?(n/1000000).toFixed(2)+'M':n>=10000?(n/1000).toFixed(1)+'K':n>=1000?(n/1000).toFixed(2)+'K':String(n)}
 function updateLiveStats(){
   const s=getGlobalStats();
   const sc=document.getElementById('stat-scans');const si=document.getElementById('stat-ids');const sb=document.getElementById('stat-bots');
-  if(sc)sc.textContent=formatNum(s.scans||2400000);if(si)si.textContent=formatNum(s.ids||14200);if(sb)sb.textContent=formatNum(s.bots||340000);
+  if(sc)sc.textContent=formatNum(s.scans||0);if(si)si.textContent=formatNum(s.ids||0);if(sb)sb.textContent=formatNum(s.bots||0);
 }
 updateLiveStats();
 window.addEventListener('dai_stats_update',updateLiveStats);
@@ -996,7 +996,7 @@ function genHash(){return Array.from({length:64},()=>"0123456789abcdef"[Math.flo
 
 // ── GLOBAL COUNTERS (shared across all users on this device) ──
 const GLOBAL_KEY="dai_global_stats";
-function getGlobalStats(){try{return JSON.parse(localStorage.getItem(GLOBAL_KEY)||'{"scans":2400000,"ids":14200,"bots":340000}')}catch{return{scans:2400000,ids:14200,bots:340000}}}
+function getGlobalStats(){try{return JSON.parse(localStorage.getItem(GLOBAL_KEY)||'{"scans":0,"ids":0,"bots":0}')}catch{return{scans:0,ids:0,bots:0}}}
 function incrementGlobalStat(key,amount=1){const s=getGlobalStats();s[key]=(s[key]||0)+amount;localStorage.setItem(GLOBAL_KEY,JSON.stringify(s));window.dispatchEvent(new Event("dai_stats_update"));}
 
 function getUsage(email){try{return JSON.parse(localStorage.getItem(`dai_usage_${email}`)||"{}")}catch{return{}}}
