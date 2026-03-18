@@ -488,7 +488,7 @@ section.landing-section{padding:80px 5%}
     </div>
     <div style="display:flex;gap:40px;flex-wrap:wrap">
       <div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:12px">PRODUCT</div><div style="display:flex;flex-direction:column;gap:8px"><a href="#tools" style="font-size:13px;color:var(--text3);cursor:pointer">Detection Tools</a><a href="#pricing" style="font-size:13px;color:var(--text3)">Pricing</a><a href="#faq" style="font-size:13px;color:var(--text3)">FAQ</a><span style="font-size:13px;color:var(--text3);cursor:pointer" onclick="openModal('register')">Get Started</span></div></div>
-      <div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:12px">SUPPORT</div><div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:var(--text3);cursor:pointer">Help Center</span><span style="font-size:13px;color:var(--text3);cursor:pointer">Privacy Policy</span><span style="font-size:13px;color:var(--text3);cursor:pointer">Terms of Service</span><span style="font-size:13px;color:var(--text3);cursor:pointer">Contact</span></div></div>
+      <div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:12px">SUPPORT</div><div style="display:flex;flex-direction:column;gap:8px"><a href="mailto:workingplace0111@gmail.com?subject=[DetectAI Support]" style="font-size:13px;color:var(--text3);cursor:pointer;text-decoration:none">Help Center</a><span style="font-size:13px;color:var(--text3);cursor:pointer">Privacy Policy</span><span style="font-size:13px;color:var(--text3);cursor:pointer">Terms of Service</span><a href="mailto:workingplace0111@gmail.com" style="font-size:13px;color:var(--text3);cursor:pointer;text-decoration:none">Contact</a></div></div>
     </div>
   </div>
   <div style="border-top:1px solid var(--border2);padding-top:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
@@ -963,6 +963,7 @@ const NAV=[
     {id:"tiktok",icon:"▶",label:"TikTok",color:"#69c9d0"},
   ]},
   {id:"humanid",icon:"⬟",label:"Human ID"},
+  {id:"support",icon:"💬",label:"Support"},
 ];
 
 // ── HELPERS ──
@@ -2281,6 +2282,190 @@ function HumanIdPage({user}){
   </Section>);
 }
 
+// ── SUPPORT PAGE ──
+const SUPPORT_EMAIL = "workingplace0111@gmail.com";
+const FAQ_ITEMS = [
+  {q:"How do I get 5 free scans?", a:"Every new account automatically gets 5 free scans on each detection tool — Text, Image, Voice, Video, Instagram and TikTok. That's 30 free scans total. No credit card needed."},
+  {q:"How do I upgrade to Pro?", a:"Go to your Dashboard and tap the 'Upgrade to Pro' banner, or tap $4.99/mo or $9.99 lifetime in the pricing section. You'll be taken to our secure Stripe checkout. After payment, come back and refresh the page to unlock unlimited scans."},
+  {q:"My payment went through but Pro isn't unlocked?", a:"Come back to the website, refresh the page, and it should unlock automatically. If it still doesn't work, email us at " + SUPPORT_EMAIL + " with your payment receipt and email address and we'll manually unlock your account within 24 hours."},
+  {q:"What is a Digital Human ID?", a:"A Digital Human ID is a verified certificate proving you are a real human. Upload your passport or ID card plus a selfie. Our AI verifies your identity and issues a Digital Human ID card you can use for KYC verification on any platform. It is completely free forever."},
+  {q:"Why did my Human ID verification fail?", a:"Common reasons: ID document not clearly visible, selfie too dark or blurry, face not matching the ID photo. Try again with a clearer photo in good lighting. Make sure all text on your ID is readable."},
+  {q:"Is my data safe?", a:"Yes. All ID documents and photos submitted during Human ID verification are permanently and automatically deleted the moment your KYC is approved. We never store, sell or share your identity documents."},
+  {q:"How does the points system work?", a:"You earn +2 points for every scan you run on any tool. Accumulate points to unlock tier badges — Bronze, Silver, Gold, Platinum and Diamond. Redeem points in the Rewards Shop for free Pro trials, lifetime access and exclusive badges."},
+  {q:"How accurate is the AI detection?", a:"Our detection tools are powered by advanced AI analysis. For text detection we achieve approximately 90-95% accuracy. For images, videos and voice the accuracy varies depending on the quality of input — adding a description significantly improves results."},
+  {q:"Can I use DetectAI on my phone?", a:"Yes! DetectAI is fully optimised for mobile. All detection tools, Human ID verification and account management work perfectly on Android and iPhone browsers."},
+  {q:"How do I cancel my monthly subscription?", a:"Email us at " + SUPPORT_EMAIL + " with your email address and we will cancel your subscription immediately. No questions asked."},
+];
+
+function SupportPage({user}){
+  const[chatOpen,setChatOpen]=useState(false);
+  const[messages,setMessages]=useState([
+    {role:"assistant",text:"Hi! 👋 I'm the DetectAI support assistant. I can help you with scans, Human ID, payments, and anything else. What do you need help with?"}
+  ]);
+  const[input,setInput]=useState("");
+  const[loading,setLoading]=useState(false);
+  const[openFaq,setOpenFaq]=useState(null);
+  const[emailSent,setEmailSent]=useState(false);
+  const[emailForm,setEmailForm]=useState({subject:"",message:""});
+  const chatEndRef=useRef(null);
+
+  useEffect(()=>{
+    if(chatEndRef.current) chatEndRef.current.scrollIntoView({behavior:"smooth"});
+  },[messages]);
+
+  const sendMsg=async()=>{
+    if(!input.trim()||loading)return;
+    const userMsg=input.trim();
+    setInput("");
+    setMessages(m=>[...m,{role:"user",text:userMsg}]);
+    setLoading(true);
+    try{
+      const r=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-20250514",
+          max_tokens:500,
+          system:`You are a friendly and helpful support assistant for DetectAI — a platform that detects AI-generated content and provides Digital Human ID verification.
+
+Key facts about DetectAI:
+- 6 detection tools: Text, Image, Voice, Video, Instagram, TikTok
+- Each new user gets 5 free scans per tool (30 total)
+- Upgrade plans: $4.99/month or $9.99 lifetime for unlimited scans
+- Human ID: Free KYC verification using passport/ID + selfie, valid 10 years
+- Support email: ${SUPPORT_EMAIL}
+- Points system: +2 points per scan, tiers from Bronze to Diamond
+- Website: spotlight01.github.io/DetectAi
+
+Be concise, friendly and helpful. If you cannot resolve an issue, ask them to email ${SUPPORT_EMAIL}.`,
+          messages:[
+            ...messages.filter(m=>m.role!=="assistant"||messages.indexOf(m)>0).map(m=>({role:m.role==="assistant"?"assistant":"user",content:m.text})),
+            {role:"user",content:userMsg}
+          ]
+        })
+      });
+      const d=await r.json();
+      const reply=d.content?.[0]?.text||"I'm sorry, I couldn't process that. Please email "+SUPPORT_EMAIL+" for direct help.";
+      setMessages(m=>[...m,{role:"assistant",text:reply}]);
+    }catch(e){
+      setMessages(m=>[...m,{role:"assistant",text:"Connection issue. Please email "+SUPPORT_EMAIL+" directly and we'll get back to you within 24 hours. 🙏"}]);
+    }
+    setLoading(false);
+  };
+
+  const sendEmail=()=>{
+    if(!emailForm.subject||!emailForm.message)return;
+    const body=encodeURIComponent(`From: ${user.email}\n\nSubject: ${emailForm.subject}\n\n${emailForm.message}`);
+    window.open(`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("[DetectAI Support] "+emailForm.subject)}&body=${body}`);
+    setEmailSent(true);
+    setTimeout(()=>setEmailSent(false),4000);
+    setEmailForm({subject:"",message:""});
+  };
+
+  const inpStyle={width:"100%",background:"#101035",border:"1px solid #2a2a6a",borderRadius:10,color:"#e8eeff",padding:"11px 14px",fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"inherit",transition:"border-color .2s"};
+
+  return(
+    <div style={{paddingBottom:20}}>
+      {/* Header */}
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:10,fontFamily:"monospace",color:"#3a4080",letterSpacing:3,marginBottom:6}}>HELP & SUPPORT</div>
+        <h2 style={{margin:0,fontWeight:800,fontSize:22,color:"#e8eeff"}}>How can we help?</h2>
+        <p style={{color:"#6068a8",fontSize:13,marginTop:6}}>Get instant answers or contact us directly.</p>
+      </div>
+
+      {/* Quick contact cards */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+        <button onClick={()=>setChatOpen(true)} style={{background:"linear-gradient(135deg,#0e0e30,#1a1052)",border:"1px solid #4f8fff40",borderRadius:14,padding:"16px 14px",textAlign:"left",cursor:"pointer",fontFamily:"inherit",transition:"all .2s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="#4f8fff80"} onMouseLeave={e=>e.currentTarget.style.borderColor="#4f8fff40"}>
+          <div style={{fontSize:28,marginBottom:8}}>🤖</div>
+          <div style={{color:"#e8eeff",fontWeight:700,fontSize:13,marginBottom:3}}>AI Chat</div>
+          <div style={{color:"#6068a8",fontSize:11}}>Instant answers 24/7</div>
+          <div style={{color:"#4f8fff",fontSize:10,fontFamily:"monospace",marginTop:6}}>Chat now →</div>
+        </button>
+        <a href={"mailto:"+SUPPORT_EMAIL+"?subject=[DetectAI Support]"} style={{background:"linear-gradient(135deg,#0e1a10,#0a2010)",border:"1px solid #00e5a040",borderRadius:14,padding:"16px 14px",textDecoration:"none",display:"block",transition:"all .2s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="#00e5a080"} onMouseLeave={e=>e.currentTarget.style.borderColor="#00e5a040"}>
+          <div style={{fontSize:28,marginBottom:8}}>📧</div>
+          <div style={{color:"#e8eeff",fontWeight:700,fontSize:13,marginBottom:3}}>Email Us</div>
+          <div style={{color:"#6068a8",fontSize:11}}>Reply within 24hrs</div>
+          <div style={{color:"#00e5a0",fontSize:10,fontFamily:"monospace",marginTop:6}}>workingplace0111@gmail.com</div>
+        </a>
+      </div>
+
+      {/* AI Chat window */}
+      {chatOpen&&(
+        <div style={{background:"#0c0c2b",border:"1px solid #2a2a6a",borderRadius:16,marginBottom:20,overflow:"hidden"}}>
+          {/* Chat header */}
+          <div style={{background:"linear-gradient(135deg,#4f8fff,#a855f7)",padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{width:32,height:32,borderRadius:"50%",background:"rgba(255,255,255,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🤖</div>
+              <div>
+                <div style={{color:"#fff",fontWeight:700,fontSize:13}}>DetectAI Support Bot</div>
+                <div style={{color:"rgba(255,255,255,.7)",fontSize:10,fontFamily:"monospace"}}>● Online — powered by Claude AI</div>
+              </div>
+            </div>
+            <button onClick={()=>setChatOpen(false)} style={{background:"rgba(255,255,255,.15)",border:"none",borderRadius:8,padding:"4px 10px",color:"#fff",cursor:"pointer",fontSize:16,fontFamily:"inherit"}}>✕</button>
+          </div>
+          {/* Chat messages */}
+          <div style={{height:280,overflowY:"auto",padding:14,display:"flex",flexDirection:"column",gap:10}}>
+            {messages.map((m,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
+                <div style={{maxWidth:"82%",padding:"10px 13px",borderRadius:m.role==="user"?"14px 14px 4px 14px":"14px 14px 14px 4px",background:m.role==="user"?"linear-gradient(135deg,#4f8fff,#a855f7)":"#16163f",color:"#e8eeff",fontSize:13,lineHeight:1.6}}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {loading&&<div style={{display:"flex",justifyContent:"flex-start"}}>
+              <div style={{background:"#16163f",borderRadius:"14px 14px 14px 4px",padding:"10px 16px",color:"#6068a8",fontSize:13}}>
+                <span style={{animation:"pulse 1s infinite"}}>● ● ●</span>
+              </div>
+            </div>}
+            <div ref={chatEndRef}/>
+          </div>
+          {/* Chat input */}
+          <div style={{padding:12,borderTop:"1px solid #2a2a6a",display:"flex",gap:8}}>
+            <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()} placeholder="Type your question..." style={{...inpStyle,flex:1,padding:"10px 12px"}} onFocus={e=>e.target.style.borderColor="#4f8fff"} onBlur={e=>e.target.style.borderColor="#2a2a6a"}/>
+            <button onClick={sendMsg} disabled={loading||!input.trim()} style={{background:"linear-gradient(135deg,#4f8fff,#a855f7)",border:"none",borderRadius:10,padding:"10px 16px",color:"#fff",fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,opacity:loading||!input.trim()?0.5:1}}>Send</button>
+          </div>
+        </div>
+      )}
+
+      {/* FAQ */}
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:10,fontFamily:"monospace",color:"#3a4080",letterSpacing:3,marginBottom:12}}>FREQUENTLY ASKED QUESTIONS</div>
+        {FAQ_ITEMS.map((item,i)=>(
+          <div key={i} style={{background:"#101035",border:`1px solid ${openFaq===i?"#4f8fff40":"#2a2a6a"}`,borderRadius:12,marginBottom:8,overflow:"hidden",transition:"border-color .2s"}}>
+            <button onClick={()=>setOpenFaq(openFaq===i?null:i)} style={{width:"100%",padding:"14px 16px",background:"none",border:"none",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",textAlign:"left",fontFamily:"inherit"}}>
+              <span style={{color:"#e8eeff",fontWeight:600,fontSize:13,paddingRight:10}}>{item.q}</span>
+              <span style={{color:"#4f8fff",fontSize:16,flexShrink:0,transition:"transform .3s",display:"inline-block",transform:openFaq===i?"rotate(45deg)":"rotate(0deg)"}}>+</span>
+            </button>
+            {openFaq===i&&<div style={{padding:"0 16px 14px",color:"#9ba4d4",fontSize:13,lineHeight:1.8,borderTop:"1px solid #2a2a6a",paddingTop:12}}>{item.a}</div>}
+          </div>
+        ))}
+      </div>
+
+      {/* Email form */}
+      <div style={{background:"#101035",border:"1px solid #2a2a6a",borderRadius:14,padding:18}}>
+        <div style={{fontSize:10,fontFamily:"monospace",color:"#3a4080",letterSpacing:3,marginBottom:14}}>SEND US A MESSAGE</div>
+        {emailSent&&<div style={{background:"#00e5a018",border:"1px solid #00e5a030",borderRadius:10,padding:"10px 14px",marginBottom:12,color:"#00e5a0",fontSize:12,fontFamily:"monospace"}}>✓ Email client opened! Send the email to reach our support team.</div>}
+        <div style={{marginBottom:10}}>
+          <div style={{color:"#3a4080",fontSize:9,fontFamily:"monospace",letterSpacing:1,marginBottom:5}}>SUBJECT</div>
+          <input value={emailForm.subject} onChange={e=>setEmailForm(f=>({...f,subject:e.target.value}))} placeholder="e.g. Payment issue, Can't verify ID, Bug report..." style={inpStyle} onFocus={e=>e.target.style.borderColor="#4f8fff"} onBlur={e=>e.target.style.borderColor="#2a2a6a"}/>
+        </div>
+        <div style={{marginBottom:14}}>
+          <div style={{color:"#3a4080",fontSize:9,fontFamily:"monospace",letterSpacing:1,marginBottom:5}}>MESSAGE</div>
+          <textarea value={emailForm.message} onChange={e=>setEmailForm(f=>({...f,message:e.target.value}))} placeholder="Describe your issue in detail. Include your email address and any relevant screenshots." style={{...inpStyle,minHeight:100,resize:"vertical",lineHeight:1.7}} onFocus={e=>e.target.style.borderColor="#4f8fff"} onBlur={e=>e.target.style.borderColor="#2a2a6a"}/>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,padding:"8px 12px",background:"#16163f",borderRadius:8}}>
+          <span style={{fontSize:14}}>📧</span>
+          <span style={{color:"#6068a8",fontSize:11,fontFamily:"monospace"}}>{SUPPORT_EMAIL}</span>
+        </div>
+        <button onClick={sendEmail} disabled={!emailForm.subject||!emailForm.message} style={{width:"100%",padding:"13px 0",borderRadius:10,border:"none",background:emailForm.subject&&emailForm.message?"linear-gradient(135deg,#4f8fff,#a855f7)":"#16163f",color:emailForm.subject&&emailForm.message?"#fff":"#3a4080",fontWeight:700,fontSize:14,cursor:emailForm.subject&&emailForm.message?"pointer":"not-allowed",fontFamily:"inherit"}}>
+          📧 Send to Support
+        </button>
+        <div style={{textAlign:"center",color:"#3a4080",fontSize:10,fontFamily:"monospace",marginTop:8}}>We reply within 24 hours · {user.email}</div>
+      </div>
+    </div>
+  );
+}
+
 // ── ROOT APP ──
 function App({initialUser}){
   const[user,setUser]=useState(initialUser);
@@ -2323,6 +2508,8 @@ function App({initialUser}){
     voice:()=><VoicePage email={user.email}/>,
     video:()=><VideoPage email={user.email}/>,
     social:()=><SocialPage subPage={subPage} setSubPage={setSubPage} email={user.email}/>,
+    humanid:()=><HumanIdPage user={user}/>,
+    support:()=><SupportPage user={user}/>,
     humanid:()=><HumanIdPage user={user}/>,
   };
 
@@ -2438,6 +2625,13 @@ function App({initialUser}){
           </div>
         </div>
       </div>
+
+      {/* ── FLOATING SUPPORT BUBBLE ── */}
+      {page!=="support"&&(
+        <button onClick={()=>setPage("support")} title="Get Support" style={{position:"fixed",bottom:"76px",right:"14px",width:50,height:50,borderRadius:"50%",background:"linear-gradient(135deg,#4f8fff,#a855f7)",border:"none",cursor:"pointer",boxShadow:"0 4px 20px rgba(79,143,255,.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,zIndex:90,transition:"transform .2s"}} onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
+          💬
+        </button>
+      )}
 
       {/* ── MOBILE BOTTOM NAV ── */}
       <div className="app-bottom-nav">
