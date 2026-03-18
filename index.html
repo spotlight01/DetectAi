@@ -1732,19 +1732,45 @@ function Dashboard({setPage,user}){
     </div>
 
     {/* ── QUICK STATS ── */}
+    {/* Upgrade banner for free users */}
+    {!isPro&&<div style={{background:"linear-gradient(135deg,#0e0e30,#1a0e3a)",border:"1px solid #4f8fff30",borderRadius:14,padding:"14px 16px",marginBottom:14,position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 100% 50%,rgba(168,85,247,.08)0%,transparent 60%)",pointerEvents:"none"}}/>
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+        <div style={{fontSize:28}}>⚡</div>
+        <div>
+          <div style={{color:"#e8eeff",fontWeight:800,fontSize:15}}>Upgrade to Pro</div>
+          <div style={{color:"#6068a8",fontSize:11,marginTop:2}}>Unlimited scans on all 6 tools forever</div>
+        </div>
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={()=>{localStorage.setItem('dai_pending_upgrade',JSON.stringify({plan:'lifetime',email:user.email,ts:Date.now()}));window.open('https://buy.stripe.com/test_6oUfZh64B20V65VfR26Ri01','_blank');}} style={{flex:1,padding:"11px 0",borderRadius:10,border:"none",background:"linear-gradient(135deg,#00c88a,#00e5a0)",color:"#07071a",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
+          💳 Lifetime $9.99
+        </button>
+        <button onClick={()=>{localStorage.setItem('dai_pending_upgrade',JSON.stringify({plan:'monthly',email:user.email,ts:Date.now()}));window.open('https://buy.stripe.com/test_cNiaEX78FdJD1PF34g6Ri00','_blank');}} style={{flex:1,padding:"11px 0",borderRadius:10,border:"1px solid #4f8fff40",background:"rgba(79,143,255,.1)",color:"#4f8fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
+          $4.99/mo
+        </button>
+      </div>
+      <div style={{textAlign:"center",marginTop:8,color:"#3a4080",fontSize:10,fontFamily:"monospace"}}>🔒 Secure checkout by Stripe</div>
+    </div>}
     <div style={{background:"#101035",border:"1px solid #2a2a6a",borderRadius:14,padding:"14px 16px",marginBottom:14}}>
       <div style={{fontSize:9,fontFamily:"monospace",color:"#3a4080",letterSpacing:3,marginBottom:12}}>PLATFORM PRICING</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:1,background:"#2a2a6a",borderRadius:10,overflow:"hidden"}}>
-        {[
-          {label:"Free",    price:"$0",      sub:"5 scans/tool", color:"#6068a8"},
-          {label:"Monthly", price:"$4.99",   sub:"/month",       color:"#4f8fff", highlight:true},
-          {label:"Lifetime",price:"$9.99",   sub:"once",         color:"#00e5a0"},
-        ].map((p,i)=>(
-          <div key={i} style={{background:p.highlight?"rgba(79,143,255,.08)":"#101035",padding:"12px 8px",textAlign:"center"}}>
-            <div style={{color:p.color,fontWeight:800,fontSize:16}}>{p.price}<span style={{fontSize:10,color:"#3a4080",fontWeight:400}}>{p.sub}</span></div>
-            <div style={{color:"#6068a8",fontSize:9,fontFamily:"monospace",marginTop:2}}>{p.label.toUpperCase()}</div>
-          </div>
-        ))}
+        {/* Free */}
+        <div style={{background:"#101035",padding:"12px 8px",textAlign:"center"}}>
+          <div style={{color:"#6068a8",fontWeight:800,fontSize:16}}>$0</div>
+          <div style={{fontSize:10,color:"#3a4080",fontWeight:400}}>5 scans/tool</div>
+          <div style={{color:"#6068a8",fontSize:9,fontFamily:"monospace",marginTop:2}}>FREE</div>
+        </div>
+        {/* Monthly - clickable */}
+        <button onClick={()=>{localStorage.setItem('dai_pending_upgrade',JSON.stringify({plan:'monthly',email:user.email,ts:Date.now()}));window.open('https://buy.stripe.com/test_cNiaEX78FdJD1PF34g6Ri00','_blank');}} style={{background:"rgba(79,143,255,.12)",border:"none",padding:"12px 8px",textAlign:"center",cursor:"pointer",fontFamily:"inherit",transition:"all .2s",borderLeft:"1px solid #2a2a6a",borderRight:"1px solid #2a2a6a"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(79,143,255,.22)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(79,143,255,.12)"}>
+          <div style={{color:"#4f8fff",fontWeight:800,fontSize:16}}>$4.99<span style={{fontSize:10,color:"#3a4080",fontWeight:400}}>/month</span></div>
+          <div style={{color:"#4f8fff",fontSize:9,fontFamily:"monospace",marginTop:2}}>MONTHLY ↗</div>
+        </button>
+        {/* Lifetime - clickable */}
+        <button onClick={()=>{localStorage.setItem('dai_pending_upgrade',JSON.stringify({plan:'lifetime',email:user.email,ts:Date.now()}));window.open('https://buy.stripe.com/test_6oUfZh64B20V65VfR26Ri01','_blank');}} style={{background:"rgba(0,229,160,.08)",border:"none",padding:"12px 8px",textAlign:"center",cursor:"pointer",fontFamily:"inherit",transition:"all .2s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(0,229,160,.18)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(0,229,160,.08)"}>
+          <div style={{color:"#00e5a0",fontWeight:800,fontSize:16}}>$9.99<span style={{fontSize:10,color:"#3a4080",fontWeight:400}}>once</span></div>
+          <div style={{color:"#00e5a0",fontSize:9,fontFamily:"monospace",marginTop:2}}>LIFETIME ↗</div>
+        </button>
       </div>
     </div>
 
