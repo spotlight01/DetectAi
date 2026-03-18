@@ -216,10 +216,10 @@ section.landing-section{padding:80px 5%}
     <button class="btn-outline" onclick="document.getElementById('tools').scrollIntoView({behavior:'smooth'})">Explore Tools</button>
   </div>
   <div class="stats-row fade-up-4">
-    <div class="stat-item"><div class="stat-val" data-target="2400000">0</div><div class="stat-lbl">SCANS COMPLETED</div></div>
-    <div class="stat-item"><div class="stat-val" data-target="14200">0</div><div class="stat-lbl">HUMAN IDs ISSUED</div></div>
-    <div class="stat-item"><div class="stat-val" data-target="340000">0</div><div class="stat-lbl">BOTS CAUGHT</div></div>
-    <div class="stat-item"><div class="stat-val" data-target="98">0</div><div class="stat-lbl">ACCURACY %</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-scans">0</div><div class="stat-lbl">SCANS COMPLETED</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-ids">0</div><div class="stat-lbl">HUMAN IDs ISSUED</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-bots">0</div><div class="stat-lbl">BOTS CAUGHT</div></div>
+    <div class="stat-item"><div class="stat-val">98%</div><div class="stat-lbl">ACCURACY</div></div>
   </div>
 </div>
 
@@ -461,17 +461,19 @@ function renderModal(){
         <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text4);margin-top:4px">5 free scans per tool — no credit card needed</div>
       </div>
       <div id="mErr"></div>
+      <div style="margin-bottom:10px"><button onclick="handleGoogleRegister()" style="width:100%;padding:12px;border-radius:10px;background:#fff;border:1px solid #e0e0e0;color:#333;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.2)'" onmouseout="this.style.boxShadow='none'"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.7 0 6.7 5.8 2.8 14.3l7.8 6.1C12.5 13.5 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.8c4.3-4 6.8-9.9 7.2-17.3z"/><path fill="#FBBC05" d="M10.6 28.7A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.8-6.1A24 24 0 0 0 0 24c0 3.9.9 7.6 2.5 10.8l8.1-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.4-5.8c-2 1.4-4.6 2.2-7.8 2.2-6.2 0-11.4-4-13.4-9.4l-8.1 6.1C6.7 42.2 14.7 48 24 48z"/></svg>Continue with Google</button></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;height:1px;background:var(--border)"></div><span style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace">OR REGISTER WITH EMAIL</span><div style="flex:1;height:1px;background:var(--border)"></div></div>
       <div class="m-field"><div class="m-lbl">FULL NAME</div><input class="m-inp" id="rName" placeholder="Your full name" type="text"/></div>
       <div class="m-field"><div class="m-lbl">EMAIL ADDRESS</div><input class="m-inp" id="rEmail" placeholder="you@email.com" type="email"/></div>
       <div class="m-field"><div class="m-lbl">PASSWORD</div><input class="m-inp" id="rPass" placeholder="Min 6 characters" type="password"/></div>
-      <button class="m-btn" onclick="doRegister()">Register & Get Verification Code</button>
+      <button class="m-btn" onclick="doRegister()">Register — Send Code to My Email →</button>
       <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--text4)">Already registered? <span style="color:var(--cyan);cursor:pointer;font-weight:700" onclick="modalMode='login';renderModal()">Sign In</span></div>`;
   } else if(modalMode==='verify'){
     c.innerHTML=`
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-size:36px;margin-bottom:10px">📧</div>
         <div style="font-size:22px;font-weight:800;color:var(--text)">Check Your Email</div>
-        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text4);margin-top:4px">Code sent to ${pEmail}</div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text4);margin-top:4px">Code sent to ${pEmail} — check your inbox</div>
       </div>
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
         <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:10px">📬 SIMULATED INBOX — noreply@detectai.com</div>
@@ -492,6 +494,13 @@ function renderModal(){
         <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text4);margin-top:4px">Sign in to your DetectAI account</div>
       </div>
       <div id="mErr"></div>
+      <div style="margin-bottom:10px">
+        <button onclick="handleGoogleRegister()" style="width:100%;padding:12px;border-radius:10px;background:#fff;border:1px solid #e0e0e0;color:#333;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.2)'" onmouseout="this.style.boxShadow='none'">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.7 0 6.7 5.8 2.8 14.3l7.8 6.1C12.5 13.5 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.8c4.3-4 6.8-9.9 7.2-17.3z"/><path fill="#FBBC05" d="M10.6 28.7A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.8-6.1A24 24 0 0 0 0 24c0 3.9.9 7.6 2.5 10.8l8.1-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.4-5.8c-2 1.4-4.6 2.2-7.8 2.2-6.2 0-11.4-4-13.4-9.4l-8.1 6.1C6.7 42.2 14.7 48 24 48z"/></svg>
+          Continue with Google
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;height:1px;background:var(--border)"></div><span style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace">OR</span><div style="flex:1;height:1px;background:var(--border)"></div></div>
       <div class="m-field"><div class="m-lbl">EMAIL ADDRESS</div><input class="m-inp" id="lEmail" placeholder="you@email.com" type="email"/></div>
       <div class="m-field"><div class="m-lbl">PASSWORD</div><input class="m-inp" id="lPass" placeholder="Your password" type="password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
       <button class="m-btn" onclick="doLogin()">Sign In →</button>
@@ -535,6 +544,629 @@ function doLogin(){
   launchApp({name:u.name,email:u.email});
 }
 
+function handleGoogleRegister(){
+  // Google OAuth — redirect to Google sign-in
+  // In production: integrate Google OAuth 2.0
+  // For now: simulate with a Google-style mock login
+  const mockGoogleUser={name:"Google User",email:"googleuser_"+Date.now()+"@gmail.com",googleAuth:true};
+  const users=getUsers();
+  if(!users[mockGoogleUser.email]){
+    users[mockGoogleUser.email]={name:mockGoogleUser.name,password:"google_oauth_"+Date.now(),email:mockGoogleUser.email,createdAt:new Date().toISOString(),googleAuth:true};
+    localStorage.setItem('dai_users',JSON.stringify(users));
+  }
+  closeModal();
+  launchApp({name:mockGoogleUser.name,email:mockGoogleUser.email});
+  showToast("✓ Signed in with Google!");
+}
+function launchApp(user){
+  // Save session
+  localStorage.setItem('dai_session',JSON.stringify(user));
+  // Hide landing, show app
+  document.getElementById('landing').style.display='none';
+  document.getElementById('app-root').style.display='block';
+  // Mount React app
+  mountApp(user);
+}
+
+// On page load — if already logged in, go straight to app
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('dai_session');
+  if(saved){
+    try{
+      const user=JSON.parse(saved);
+      if(user&&user.email){
+        // verify user still exists
+        const users=getUsers();
+        if(users[user.email]){
+          document.getElementById('landing').style.display='none';
+          document.getElementById('app-root').style.display='block';
+          mountApp(user);
+          return;
+        }
+      }
+    }catch(e){}
+    localStorage.removeItem('dai_session');
+  }
+  // Start counter animations
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        animateCounter(e.target,parseInt(e.target.dataset.target));
+        obs.unobserve(e.target);
+      }
+    });
+  },{threshold:.5});
+  document.querySelectorAll('[data-target]').forEach(el=>obs.observe(el));
+});
+
+function formatNum(n){return n>=1000000?(n/1000000).toFixed(1)+'M+':n>=1000?(n/1000).toFixed(0)+'K+':String(n)}
+function updateLiveStats(){
+  const s=getGlobalStats();
+  const sc=document.getElementById('stat-scans');const si=document.getElementById('stat-ids');const sb=document.getElementById('stat-bots');
+  if(sc)sc.textContent=formatNum(s.scans||2400000);if(si)si.textContent=formatNum(s.ids||14200);if(sb)sb.textContent=formatNum(s.bots||340000);
+}
+updateLiveStats();
+window.addEventListener('dai_stats_update',updateLiveStats);
+window.addEventListener('storage',e=>{if(e.key==='dai_global_stats')updateLiveStats()});!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DetectAI — Detect AI & Prove You Are A Real Human</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<!-- React + Babel for the app -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+:root{--bg:#020817;--bg2:#050b18;--bg3:#080d1a;--bg4:#0d1526;--border:#1a2540;--border2:#0d1526;--text:#d4dff7;--text2:#7a8db5;--text3:#4a5980;--text4:#2a3a5c;--text5:#1a2540;--cyan:#06b6d4;--green:#10b981;--blue:#3b82f6;--purple:#8b5cf6;--pink:#ec4899;--amber:#f59e0b;--rose:#f43f5e;--violet:#7c3aed}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes orb{0%{transform:translate(0,0)scale(1)}33%{transform:translate(30px,-20px)scale(1.1)}66%{transform:translate(-20px,15px)scale(.95)}100%{transform:translate(0,0)scale(1)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.fade-up{animation:fadeUp .7s ease both}
+.fade-up-2{animation:fadeUp .7s .15s ease both}
+.fade-up-3{animation:fadeUp .7s .3s ease both}
+.fade-up-4{animation:fadeUp .7s .45s ease both}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+/* ── LANDING PAGE STYLES ── */
+#landing{display:block}
+#app-root{display:none}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 5%;background:rgba(2,8,23,.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border2);height:64px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-icon{font-size:24px;color:var(--cyan);filter:drop-shadow(0 0 8px var(--cyan))}
+.nav-logo-title{font-weight:800;font-size:14px;color:var(--text);line-height:1.2}
+.nav-logo-sub{font-size:9px;font-family:'DM Mono',monospace;color:var(--text5);letter-spacing:1px}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nav-link{padding:8px 13px;border-radius:8px;font-size:13px;color:var(--text3);cursor:pointer;transition:color .2s}
+.nav-link:hover{color:var(--text)}
+.btn-nav-outline{padding:8px 18px;border-radius:9px;background:none;border:1px solid var(--border);color:var(--text3);font-weight:700;font-size:13px;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s}
+.btn-nav-outline:hover{border-color:var(--cyan);color:var(--cyan)}
+.btn-nav-primary{padding:9px 20px;border-radius:9px;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;font-weight:700;font-size:13px;cursor:pointer;border:none;font-family:'Syne',sans-serif;box-shadow:0 4px 16px rgba(6,182,212,.3)}
+section.landing-section{padding:80px 5%}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 5% 80px;position:relative;overflow:hidden;text-align:center}
+.hero-bg{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 60% at 20% 20%,rgba(6,182,212,.08)0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 70%,rgba(124,58,237,.07)0%,transparent 60%)}
+.hero-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(26,37,64,.2)1px,transparent 1px),linear-gradient(90deg,rgba(26,37,64,.2)1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 80%)}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none;animation:orb 8s ease-in-out infinite}
+.hero-title{font-size:clamp(36px,6vw,72px);font-weight:800;line-height:1.05;letter-spacing:-2px;margin-bottom:12px}
+.hero-title .g{background:linear-gradient(135deg,var(--cyan),var(--violet),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:clamp(15px,2vw,18px);color:var(--text3);max-width:560px;line-height:1.8;margin:0 auto 36px;font-family:'Instrument Serif',serif;font-style:italic}
+.hero-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:40px}
+.pill{background:var(--bg3);border:1px solid var(--border);border-radius:99px;padding:6px 16px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text3)}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:52px}
+.btn-primary{padding:14px 32px;border-radius:12px;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;font-weight:800;font-size:15px;cursor:pointer;border:none;font-family:'Syne',sans-serif;box-shadow:0 8px 32px rgba(6,182,212,.3);transition:all .2s}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(6,182,212,.4)}
+.btn-outline{padding:14px 32px;border-radius:12px;background:none;border:1px solid var(--border);color:var(--text2);font-weight:700;font-size:15px;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s}
+.btn-outline:hover{border-color:var(--cyan);color:var(--cyan)}
+.stats-row{display:flex;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--bg3);max-width:680px;width:100%;margin:0 auto}
+.stat-item{flex:1;padding:20px 12px;text-align:center;border-right:1px solid var(--border)}
+.stat-item:last-child{border-right:none}
+.stat-val{font-weight:800;font-size:26px;color:var(--cyan);font-family:'DM Mono',monospace}
+.stat-lbl{font-size:10px;color:var(--text4);font-family:'DM Mono',monospace;letter-spacing:1px;margin-top:3px}
+.sec-tag{font-size:10px;font-family:'DM Mono',monospace;color:var(--cyan);letter-spacing:3px;margin-bottom:10px;text-align:center}
+.sec-title{font-size:clamp(28px,4vw,44px);font-weight:800;text-align:center;letter-spacing:-1px;margin-bottom:12px;line-height:1.1}
+.sec-sub{font-size:15px;color:var(--text3);text-align:center;max-width:520px;margin:0 auto 48px;line-height:1.8}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.tool-card{background:var(--bg3);border:1px solid var(--border);border-radius:18px;padding:24px;cursor:pointer;transition:all .3s}
+.tool-card:hover{transform:translateY(-4px)}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:900px;margin:0 auto}
+.p-card{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:28px;position:relative;transition:all .3s}
+.p-card.pop{border-color:var(--cyan);box-shadow:0 0 40px rgba(6,182,212,.12)}
+.p-card:hover{transform:translateY(-4px)}
+.p-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);color:#fff;font-size:9px;font-family:'DM Mono',monospace;padding:3px 14px;border-radius:99px;letter-spacing:1px;white-space:nowrap}
+.faq-item{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px}
+.faq-q{padding:18px 20px;font-weight:700;font-size:14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:var(--text);user-select:none}
+.faq-q:hover{color:var(--cyan)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .3s;font-size:13px;color:var(--text3);line-height:1.8;padding:0 20px}
+.faq-item.open .faq-a{max-height:200px;padding-bottom:18px}
+.faq-chev{color:var(--text4);transition:transform .3s}
+.faq-item.open .faq-chev{transform:rotate(180deg)}
+/* ── MODAL ── */
+.modal-ov{position:fixed;inset:0;background:rgba(2,8,23,.92);backdrop-filter:blur(8px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-ov.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:36px;max-width:420px;width:100%;box-shadow:0 0 80px rgba(6,182,212,.12);transform:translateY(20px);transition:transform .3s;position:relative}
+.modal-ov.open .modal-box{transform:translateY(0)}
+.m-inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px 16px;font-size:14px;outline:none;font-family:'Syne',sans-serif;transition:border-color .2s;margin-top:5px}
+.m-inp:focus{border-color:var(--cyan)}
+.m-inp::placeholder{color:var(--text5)}
+.m-btn{width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;font-weight:800;font-size:14px;cursor:pointer;border:none;font-family:'Syne',sans-serif;margin-top:14px;box-shadow:0 4px 20px rgba(6,182,212,.25)}
+.m-btn:disabled{background:var(--bg4);color:var(--text5);cursor:not-allowed;box-shadow:none}
+.m-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:8px 12px;color:#ef4444;font-size:11px;font-family:'DM Mono',monospace;margin:10px 0 0}
+.m-lbl{font-size:9px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:1.5px}
+.m-field{margin-bottom:12px}
+/* ── APP STYLES ── */
+#app-root *{box-sizing:border-box}
+#app-root textarea,#app-root input,#app-root button{font-family:'Syne',sans-serif}
+#app-root textarea::placeholder,#app-root input::placeholder{color:#1e2d4a}
+#app-root input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.3)}
+/* toast */
+.toast-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;font-size:13px;z-index:9999;box-shadow:0 4px 20px rgba(16,185,129,.4);animation:fadeUp .4s ease;display:none;white-space:nowrap}
+.toast-bar.show{display:block}
+
+/* ══ RESPONSIVE — MOBILE FIRST ══ */
+@media(max-width:900px){
+  .pricing-grid{grid-template-columns:1fr;max-width:420px;margin:0 auto}
+}
+@media(max-width:768px){
+  /* NAV */
+  nav{padding:0 16px;height:56px}
+  .nav-links{display:none}
+  .nav-logo-title{font-size:12px}
+  .nav-logo-sub{display:none}
+  .btn-nav-outline{padding:7px 12px;font-size:12px}
+  .btn-nav-primary{padding:7px 14px;font-size:12px}
+
+  /* HERO */
+  .hero{padding:80px 16px 50px;min-height:auto}
+  .hero-title{font-size:clamp(28px,8vw,48px);letter-spacing:-1px}
+  .hero-sub{font-size:14px;margin-bottom:24px}
+  .hero-pills{gap:6px;margin-bottom:28px}
+  .pill{font-size:11px;padding:5px 12px}
+  .hero-btns{margin-bottom:36px;gap:10px}
+  .btn-primary{padding:12px 24px;font-size:14px}
+  .btn-outline{padding:12px 24px;font-size:14px}
+
+  /* STATS */
+  .stats-row{flex-direction:column;max-width:320px}
+  .stat-item{border-right:none;border-bottom:1px solid var(--border);padding:14px 12px}
+  .stat-item:last-child{border-bottom:none}
+  .stat-val{font-size:22px}
+
+  /* SECTIONS */
+  section.landing-section{padding:52px 16px}
+  .sec-title{font-size:clamp(22px,6vw,34px);letter-spacing:-.5px}
+  .sec-sub{font-size:13px;margin-bottom:32px}
+
+  /* TOOLS */
+  .tools-grid{grid-template-columns:1fr}
+  .tool-card{padding:18px}
+
+  /* PRICING */
+  .pricing-grid{grid-template-columns:1fr;max-width:100%;gap:12px}
+  .p-card{padding:22px 18px}
+
+  /* MODAL */
+  .modal-ov{padding:12px;align-items:flex-end}
+  .modal-box{padding:24px 20px;border-radius:18px 18px 0 0;max-height:92vh;overflow-y:auto}
+
+  /* APP SIDEBAR — hidden on mobile, shown as bottom bar */
+  #app-sidebar{display:none !important}
+  #app-topbar{padding:10px 14px !important}
+  #app-content{padding:16px 14px !important;max-width:100% !important}
+
+  /* DASHBOARD GRID */
+  .dash-tools-grid{grid-template-columns:1fr 1fr !important}
+  .dash-stats-grid{grid-template-columns:1fr 1fr !important}
+}
+@media(max-width:480px){
+  nav{padding:0 12px}
+  .hero-title{font-size:clamp(24px,9vw,38px)}
+  .hero-pills{display:none}
+  .hero-btns{flex-direction:column;align-items:stretch;width:100%;max-width:300px}
+  .btn-primary,.btn-outline{width:100%;text-align:center}
+  .stats-row{max-width:100%}
+  section.landing-section{padding:44px 14px}
+  .modal-box{padding:20px 16px}
+  .dash-tools-grid{grid-template-columns:1fr 1fr !important}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     LANDING PAGE
+═══════════════════════════════════════════ -->
+<div id="landing">
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">⬡</div>
+    <div>
+      <div class="nav-logo-title">Detect AI</div>
+      <div class="nav-logo-sub">PROVE YOU ARE A REAL HUMAN</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" href="#how">How It Works</a>
+    <a class="nav-link" href="#tools">Tools</a>
+    <a class="nav-link" href="#pricing">Pricing</a>
+    <a class="nav-link" href="#faq">FAQ</a>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn-nav-outline" onclick="openModal('login')">Sign In</button>
+    <button class="btn-nav-primary" onclick="openModal('register')">Get Started Free →</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-orb" style="width:400px;height:400px;top:-100px;left:-100px;background:rgba(6,182,212,.06)"></div>
+  <div class="hero-orb" style="width:300px;height:300px;bottom:0;right:-50px;background:rgba(124,58,237,.06);animation-delay:3s"></div>
+  <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--cyan);letter-spacing:4px;margin-bottom:16px;display:flex;align-items:center;gap:8px;justify-content:center" class="fade-up">
+    <span style="width:30px;height:1px;background:var(--cyan);opacity:.4;display:inline-block"></span>AI DETECTION · HUMAN VERIFICATION · KYC IDENTITY<span style="width:30px;height:1px;background:var(--cyan);opacity:.4;display:inline-block"></span>
+  </div>
+  <h1 class="hero-title fade-up-2"><span style="color:var(--text);display:block">Detect AI.</span><span class="g" style="display:block">Prove You Are A Real Human.</span></h1>
+  <p class="hero-sub fade-up-3">The world's first platform combining AI content detection with verified human identity. Spot bots, expose fakes, get your Digital Human ID.</p>
+  <div class="hero-pills fade-up-4">
+    <span class="pill">🔍 Text Detector</span><span class="pill">🖼 Image Detector</span><span class="pill">🎙 Voice Detector</span><span class="pill">🎬 Video Detector</span><span class="pill">📱 Social Accounts</span><span class="pill">⬟ Human ID · Free</span>
+  </div>
+  <div class="hero-btns fade-up-4">
+    <button class="btn-primary" onclick="openModal('register')">Create Free Account →</button>
+    <button class="btn-outline" onclick="document.getElementById('tools').scrollIntoView({behavior:'smooth'})">Explore Tools</button>
+  </div>
+  <div class="stats-row fade-up-4">
+    <div class="stat-item"><div class="stat-val" id="stat-scans">0</div><div class="stat-lbl">SCANS COMPLETED</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-ids">0</div><div class="stat-lbl">HUMAN IDs ISSUED</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-bots">0</div><div class="stat-lbl">BOTS CAUGHT</div></div>
+    <div class="stat-item"><div class="stat-val">98%</div><div class="stat-lbl">ACCURACY</div></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="landing-section" id="how" style="background:var(--bg2)">
+  <div class="sec-tag">HOW IT WORKS</div>
+  <h2 class="sec-title">Simple. Fast. <span style="color:var(--cyan)">Accurate.</span></h2>
+  <p class="sec-sub">Register, run scans, get your Human ID. Everything in one place.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px">
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:28px">
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--cyan);color:#fff;font-weight:800;font-size:14px;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;margin-bottom:14px">01</div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:var(--text)">Create Your Account</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7">Sign up with email, verify with a 6-digit code, and get 5 free scans on every tool instantly.</div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:28px">
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--cyan);color:#fff;font-weight:800;font-size:14px;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;margin-bottom:14px">02</div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:var(--text)">Run Your Scans</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7">Upload text, images, audio, videos or paste social media URLs. Get a detailed AI authenticity report in seconds.</div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:28px">
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--cyan);color:#fff;font-weight:800;font-size:14px;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;margin-bottom:14px">03</div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:var(--text)">Get Your Human ID</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7">Complete a human-only challenge and receive your Digital Human ID card — 100% free, forever.</div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:28px">
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--cyan);color:#fff;font-weight:800;font-size:14px;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;margin-bottom:14px">04</div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:var(--text)">Use It Everywhere</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7">Download your Human ID and use it for KYC verification on any platform that requires proof of humanity.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section class="landing-section" id="tools">
+  <div class="sec-tag">DETECTION TOOLS</div>
+  <h2 class="sec-title">Six Tools. <span style="color:var(--cyan)">One Platform.</span></h2>
+  <p class="sec-sub">Every tool is powered by advanced AI and gives you a full breakdown — not just a yes/no answer.</p>
+  <div class="tools-grid">
+    <div class="tool-card" onmouseenter="this.style.borderColor='rgba(59,130,246,.5)'" onmouseleave="this.style.borderColor='var(--border)'">
+      <div style="font-size:32px;margin-bottom:14px">✦</div>
+      <div style="font-weight:800;font-size:17px;margin-bottom:6px">Text Detector</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:14px">Detect AI-generated essays, emails, cover letters and articles. Scores fluency, coherence, creativity and humanness.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(59,130,246,.3);color:var(--blue)">ChatGPT</span>
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(59,130,246,.3);color:var(--blue)">Claude</span>
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(59,130,246,.3);color:var(--blue)">Gemini</span>
+      </div>
+      <div style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace;margin-top:12px">⬡ 5 free scans · Then $4.99/mo</div>
+    </div>
+    <div class="tool-card" onmouseenter="this.style.borderColor='rgba(139,92,246,.5)'" onmouseleave="this.style.borderColor='var(--border)'">
+      <div style="font-size:32px;margin-bottom:14px">◈</div>
+      <div style="font-weight:800;font-size:17px;margin-bottom:6px">Image Detector</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:14px">Identify AI-generated images, deepfakes and synthetic art. Analyzes textures, lighting, GAN artifacts and visual coherence.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(139,92,246,.3);color:var(--purple)">Midjourney</span>
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(139,92,246,.3);color:var(--purple)">DALL·E</span>
+      </div>
+      <div style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace;margin-top:12px">⬡ 5 free scans · Then $4.99/mo</div>
+    </div>
+    <div class="tool-card" onmouseenter="this.style.borderColor='rgba(244,63,94,.5)'" onmouseleave="this.style.borderColor='var(--border)'">
+      <div style="font-size:32px;margin-bottom:14px">🎬</div>
+      <div style="font-weight:800;font-size:17px;margin-bottom:6px">Video Detector</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:14px">Detect deepfakes, AI-generated scenes, face swaps and synthetic motion. Upload any video up to 200MB.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(244,63,94,.3);color:var(--rose)">Deepfakes</span>
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(244,63,94,.3);color:var(--rose)">Face Swaps</span>
+      </div>
+      <div style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace;margin-top:12px">⬡ 5 free scans · Then $4.99/mo</div>
+    </div>
+    <div class="tool-card" onmouseenter="this.style.borderColor='rgba(236,72,153,.5)'" onmouseleave="this.style.borderColor='var(--border)'">
+      <div style="font-size:32px;margin-bottom:14px">◭</div>
+      <div style="font-weight:800;font-size:17px;margin-bottom:6px">Social Accounts</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:14px">Verify Instagram and TikTok profiles. Detect AI agents, bots and fake accounts based on posting patterns and engagement.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(225,48,108,.3);color:#e1306c">Instagram</span>
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(105,201,208,.3);color:#69c9d0">TikTok</span>
+      </div>
+      <div style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace;margin-top:12px">⬡ 5 free scans · Then $4.99/mo</div>
+    </div>
+    <div class="tool-card" onmouseenter="this.style.borderColor='rgba(245,158,11,.5)'" onmouseleave="this.style.borderColor='var(--border)'">
+      <div style="font-size:32px;margin-bottom:14px">◉</div>
+      <div style="font-weight:800;font-size:17px;margin-bottom:6px">Voice Detector</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:14px">Record live audio or describe a voice to detect AI clones and synthetic speech. Checks prosody and breathing patterns.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(245,158,11,.3);color:var(--amber)">ElevenLabs</span>
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(245,158,11,.3);color:var(--amber)">Clones</span>
+      </div>
+      <div style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace;margin-top:12px">⬡ 5 free scans · Then $4.99/mo</div>
+    </div>
+    <div class="tool-card" style="border-color:rgba(16,185,129,.25)" onmouseenter="this.style.borderColor='rgba(16,185,129,.5)'" onmouseleave="this.style.borderColor='rgba(16,185,129,.25)'">
+      <div style="font-size:32px;margin-bottom:14px">⬟</div>
+      <div style="font-weight:800;font-size:17px;margin-bottom:6px">Human ID</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:14px">Complete a human-only challenge. Receive a Digital Human ID card for KYC verification anywhere — completely free forever.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <span style="font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid rgba(16,185,129,.3);color:var(--green)">KYC Verified</span>
+      </div>
+      <div style="color:var(--green);font-size:11px;font-family:'DM Mono',monospace;margin-top:12px">⬟ Always 100% FREE — no subscription needed</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="landing-section" id="pricing" style="background:var(--bg2)">
+  <div class="sec-tag">PRICING</div>
+  <h2 class="sec-title">Simple, <span style="color:var(--cyan)">Honest</span> Pricing.</h2>
+  <p class="sec-sub">5 free scans per tool. Upgrade when you need more. Human ID always free.</p>
+  <div class="pricing-grid">
+    <div class="p-card">
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:10px">FREE TIER</div>
+      <div style="font-size:40px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px">$0<span style="font-size:14px;color:var(--text4);font-weight:400">/forever</span></div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:20px">Try every tool, no card needed</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>5 free scans on every tool</div>
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>All 6 detection tools</div>
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Human ID — always free ⬟</div>
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Points & rewards system</div>
+      </div>
+      <button style="width:100%;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;background:none;border:1px solid var(--border);color:var(--text3);transition:all .2s" onmouseenter="this.style.borderColor='var(--cyan)';this.style.color='var(--cyan)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text3)'" onclick="openModal('register')">Get Started Free</button>
+    </div>
+    <div class="p-card pop">
+      <div class="p-badge" style="background:var(--cyan)">MOST POPULAR</div>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:10px">MONTHLY PRO</div>
+      <div style="font-size:40px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px">$4.99<span style="font-size:14px;color:var(--text4);font-weight:400">/month</span></div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:20px">Unlimited scans, cancel anytime</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Unlimited scans on ALL tools</div>
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Priority results & no waiting</div>
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Human ID — always free ⬟</div>
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>2x points earning boost</div>
+      </div>
+      <button style="width:100%;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;border:none;box-shadow:0 4px 16px rgba(6,182,212,.25)" onclick="openModal('register')">Start Monthly Plan →</button>
+    </div>
+    <div class="p-card">
+      <div class="p-badge" style="background:var(--green)">BEST VALUE</div>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:10px">LIFETIME ACCESS</div>
+      <div style="font-size:40px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px">$9.99<span style="font-size:14px;color:var(--text4);font-weight:400"> once</span></div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:20px">Pay once, use forever</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Everything in Monthly Pro</div>
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>All future tools included</div>
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Founding Member badge</div>
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Lifetime rewards multiplier</div>
+      </div>
+      <button style="width:100%;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;background:linear-gradient(135deg,var(--green),#059669);color:#fff;border:none;box-shadow:0 4px 16px rgba(16,185,129,.25)" onclick="openModal('register')">Get Lifetime Access →</button>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:16px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text5)">⬟ Human ID is always 100% free — no plan required</div>
+</section>
+
+<!-- FAQ -->
+<section class="landing-section" id="faq">
+  <div class="sec-tag">FAQ</div>
+  <h2 class="sec-title">Got <span style="color:var(--cyan)">Questions?</span></h2>
+  <div style="max-width:700px;margin:0 auto">
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>What is a Digital Human ID?</span><span class="faq-chev">▾</span></div><div class="faq-a">A Digital Human ID is a verified certificate proving you are a real human — not an AI or bot. Use it for KYC verification on financial platforms, DAOs, and any service restricting access to real humans. It is completely free forever.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>Is my data safe when I verify for Human ID?</span><span class="faq-chev">▾</span></div><div class="faq-a">Yes. Any documents or personal information submitted during Human ID verification are permanently and automatically deleted from our servers the moment your KYC is approved. We never store, sell or share your identity documents.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>How do the 5 free scans work?</span><span class="faq-chev">▾</span></div><div class="faq-a">Every new account gets 5 free scans per tool — so 5 text scans, 5 image scans, 5 video scans etc. Human ID is always free and does not count against your quota. Once free scans are used, upgrade to Pro ($4.99/month) or Lifetime ($9.99 once).</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>How do the points and rewards work?</span><span class="faq-chev">▾</span></div><div class="faq-a">Every scan earns 2 points. Points unlock tier badges (Bronze → Silver → Gold → Platinum → Diamond) and can be redeemed in the Rewards Shop for free Pro trials, lifetime access, and exclusive badges. Points never expire.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>Does it work on mobile?</span><span class="faq-chev">▾</span></div><div class="faq-a">Yes — DetectAI is fully responsive and works on all modern mobile browsers. No app download needed.</div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="landing-section" style="background:var(--bg2)">
+  <div style="max-width:680px;margin:0 auto;text-align:center;background:linear-gradient(135deg,var(--bg3),#0a1628);border:1px solid rgba(6,182,212,.25);border-radius:24px;padding:56px 40px;box-shadow:0 0 80px rgba(6,182,212,.08);position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 50% 0%,rgba(6,182,212,.07)0%,transparent 70%);pointer-events:none"></div>
+    <div style="font-size:44px;margin-bottom:14px;filter:drop-shadow(0 0 16px var(--cyan));animation:float 3s ease-in-out infinite">⬡</div>
+    <h2 style="font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-1px;margin-bottom:14px">Ready to Prove <span style="background:linear-gradient(135deg,var(--cyan),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent">You're Human?</span></h2>
+    <p style="font-size:15px;color:var(--text3);line-height:1.8;margin-bottom:32px">Join thousands detecting AI content and verifying their humanity. Start with 5 free scans — no credit card needed.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn-primary" onclick="openModal('register')">Create Free Account →</button>
+      <button class="btn-outline" onclick="openModal('login')">Sign In</button>
+    </div>
+    <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text5);margin-top:14px">⬟ Human ID always free · No credit card required · Cancel anytime</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:var(--bg2);border-top:1px solid var(--border2);padding:40px 5% 24px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:30px;margin-bottom:30px">
+    <div style="max-width:280px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="font-size:22px;color:var(--cyan);filter:drop-shadow(0 0 6px var(--cyan))">⬡</div>
+        <div style="font-weight:800;font-size:14px">Detect AI &amp; Prove You Are A Real Human</div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.8;margin-bottom:14px">Detect bots, expose fakes, prove your humanity. Get your Digital Human ID for KYC verification.</div>
+      <div style="display:flex;gap:8px">
+        <div style="width:36px;height:36px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer" title="Twitter">🐦</div>
+        <div style="width:36px;height:36px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer" title="Telegram">✈️</div>
+        <div style="width:36px;height:36px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer" title="Discord">💬</div>
+        <div style="width:36px;height:36px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer" title="Instagram">📸</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:40px;flex-wrap:wrap">
+      <div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:12px">PRODUCT</div><div style="display:flex;flex-direction:column;gap:8px"><a href="#tools" style="font-size:13px;color:var(--text3);cursor:pointer">Detection Tools</a><a href="#pricing" style="font-size:13px;color:var(--text3)">Pricing</a><a href="#faq" style="font-size:13px;color:var(--text3)">FAQ</a><span style="font-size:13px;color:var(--text3);cursor:pointer" onclick="openModal('register')">Get Started</span></div></div>
+      <div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:12px">SUPPORT</div><div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:var(--text3);cursor:pointer">Help Center</span><span style="font-size:13px;color:var(--text3);cursor:pointer">Privacy Policy</span><span style="font-size:13px;color:var(--text3);cursor:pointer">Terms of Service</span><span style="font-size:13px;color:var(--text3);cursor:pointer">Contact</span></div></div>
+    </div>
+  </div>
+  <div style="border-top:1px solid var(--border2);padding-top:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text5)">© 2026 Detect AI & Prove You Are A Real Human. All rights reserved.</div>
+    <div style="display:flex;gap:16px"><span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text5);cursor:pointer">Privacy</span><span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text5);cursor:pointer">Terms</span></div>
+  </div>
+</footer>
+</div><!-- end #landing -->
+
+<!-- ══ AUTH MODAL ══ -->
+<div class="modal-ov" id="modalOv" onclick="if(event.target.id==='modalOv')closeModal()">
+  <div class="modal-box">
+    <button onclick="closeModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1">×</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ══ APP CONTAINER ══ -->
+<div id="app-root"></div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast-bar" id="toastBar"></div>
+
+<!-- ══ LANDING JS ══ -->
+<script>
+// ── Helpers ──
+function getUsers(){try{return JSON.parse(localStorage.getItem('dai_users')||'{}')}catch{return{}}}
+function genCode(){return Math.floor(100000+Math.random()*900000).toString()}
+
+let modalMode='register', pEmail='', pName='', pPass='', pCode='';
+
+function openModal(m){modalMode=m;document.getElementById('modalOv').classList.add('open');renderModal()}
+function closeModal(){document.getElementById('modalOv').classList.remove('open')}
+
+function renderModal(){
+  const c=document.getElementById('modalContent');
+  if(modalMode==='register'){
+    c.innerHTML=`
+      <div style="text-align:center;margin-bottom:22px">
+        <div style="font-size:36px;color:var(--cyan);filter:drop-shadow(0 0 12px var(--cyan));margin-bottom:10px">⬡</div>
+        <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:3px;margin-bottom:6px">DETECT AI · PROVE YOU ARE A REAL HUMAN</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text)">Create Account</div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text4);margin-top:4px">5 free scans per tool — no credit card needed</div>
+      </div>
+      <div id="mErr"></div>
+      <div style="margin-bottom:10px"><button onclick="handleGoogleRegister()" style="width:100%;padding:12px;border-radius:10px;background:#fff;border:1px solid #e0e0e0;color:#333;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.2)'" onmouseout="this.style.boxShadow='none'"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.7 0 6.7 5.8 2.8 14.3l7.8 6.1C12.5 13.5 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.8c4.3-4 6.8-9.9 7.2-17.3z"/><path fill="#FBBC05" d="M10.6 28.7A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.8-6.1A24 24 0 0 0 0 24c0 3.9.9 7.6 2.5 10.8l8.1-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.4-5.8c-2 1.4-4.6 2.2-7.8 2.2-6.2 0-11.4-4-13.4-9.4l-8.1 6.1C6.7 42.2 14.7 48 24 48z"/></svg>Continue with Google</button></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;height:1px;background:var(--border)"></div><span style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace">OR REGISTER WITH EMAIL</span><div style="flex:1;height:1px;background:var(--border)"></div></div>
+      <div class="m-field"><div class="m-lbl">FULL NAME</div><input class="m-inp" id="rName" placeholder="Your full name" type="text"/></div>
+      <div class="m-field"><div class="m-lbl">EMAIL ADDRESS</div><input class="m-inp" id="rEmail" placeholder="you@email.com" type="email"/></div>
+      <div class="m-field"><div class="m-lbl">PASSWORD</div><input class="m-inp" id="rPass" placeholder="Min 6 characters" type="password"/></div>
+      <button class="m-btn" onclick="doRegister()">Register — Send Code to My Email →</button>
+      <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--text4)">Already registered? <span style="color:var(--cyan);cursor:pointer;font-weight:700" onclick="modalMode='login';renderModal()">Sign In</span></div>`;
+  } else if(modalMode==='verify'){
+    c.innerHTML=`
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:36px;margin-bottom:10px">📧</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text)">Check Your Email</div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text4);margin-top:4px">Code sent to ${pEmail} — check your inbox</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
+        <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:10px">📬 SIMULATED INBOX — noreply@detectai.com</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Hi ${pName}, verify your email to get started:</div>
+        <div style="text-align:center;padding:14px;letter-spacing:8px;font-size:28px;font-weight:800;font-family:'DM Mono',monospace;color:var(--cyan);background:var(--bg4);border-radius:8px;filter:drop-shadow(0 0 10px rgba(6,182,212,.3))" id="codeDisp">${pCode}</div>
+        <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--text5);text-align:center;margin-top:8px">Expires in 10 minutes</div>
+      </div>
+      <div id="mErr"></div>
+      <div class="m-field"><div class="m-lbl">ENTER 6-DIGIT CODE</div><input class="m-inp" id="vCode" placeholder="——————" type="text" maxlength="6" style="text-align:center;letter-spacing:6px;font-size:20px;font-family:'DM Mono',monospace"/></div>
+      <button class="m-btn" onclick="doVerify()">Verify & Create Account</button>
+      <div style="text-align:center;margin-top:8px"><span style="color:var(--text4);font-size:12px;cursor:pointer" onclick="pCode=genCode();document.getElementById('codeDisp').textContent=pCode">Resend code</span></div>`;
+  } else if(modalMode==='login'){
+    c.innerHTML=`
+      <div style="text-align:center;margin-bottom:22px">
+        <div style="font-size:36px;color:var(--cyan);filter:drop-shadow(0 0 12px var(--cyan));margin-bottom:10px">⬡</div>
+        <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:3px;margin-bottom:6px">DETECT AI · PROVE YOU ARE A REAL HUMAN</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text)">Welcome Back</div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text4);margin-top:4px">Sign in to your DetectAI account</div>
+      </div>
+      <div id="mErr"></div>
+      <div style="margin-bottom:10px">
+        <button onclick="handleGoogleRegister()" style="width:100%;padding:12px;border-radius:10px;background:#fff;border:1px solid #e0e0e0;color:#333;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.2)'" onmouseout="this.style.boxShadow='none'">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.7 0 6.7 5.8 2.8 14.3l7.8 6.1C12.5 13.5 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.8c4.3-4 6.8-9.9 7.2-17.3z"/><path fill="#FBBC05" d="M10.6 28.7A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.8-6.1A24 24 0 0 0 0 24c0 3.9.9 7.6 2.5 10.8l8.1-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.4-5.8c-2 1.4-4.6 2.2-7.8 2.2-6.2 0-11.4-4-13.4-9.4l-8.1 6.1C6.7 42.2 14.7 48 24 48z"/></svg>
+          Continue with Google
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;height:1px;background:var(--border)"></div><span style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace">OR</span><div style="flex:1;height:1px;background:var(--border)"></div></div>
+      <div class="m-field"><div class="m-lbl">EMAIL ADDRESS</div><input class="m-inp" id="lEmail" placeholder="you@email.com" type="email"/></div>
+      <div class="m-field"><div class="m-lbl">PASSWORD</div><input class="m-inp" id="lPass" placeholder="Your password" type="password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <button class="m-btn" onclick="doLogin()">Sign In →</button>
+      <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--text4)">No account? <span style="color:var(--cyan);cursor:pointer;font-weight:700" onclick="modalMode='register';renderModal()">Register Free</span></div>`;
+  }
+}
+
+function showErr(msg){const e=document.getElementById('mErr');if(e)e.innerHTML=`<div class="m-err">${msg}</div>`}
+
+function doRegister(){
+  const name=document.getElementById('rName').value.trim();
+  const email=document.getElementById('rEmail').value.trim();
+  const pass=document.getElementById('rPass').value;
+  if(!name||!email||!pass){showErr('Please fill all fields.');return}
+  if(pass.length<6){showErr('Password must be at least 6 characters.');return}
+  const users=getUsers();
+  if(users[email]){showErr('Email already registered. Please sign in.');return}
+  pName=name; pEmail=email; pPass=pass; pCode=genCode();
+  modalMode='verify'; renderModal();
+}
+
+function doVerify(){
+  const code=document.getElementById('vCode').value.trim();
+  if(code!==pCode){showErr('Invalid code. Check the box above.');return}
+  const users=getUsers();
+  users[pEmail]={name:pName,password:pPass,email:pEmail,createdAt:new Date().toISOString()};
+  localStorage.setItem('dai_users',JSON.stringify(users));
+  closeModal();
+  launchApp({name:pName,email:pEmail});
+}
+
+function doLogin(){
+  const email=document.getElementById('lEmail').value.trim();
+  const pass=document.getElementById('lPass').value;
+  if(!email||!pass){showErr('Please enter your email and password.');return}
+  const users=getUsers();
+  const u=users[email];
+  if(!u){showErr('No account found. Please register first.');return}
+  if(u.password!==pass){showErr('Incorrect password. Please try again.');return}
+  closeModal();
+  launchApp({name:u.name,email:u.email});
+}
+
+function handleGoogleRegister(){
+  // Google OAuth — redirect to Google sign-in
+  // In production: integrate Google OAuth 2.0
+  // For now: simulate with a Google-style mock login
+  const mockGoogleUser={name:"Google User",email:"googleuser_"+Date.now()+"@gmail.com",googleAuth:true};
+  const users=getUsers();
+  if(!users[mockGoogleUser.email]){
+    users[mockGoogleUser.email]={name:mockGoogleUser.name,password:"google_oauth_"+Date.now(),email:mockGoogleUser.email,createdAt:new Date().toISOString(),googleAuth:true};
+    localStorage.setItem('dai_users',JSON.stringify(users));
+  }
+  closeModal();
+  launchApp({name:mockGoogleUser.name,email:mockGoogleUser.email});
+  showToast("✓ Signed in with Google!");
+}
 function launchApp(user){
   // Save session
   localStorage.setItem('dai_session',JSON.stringify(user));
@@ -748,6 +1380,11 @@ Return: {"scores":{[key]:0-100,"overall":0-100},"confidence":"High|Medium|Low","
 function genId(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";const r=Array.from({length:12},()=>c[Math.floor(Math.random()*c.length)]).join("");return"HID-"+r.slice(0,4)+"-"+r.slice(4,8)+"-"+r.slice(8,12)}
 function genHash(){return Array.from({length:64},()=>"0123456789abcdef"[Math.floor(Math.random()*16)]).join("")}
 
+// ── GLOBAL COUNTERS (shared across all users on this device) ──
+const GLOBAL_KEY="dai_global_stats";
+function getGlobalStats(){try{return JSON.parse(localStorage.getItem(GLOBAL_KEY)||'{"scans":2400000,"ids":14200,"bots":340000}')}catch{return{scans:2400000,ids:14200,bots:340000}}}
+function incrementGlobalStat(key,amount=1){const s=getGlobalStats();s[key]=(s[key]||0)+amount;localStorage.setItem(GLOBAL_KEY,JSON.stringify(s));window.dispatchEvent(new Event("dai_stats_update"));}
+
 function getUsage(email){try{return JSON.parse(localStorage.getItem(`dai_usage_${email}`)||"{}")}catch{return{}}}
 function getPoints(email){try{return parseInt(localStorage.getItem(`dai_pts_${email}`)||"0")}catch{return 0}}
 function addPoints(email,pts){const c=getPoints(email);const n=c+pts;localStorage.setItem(`dai_pts_${email}`,String(n));return n}
@@ -761,15 +1398,18 @@ function recordPtsHistory(email,tool,pts){
 }
 function getRedeemedRewards(email){try{return JSON.parse(localStorage.getItem(`dai_redeemed_${email}`)||"[]")}catch{return[]}}
 
+const ADMIN_EMAILS=["thikanspotlight@gmail.com"];
 function useToolUsage(email,toolId){
+  const isAdmin=ADMIN_EMAILS.includes((email||"").toLowerCase());
   const[used,setUsed]=useState(()=>{const u=getUsage(email);return u[toolId]||0});
-  const[isPro,setIsPro]=useState(()=>{try{return JSON.parse(localStorage.getItem(`dai_pro_${email}`)||"false")}catch{return false}});
-  const canUse=isPro||used<FREE_TRIALS;
-  const remaining=isPro?Infinity:Math.max(0,FREE_TRIALS-used);
+  const[isPro,setIsPro]=useState(()=>{try{return isAdmin||JSON.parse(localStorage.getItem(`dai_pro_${email}`)||"false")}catch{return isAdmin}});
+  const canUse=isAdmin||isPro||used<FREE_TRIALS;
+  const remaining=isAdmin||isPro?Infinity:Math.max(0,FREE_TRIALS-used);
   const recordUse=(toolName=toolId)=>{
     addPoints(email,POINTS_PER_USE);
     recordPtsHistory(email,toolName,POINTS_PER_USE);
-    if(isPro)return;
+    incrementGlobalStat("scans");
+    if(isAdmin||isPro)return;
     const u=getUsage(email);u[toolId]=(u[toolId]||0)+1;
     localStorage.setItem(`dai_usage_${email}`,JSON.stringify(u));
     setUsed(u[toolId]);
@@ -849,9 +1489,11 @@ function PortfolioPage({user}){
   const[history]=useState(()=>{try{return JSON.parse(localStorage.getItem(`dai_pts_hist_${user.email}`)||"[]")}catch{return[]}});
   const[redeemed,setRedeemed]=useState(()=>getRedeemedRewards(user.email));
   const[toast2,setToast2]=useState(null);
-  const isPro=()=>{try{return JSON.parse(localStorage.getItem(`dai_pro_${user.email}`)||"false")}catch{return false}};
+  const isPro=()=>{try{return ADMIN_EMAILS.includes((user.email||"").toLowerCase())||JSON.parse(localStorage.getItem(`dai_pro_${user.email}`)||"false")}catch{return false}};
   const usage=getUsage(user.email);
   const totalScans=Object.values(usage).reduce((a,b)=>a+b,0);
+  const savedHid=(()=>{try{return JSON.parse(localStorage.getItem("dai_hid_"+user.email)||"null")}catch{return null}})();
+  const tCPort={Platinum:"#e2e8f0",Gold:"#f59e0b",Silver:"#94a3b8"};
   const tier=pts>=500?{name:"Diamond",color:"#06b6d4",icon:"💎",next:null,nextPts:null}:pts>=200?{name:"Platinum",color:"#e2e8f0",icon:"⬟",next:"Diamond",nextPts:500}:pts>=100?{name:"Gold",color:"#f59e0b",icon:"★",next:"Platinum",nextPts:200}:pts>=50?{name:"Silver",color:"#94a3b8",icon:"◈",next:"Gold",nextPts:100}:{name:"Bronze",color:"#b45309",icon:"◉",next:"Silver",nextPts:50};
   const prog=tier.nextPts?Math.min(100,(pts/tier.nextPts)*100):100;
   const redeem=reward=>{
@@ -869,8 +1511,24 @@ function PortfolioPage({user}){
     {/* Profile */}
     <div style={{background:"linear-gradient(135deg,#080d1a,#0d1526)",border:"1px solid #1a2540",borderRadius:16,padding:20,marginBottom:14}}>
       <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}>
-        <div style={{width:56,height:56,borderRadius:"50%",background:"linear-gradient(135deg,#06b6d4,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:800,color:"#fff",flexShrink:0}}>{user.name?.[0]?.toUpperCase()||"?"}</div>
-        <div style={{flex:1}}><div style={{color:"#d4dff7",fontWeight:800,fontSize:18}}>{user.name}</div><div style={{color:"#4a5980",fontSize:12,fontFamily:"monospace",marginTop:2}}>{user.email}</div><div style={{display:"inline-flex",alignItems:"center",gap:5,background:isPro()?"#06b6d420":"#1a2540",border:`1px solid ${isPro()?"#06b6d440":"#2a3a5c"}`,borderRadius:99,padding:"2px 10px",marginTop:6}}><span style={{color:isPro()?"#06b6d4":"#4a5980",fontSize:10,fontFamily:"monospace",fontWeight:700}}>{isPro()?"✓ PRO MEMBER":"FREE TIER"}</span></div></div>
+        <div style={{position:"relative",flexShrink:0}}>
+          <div style={{width:60,height:60,borderRadius:"50%",background:"linear-gradient(135deg,#06b6d4,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontWeight:800,color:"#fff"}}>{user.name?.[0]?.toUpperCase()||"?"}</div>
+          {savedHid&&<div style={{position:"absolute",bottom:-2,right:-2,width:20,height:20,borderRadius:"50%",background:"#10b981",border:"2px solid #080d1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10}}>✓</div>}
+        </div>
+        <div style={{flex:1}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <div style={{color:"#d4dff7",fontWeight:800,fontSize:18}}>{user.name}</div>
+            {savedHid&&<div style={{display:"inline-flex",alignItems:"center",gap:4,background:"linear-gradient(135deg,#10b98120,#06b6d420)",border:"1px solid #10b98150",borderRadius:99,padding:"3px 10px"}}>
+              <span style={{fontSize:10}}>✅</span>
+              <span style={{color:"#10b981",fontSize:10,fontFamily:"monospace",fontWeight:700}}>VERIFIED HUMAN</span>
+            </div>}
+          </div>
+          <div style={{color:"#4a5980",fontSize:12,fontFamily:"monospace",marginTop:2}}>{user.email}</div>
+          <div style={{display:"flex",gap:6,marginTop:6,flexWrap:"wrap"}}>
+            <div style={{display:"inline-flex",alignItems:"center",gap:5,background:isPro()?"#06b6d420":"#1a2540",border:`1px solid ${isPro()?"#06b6d440":"#2a3a5c"}`,borderRadius:99,padding:"2px 10px"}}><span style={{color:isPro()?"#06b6d4":"#4a5980",fontSize:10,fontFamily:"monospace",fontWeight:700}}>{isPro()?"✓ PRO MEMBER":"FREE TIER"}</span></div>
+            {!savedHid&&<div style={{display:"inline-flex",alignItems:"center",gap:5,background:"#ef444415",border:"1px solid #ef444430",borderRadius:99,padding:"2px 10px"}}><span style={{color:"#ef4444",fontSize:10,fontFamily:"monospace"}}>⚠ NOT VERIFIED</span></div>}
+          </div>
+        </div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
         {[{label:"Total Scans",val:totalScans,icon:"🔍",color:"#3b82f6"},{label:"Points",val:pts,icon:"⭐",color:"#f59e0b"},{label:"Rewards",val:redeemed.length,icon:"🎁",color:"#10b981"}].map((s,i)=>(
@@ -878,6 +1536,36 @@ function PortfolioPage({user}){
         ))}
       </div>
     </div>
+  {/* Human ID status card */}
+  {savedHid?(
+    <div style={{background:"linear-gradient(135deg,#0a1628,#0d1f14)",border:`1px solid ${tCPort[savedHid.tier]||"#10b981"}40`,borderRadius:16,padding:18,marginBottom:14}}>
+      <div style={{fontSize:9,fontFamily:"monospace",color:"#10b981",letterSpacing:3,marginBottom:12}}>⬟ YOUR DIGITAL HUMAN ID</div>
+      <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:12}}>
+        <div style={{width:52,height:52,borderRadius:10,background:"linear-gradient(135deg,#06b6d420,#10b98120)",border:`2px solid ${tCPort[savedHid.tier]||"#10b981"}40`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>⬟</div>
+        <div style={{flex:1}}>
+          <div style={{color:"#d4dff7",fontWeight:800,fontSize:17}}>{savedHid.name}</div>
+          <div style={{color:"#4a5980",fontSize:11,marginTop:2}}>{savedHid.nationality}</div>
+          <div style={{display:"flex",gap:5,marginTop:5,flexWrap:"wrap"}}>
+            <span style={{background:"#10b98120",border:"1px solid #10b98140",color:"#10b981",fontSize:9,fontFamily:"monospace",padding:"2px 8px",borderRadius:99}}>✅ KYC VERIFIED</span>
+            <span style={{background:`${tCPort[savedHid.tier]||"#94a3b8"}20`,border:`1px solid ${tCPort[savedHid.tier]||"#94a3b8"}40`,color:tCPort[savedHid.tier]||"#94a3b8",fontSize:9,fontFamily:"monospace",padding:"2px 8px",borderRadius:99}}>{savedHid.tier||"Silver"}</span>
+          </div>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,background:"#080d1a",borderRadius:10,padding:12,marginBottom:8}}>
+        {[["ID NUMBER",savedHid.id],["ISSUED",savedHid.issued],["EXPIRES",savedHid.expiry],["HUMANITY",savedHid.score+"%"]].map(([k,v])=>(
+          <div key={k}><div style={{color:"#1a2540",fontSize:8,fontFamily:"monospace",letterSpacing:1,marginBottom:2}}>{k}</div><div style={{color:k==="ID NUMBER"?tCPort[savedHid.tier]||"#94a3b8":"#4a5980",fontSize:10,fontFamily:"monospace",wordBreak:"break-all"}}>{v}</div></div>
+        ))}
+      </div>
+      <div style={{padding:"6px 0 0",borderTop:"1px solid #0d1526"}}><div style={{color:"#1a2540",fontSize:8,fontFamily:"monospace",wordBreak:"break-all",lineHeight:1.6}}>SHA256: {savedHid.hash?.slice(0,32)}...</div></div>
+    </div>
+  ):(
+    <div style={{background:"#080d1a",border:"1px solid #ef444420",borderRadius:14,padding:18,marginBottom:14,textAlign:"center"}}>
+      <div style={{fontSize:36,marginBottom:8}}>⬟</div>
+      <div style={{color:"#ef4444",fontWeight:700,fontSize:15,marginBottom:6}}>Not Yet Verified</div>
+      <div style={{color:"#4a5980",fontSize:12,lineHeight:1.7,marginBottom:12}}>You don't have a Digital Human ID yet. Get verified to prove your humanity.</div>
+      <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"#ef444415",border:"1px solid #ef444430",borderRadius:99,padding:"4px 14px"}}><span style={{color:"#ef4444",fontSize:11,fontFamily:"monospace",fontWeight:700}}>⚠ UNVERIFIED — No Human ID</span></div>
+    </div>
+  )}
     {/* Points & Tier */}
     <div style={{background:"linear-gradient(135deg,#0a0f1e,#0d1a2e)",border:"1px solid #f59e0b30",borderRadius:16,padding:20,marginBottom:14}}>
       <div style={{fontSize:9,fontFamily:"monospace",color:"#2a3a5c",letterSpacing:2,marginBottom:12}}>REWARDS POINTS & TIER</div>
@@ -1222,10 +1910,10 @@ function HumanIdPage({user}){
     if(r.passed&&r.humanScore>=50){
       addPoints(user.email,POINTS_PER_USE);
       recordPtsHistory(user.email,"humanid",POINTS_PER_USE);
-      const newHid={id:genId(),name:form.fullName,dob:form.dob,country:form.country,nationality:form.nationality,idType:form.idType,issued:new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}),expiry:new Date(Date.now()+365*24*60*60*1000).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}),score:r.humanScore,hash:genHash(),tier:r.humanScore>=85?"Platinum":r.humanScore>=70?"Gold":"Silver"};
+      const newHid={id:genId(),name:form.fullName,dob:form.dob,country:form.country,nationality:form.nationality,idType:form.idType,issued:new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}),expiry:new Date(Date.now()+10*365*24*60*60*1000).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}),score:r.humanScore,hash:genHash(),tier:r.humanScore>=85?"Platinum":r.humanScore>=70?"Gold":"Silver"};
       setHid(newHid);
       // Save Human ID to localStorage so it persists
-      localStorage.setItem("dai_hid_"+user.email, JSON.stringify(newHid));
+      localStorage.setItem("dai_hid_"+user.email, JSON.stringify(newHid)); incrementGlobalStat("ids");
     }
   };
 
@@ -1408,12 +2096,13 @@ function App({initialUser}){
         }
         @media(min-width:769px){.app-bottom-nav{display:none!important}}
         /* BOTTOM NAV */
-        .app-bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#050b18;border-top:1px solid #0d1526;padding:6px 0 env(safe-area-inset-bottom,6px);display:none;justify-content:space-around;align-items:center}
-        .bnb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;border:none;background:none;cursor:pointer;flex:1;transition:all .15s;font-family:inherit}
-        .bnb-i{font-size:19px;color:#2a3a5c;transition:all .15s;line-height:1}
-        .bnb-l{font-size:8px;font-family:'DM Mono',monospace;color:#2a3a5c;transition:all .15s}
-        .bnb.on .bnb-i{color:#06b6d4;filter:drop-shadow(0 0 4px #06b6d4)}
-        .bnb.on .bnb-l{color:#06b6d4}
+        .app-bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(5,11,24,.97);border-top:1px solid #1a2540;padding:8px 0 env(safe-area-inset-bottom,8px);display:none;justify-content:space-around;align-items:center;backdrop-filter:blur(12px)}
+        .bnb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;border:none;background:none;cursor:pointer;flex:1;transition:all .2s;font-family:inherit}
+        .bnb-i{font-size:24px;color:#4a5980;transition:all .2s;line-height:1;display:flex;align-items:center;justify-content:center;width:42px;height:32px;border-radius:10px;background:transparent}
+        .bnb-l{font-size:9px;font-family:'DM Mono',monospace;color:#4a5980;transition:all .2s;letter-spacing:.3px}
+        .bnb.on .bnb-i{color:#fff;background:linear-gradient(135deg,#06b6d4,#7c3aed);box-shadow:0 2px 12px rgba(6,182,212,.5);filter:none}
+        .bnb.on .bnb-l{color:#06b6d4;font-weight:700}
+        .bnb:not(.on):active .bnb-i{color:#06b6d4;background:#06b6d420}
         /* mobile social sheet */
         .mob-social{position:fixed;bottom:62px;left:0;right:0;z-index:99;background:#050b18;border-top:1px solid #0d1526;padding:10px 16px;display:flex;gap:10px;justify-content:center}
         .mob-soc-btn{flex:1;max-width:150px;padding:10px;border-radius:12px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px}
