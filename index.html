@@ -249,13 +249,13 @@ section.landing-section{padding:80px 5%}
   <div style="display:flex;gap:8px;align-items:center">
     <button class="btn-nav-outline" onclick="openModal('login')" id="navSignInBtn">Sign In</button>
   <script>
-    // Show returning user indicator on nav button
+    // Only show returning user on nav if there is an active session
     (function(){
-      const le=localStorage.getItem('dai_last_name')||localStorage.getItem('dai_last_email');
-      if(le){
+      const session=JSON.parse(sessionStorage.getItem('dai_session')||localStorage.getItem('dai_session')||'null');
+      if(session&&session.name){
         const btn=document.getElementById('navSignInBtn');
         if(btn){
-          const first=le.split(' ')[0].split('@')[0];
+          const first=session.name.split(' ')[0];
           btn.textContent='Sign In · '+first;
           btn.style.borderColor='rgba(79,143,255,.4)';
           btn.style.color='#4f8fff';
@@ -706,9 +706,12 @@ function renderModal(){
       <button class="m-btn" onclick="doVerify()">Verify & Create Account</button>
       <div style="text-align:center;margin-top:8px"><span style="color:var(--text4);font-size:12px;cursor:pointer" onclick="pCode=genCode();document.getElementById('codeDisp').textContent=pCode">Resend code</span></div>`;
   } else if(modalMode==='login'){
-    const lastEmail=localStorage.getItem('dai_last_email')||'';
-    const lastName=localStorage.getItem('dai_last_name')||'';
-    const isReturning=!!lastEmail;
+    // Only show "welcome back" if there is an ACTIVE saved session
+    // not just because someone logged in before on this device
+    const activeSession=JSON.parse(sessionStorage.getItem('dai_session')||localStorage.getItem('dai_session')||'null');
+    const lastEmail=activeSession?activeSession.email:'';
+    const lastName=activeSession?activeSession.name:'';
+    const isReturning=!!(activeSession&&activeSession.email);
     const avatarLetter=lastName?.[0]?.toUpperCase()||lastEmail?.[0]?.toUpperCase()||'?';
     c.innerHTML=`
       <div style="text-align:center;margin-bottom:20px">
@@ -799,9 +802,8 @@ function launchApp(user, rememberMe){
   if(rememberMe !== false){
     localStorage.setItem('dai_session', JSON.stringify(user));
   }
-  // Save last logged-in email for pre-filling login form next time
-  localStorage.setItem('dai_last_email', user.email);
-  localStorage.setItem('dai_last_name', user.name||'');
+  // NOTE: We no longer save dai_last_email/dai_last_name globally
+  // The session itself IS the "last login" info — avoids cross-user contamination
   // Mark as logged in
   document.body.classList.add('app-mode');
   document.getElementById('landing').style.display='none';
@@ -819,8 +821,11 @@ function launchApp(user, rememberMe){
 // On page load — if already logged in, go straight to app
 // Immediately hide landing if session exists (prevents flash)
 (function(){
-  const s=localStorage.getItem('dai_session');
+  const s=sessionStorage.getItem('dai_session')||localStorage.getItem('dai_session');
   if(s){try{const u=JSON.parse(s);if(u&&u.email){document.documentElement.style.visibility='hidden';}}catch(e){}}
+  // Clean up old stale last_email/last_name keys to fix cross-user contamination
+  localStorage.removeItem('dai_last_email');
+  localStorage.removeItem('dai_last_name');
 })();
 
 // Store pending auto-login user — Babel needs time to compile before mountApp exists
