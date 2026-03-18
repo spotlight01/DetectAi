@@ -488,7 +488,7 @@ section.landing-section{padding:80px 5%}
     </div>
     <div style="display:flex;gap:40px;flex-wrap:wrap">
       <div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:12px">PRODUCT</div><div style="display:flex;flex-direction:column;gap:8px"><a href="#tools" style="font-size:13px;color:var(--text3);cursor:pointer">Detection Tools</a><a href="#pricing" style="font-size:13px;color:var(--text3)">Pricing</a><a href="#faq" style="font-size:13px;color:var(--text3)">FAQ</a><span style="font-size:13px;color:var(--text3);cursor:pointer" onclick="openModal('register')">Get Started</span></div></div>
-      <div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:12px">SUPPORT</div><div style="display:flex;flex-direction:column;gap:8px"><a href="mailto:workingplace0111@gmail.com?subject=[DetectAI Support]" style="font-size:13px;color:var(--text3);cursor:pointer;text-decoration:none">Help Center</a><span style="font-size:13px;color:var(--text3);cursor:pointer">Privacy Policy</span><span style="font-size:13px;color:var(--text3);cursor:pointer">Terms of Service</span><a href="mailto:workingplace0111@gmail.com" style="font-size:13px;color:var(--text3);cursor:pointer;text-decoration:none">Contact</a></div></div>
+      <div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text4);letter-spacing:2px;margin-bottom:12px">SUPPORT</div><div style="display:flex;flex-direction:column;gap:8px"><a href="/cdn-cgi/l/email-protection#a1d6ced3cac8cfc6d1cdc0c2c491909090e1c6ccc0c8cd8fc2cecc9ed2d4c3cbc4c2d59cfae5c4d5c4c2d5e0e881f2d4d1d1ced3d5fc" style="font-size:13px;color:var(--text3);cursor:pointer;text-decoration:none">Help Center</a><span style="font-size:13px;color:var(--text3);cursor:pointer">Privacy Policy</span><span style="font-size:13px;color:var(--text3);cursor:pointer">Terms of Service</span><a href="/cdn-cgi/l/email-protection#8bfce4f9e0e2e5ecfbe7eae8eebbbababacbece6eae2e7a5e8e4e6" style="font-size:13px;color:var(--text3);cursor:pointer;text-decoration:none">Contact</a></div></div>
     </div>
   </div>
   <div style="border-top:1px solid var(--border2);padding-top:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
@@ -513,7 +513,7 @@ section.landing-section{padding:80px 5%}
 <div class="toast-bar" id="toastBar"></div>
 
 <!-- ══ LANDING JS ══ -->
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ── SUPABASE CONFIG ──
 const SUPA_URL = "https://xjwarcttqjwymebgvzgx.supabase.co";
 const SUPA_KEY = "sb_publishable_q88VjiymEvxB_jEIBv4Xwg_Z8jVIcFL";
@@ -964,6 +964,7 @@ const NAV=[
   ]},
   {id:"humanid",icon:"⬟",label:"Human ID"},
   {id:"support",icon:"💬",label:"Support"},
+  {id:"whitepaper",icon:"📄",label:"Whitepaper"},
 ];
 
 // ── HELPERS ──
@@ -2282,6 +2283,159 @@ function HumanIdPage({user}){
   </Section>);
 }
 
+// ── WHITEPAPER PAGE ──
+function WhitepaperPage(){
+  return(
+    <div style={{paddingBottom:20}}>
+      {/* Header */}
+      <div style={{background:"linear-gradient(135deg,#0e0e30,#1a0e3a)",border:"1px solid #4f8fff30",borderRadius:18,padding:24,marginBottom:20,textAlign:"center",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(79,143,255,.1)0%,transparent 60%)",pointerEvents:"none"}}/>
+        <div style={{fontSize:10,fontFamily:"monospace",color:"#4f8fff",letterSpacing:4,marginBottom:10}}>DETECTAI · OFFICIAL DOCUMENT</div>
+        <div style={{fontWeight:800,fontSize:24,color:"#e8eeff",marginBottom:6}}>Whitepaper & Roadmap</div>
+        <div style={{color:"#9ba4d4",fontSize:13,lineHeight:1.7,marginBottom:16}}>Our complete vision for AI detection, Human ID verification, and the future of proving humanity online. 2026–2029.</div>
+        <a href="detectai_whitepaper.pdf" download="DetectAI_Whitepaper_2026.pdf" style={{display:"inline-flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,#4f8fff,#a855f7)",border:"none",borderRadius:12,padding:"12px 24px",color:"#fff",fontWeight:800,fontSize:14,textDecoration:"none",boxShadow:"0 6px 24px rgba(79,143,255,.3)"}}>
+          📥 Download Full Whitepaper PDF
+        </a>
+        <div style={{color:"#3a4080",fontSize:10,fontFamily:"monospace",marginTop:10}}>24KB · PDF · English · 2026 Edition</div>
+      </div>
+
+      {/* Abstract */}
+      <div style={{background:"#101035",border:"1px solid #2a2a6a",borderRadius:14,padding:18,marginBottom:20}}>
+        <div style={{fontSize:9,fontFamily:"monospace",color:"#3a4080",letterSpacing:3,marginBottom:10}}>ABSTRACT</div>
+        <div style={{color:"#9ba4d4",fontSize:13,lineHeight:1.8}}>DetectAI is the world's first platform combining AI-generated content detection with verified human identity. As artificial intelligence becomes indistinguishable from human output, we provide two critical tools: a suite of detection tools that identify AI-generated text, images, voice, video and social media content — and a Digital Human ID system that lets any real human prove their humanity for free, forever.</div>
+      </div>
+
+      {/* Key Stats */}
+      <div style={{fontSize:9,fontFamily:"monospace",color:"#3a4080",letterSpacing:3,marginBottom:10}}>PLATFORM AT A GLANCE</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:20}}>
+        {[
+          {val:"6",label:"Detection Tools",color:"#4f8fff"},
+          {val:"Free",label:"Human ID Forever",color:"#00e5a0"},
+          {val:"$9.99",label:"Lifetime Access",color:"#a855f7"},
+          {val:"98%",label:"Detection Accuracy",color:"#f59e0b"},
+          {val:"10 Yrs",label:"Human ID Validity",color:"#00e5a0"},
+          {val:"0",label:"Data Retained After KYC",color:"#fb7185"},
+        ].map((s,i)=>(
+          <div key={i} style={{background:"#101035",border:`1px solid ${s.color}25`,borderRadius:12,padding:"14px 12px",textAlign:"center"}}>
+            <div style={{color:s.color,fontWeight:800,fontSize:20,marginBottom:3}}> {s.val}</div>
+            <div style={{color:"#6068a8",fontSize:10,fontFamily:"monospace"}}> {s.label.toUpperCase()}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Roadmap */}
+      <div style={{fontSize:9,fontFamily:"monospace",color:"#3a4080",letterSpacing:3,marginBottom:14}}>PRODUCT ROADMAP 2026–2029</div>
+      
+          <div style={{background:"#101035",border:"1px solid #00e5a030",borderRadius:16,padding:20,marginBottom:14,position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:0,left:0,width:4,bottom:0,background:"linear-gradient(180deg,#00e5a0,#00e5a044)"}}/>
+            <div style={{paddingLeft:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10,flexWrap:"wrap",gap:6}}>
+                <div>
+                  <div style={{fontSize:9,fontFamily:"monospace",color:"#00e5a0",letterSpacing:2,marginBottom:3}}>Q1-Q2 2026</div>
+                  <div style={{fontWeight:800,fontSize:17,color:"#e8eeff"}}>Foundation</div>
+                </div>
+                <div style={{background:"#00e5a020",border:"1px solid #00e5a040",borderRadius:99,padding:"4px 12px",fontSize:9,fontFamily:"monospace",color:"#00e5a0",fontWeight:700,flexShrink:0}}>✓ LIVE</div>
+              </div>
+                            <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#00e5a0",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>6 AI Detection Tools (Text, Image, Voice, Video, Instagram, TikTok)</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#00e5a0",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Digital Human ID — Free KYC with passport + selfie, 10yr validity</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#00e5a0",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Points & Rewards system (Bronze → Diamond tiers)</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#00e5a0",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Stripe payments — $4.99/mo and $9.99 lifetime</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#00e5a0",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>AI Support Chat powered by Claude</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#00e5a0",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Supabase real-time global statistics</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#00e5a0",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Full mobile responsive design</span></div>
+            </div>
+          </div>
+          <div style={{background:"#101035",border:"1px solid #4f8fff30",borderRadius:16,padding:20,marginBottom:14,position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:0,left:0,width:4,bottom:0,background:"linear-gradient(180deg,#4f8fff,#4f8fff44)"}}/>
+            <div style={{paddingLeft:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10,flexWrap:"wrap",gap:6}}>
+                <div>
+                  <div style={{fontSize:9,fontFamily:"monospace",color:"#4f8fff",letterSpacing:2,marginBottom:3}}>Q3-Q4 2026</div>
+                  <div style={{fontWeight:800,fontSize:17,color:"#e8eeff"}}>Expansion</div>
+                </div>
+                <div style={{background:"#4f8fff20",border:"1px solid #4f8fff40",borderRadius:99,padding:"4px 12px",fontSize:9,fontFamily:"monospace",color:"#4f8fff",fontWeight:700,flexShrink:0}}>IN PROGRESS</div>
+              </div>
+                            <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#4f8fff",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>YouTube & X/Twitter detector tools</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#4f8fff",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>LinkedIn profile verification detector</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#4f8fff",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Public REST API v1 for developers</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#4f8fff",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Native Android & iOS mobile apps</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#4f8fff",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Business dashboard — team accounts, bulk scanning</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#4f8fff",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Blockchain hash registry for Human IDs</span></div>
+            </div>
+          </div>
+          <div style={{background:"#101035",border:"1px solid #a855f730",borderRadius:16,padding:20,marginBottom:14,position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:0,left:0,width:4,bottom:0,background:"linear-gradient(180deg,#a855f7,#a855f744)"}}/>
+            <div style={{paddingLeft:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10,flexWrap:"wrap",gap:6}}>
+                <div>
+                  <div style={{fontSize:9,fontFamily:"monospace",color:"#a855f7",letterSpacing:2,marginBottom:3}}>Q1-Q2 2027</div>
+                  <div style={{fontWeight:800,fontSize:17,color:"#e8eeff"}}>Partnerships</div>
+                </div>
+                <div style={{background:"#a855f720",border:"1px solid #a855f740",borderRadius:99,padding:"4px 12px",fontSize:9,fontFamily:"monospace",color:"#a855f7",fontWeight:700,flexShrink:0}}>UPCOMING</div>
+              </div>
+                            <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#a855f7",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Crypto exchange integrations (Binance, Coinbase, Kraken)</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#a855f7",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>DeFi protocol Sybil resistance (Uniswap, Aave)</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#a855f7",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Freelance platform verified human badges (Upwork, Fiverr)</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#a855f7",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>DAO governance one-person-one-vote verification</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#a855f7",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Bank & fintech KYC compliance integration</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#a855f7",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Email & LinkedIn detector tools</span></div>
+            </div>
+          </div>
+          <div style={{background:"#101035",border:"1px solid #fb718530",borderRadius:16,padding:20,marginBottom:14,position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:0,left:0,width:4,bottom:0,background:"linear-gradient(180deg,#fb7185,#fb718544)"}}/>
+            <div style={{paddingLeft:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10,flexWrap:"wrap",gap:6}}>
+                <div>
+                  <div style={{fontSize:9,fontFamily:"monospace",color:"#fb7185",letterSpacing:2,marginBottom:3}}>Q3 2027–2029</div>
+                  <div style={{fontWeight:800,fontSize:17,color:"#e8eeff"}}>Infrastructure</div>
+                </div>
+                <div style={{background:"#fb718520",border:"1px solid #fb718540",borderRadius:99,padding:"4px 12px",fontSize:9,fontFamily:"monospace",color:"#fb7185",fontWeight:700,flexShrink:0}}>FUTURE</div>
+              </div>
+                            <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#fb7185",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Biometric verification — fingerprint & Face ID layer</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#fb7185",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>NFC ID card scanning via phone chip</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#fb7185",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>DetectAI SDK for third-party app integration</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#fb7185",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Enterprise API with custom SLA & models</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#fb7185",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>W3C Decentralised Identity (DID) standard compliance</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#fb7185",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Government eKYC acceptance in target jurisdictions</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#fb7185",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>AI watermark detection in content</span></div>
+              <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{color:"#fb7185",fontSize:12,flexShrink:0}}>›</span><span style={{color:"#9ba4d4",fontSize:12,lineHeight:1.6}}>Global Human Registry with zero-knowledge proofs</span></div>
+            </div>
+          </div>
+
+      {/* Partnerships */}
+      <div style={{background:"linear-gradient(135deg,#0e0e30,#1a0e3a)",border:"1px solid #a855f730",borderRadius:14,padding:18,marginBottom:14}}>
+        <div style={{fontSize:9,fontFamily:"monospace",color:"#a855f7",letterSpacing:3,marginBottom:12}}>PARTNERSHIP OPPORTUNITIES</div>
+        <div style={{color:"#9ba4d4",fontSize:13,lineHeight:1.7,marginBottom:14}}>We are actively seeking partnerships with platforms that require human verification and AI content detection. Our Human ID can be integrated as a KYC layer on any platform.</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {[
+            {icon:"🏦",label:"Banks & Fintech",desc:"KYC compliance, AML, account verification"},
+            {icon:"🔗",label:"Crypto Exchanges & DeFi",desc:"Sybil resistance, bot prevention, governance"},
+            {icon:"💼",label:"Freelance & Hiring Platforms",desc:"Verified human worker & applicant badges"},
+            {icon:"📱",label:"Social Networks & Apps",desc:"Bot-free verified human user badges"},
+            {icon:"🏛",label:"DAOs & Web3 Governance",desc:"One-person-one-vote human verification"},
+            {icon:"🏢",label:"Enterprise & Government",desc:"Custom API, white-label KYC, SLA"},
+          ].map((p,i)=>(
+            <div key={i} style={{display:"flex",gap:12,alignItems:"center",padding:"10px 12px",background:"rgba(168,85,247,.05)",border:"1px solid rgba(168,85,247,.2)",borderRadius:10}}>
+              <span style={{fontSize:20}}> {p.icon}</span>
+              <div><div style={{color:"#e8eeff",fontWeight:700,fontSize:13}}> {p.label}</div><div style={{color:"#6068a8",fontSize:11}}> {p.desc}</div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Contact */}
+      <div style={{background:"#101035",border:"1px solid #2a2a6a",borderRadius:14,padding:18,textAlign:"center"}}>
+        <div style={{fontSize:9,fontFamily:"monospace",color:"#3a4080",letterSpacing:3,marginBottom:10}}>GET IN TOUCH</div>
+        <div style={{color:"#9ba4d4",fontSize:13,marginBottom:14}}>For partnerships, API access, investment or enterprise enquiries:</div>
+        <a href="mailto:workingplace0111@gmail.com?subject=DetectAI Partnership" style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(79,143,255,.1)",border:"1px solid #4f8fff40",borderRadius:10,padding:"10px 20px",color:"#4f8fff",fontWeight:700,fontSize:13,textDecoration:"none"}}>
+          📧 workingplace0111@gmail.com
+        </a>
+        <div style={{color:"#3a4080",fontSize:10,fontFamily:"monospace",marginTop:10}}>spotlight01.github.io/DetectAi</div>
+      </div>
+    </div>
+  );
+}
+
 // ── SUPPORT PAGE ──
 const SUPPORT_EMAIL = "workingplace0111@gmail.com";
 const FAQ_ITEMS = [
@@ -2510,7 +2664,7 @@ function App({initialUser}){
     social:()=><SocialPage subPage={subPage} setSubPage={setSubPage} email={user.email}/>,
     humanid:()=><HumanIdPage user={user}/>,
     support:()=><SupportPage user={user}/>,
-    humanid:()=><HumanIdPage user={user}/>,
+    whitepaper:()=><WhitepaperPage/>,
   };
 
   return(
@@ -2659,11 +2813,4 @@ function App({initialUser}){
 }
 
 // ── MOUNT FUNCTION ──
-window.mountApp=function(user){
-  window._pendingAutoLogin = null; // Clear any pending auto-login
-  const root=ReactDOM.createRoot(document.getElementById("app-root"));
-  root.render(React.createElement(App,{initialUser:user}));
-};
-</script>
-</body>
-</html>
+window.mountApp=function(u
