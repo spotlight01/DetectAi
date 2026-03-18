@@ -527,7 +527,7 @@ async function supaFetch(path, method, body){
         "apikey": SUPA_KEY,
         "Authorization": "Bearer " + SUPA_KEY,
         "Content-Type": "application/json",
-        "Prefer": method==="POST" ? "resolution=merge-duplicates" : ""
+        "Prefer": method==="POST" ? "resolution=merge-duplicates" : method==="PATCH" ? "return=minimal" : ""
       }
     };
     if(body) opts.body = JSON.stringify(body);
@@ -662,7 +662,58 @@ window.addEventListener('DOMContentLoaded', function(){
 });
 
 // ── Helpers ──
+// Simple hash function (not cryptographic but works for static site)
+async function hashPassword(password){
+  const msgBuffer = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── USER FUNCTIONS — Supabase primary, localStorage fallback ──
+async function supaGetUser(email){
+  try{
+    const data = await supaFetch('users?email=eq.'+encodeURIComponent(email)+'&select=email,name,password_hash,created_at');
+    return data && data[0] ? data[0] : null;
+  }catch(e){ return null; }
+}
+
+async function supaCreateUser(email, name, passwordHash){
+  try{
+    await supaFetch('users','POST',{
+      email: email,
+      name: name,
+      password_hash: passwordHash,
+      created_at: new Date().toISOString(),
+      last_login: new Date().toISOString()
+    });
+    return true;
+  }catch(e){ return false; }
+}
+
+async function supaUpdateLogin(email){
+  try{
+    await supaFetch('users?email=eq.'+encodeURIComponent(email),'PATCH',{
+      last_login: new Date().toISOString()
+    });
+  }catch(e){}
+}
+
+async function supaUpdateName(email, name){
+  try{
+    await supaFetch('users?email=eq.'+encodeURIComponent(email),'PATCH',{name});
+    return true;
+  }catch(e){ return false; }
+}
+
+// Keep localStorage as fallback cache
 function getUsers(){try{return JSON.parse(localStorage.getItem('dai_users')||'{}')}catch{return{}}}
+function saveUserLocal(email, name, passwordHash){
+  const users = getUsers();
+  users[email] = {name, password:passwordHash, email, createdAt:new Date().toISOString(), supabase:true};
+  localStorage.setItem('dai_users', JSON.stringify(users));
+}
+
 function genCode(){return Math.floor(100000+Math.random()*900000).toString()}
 
 let modalMode='register', pEmail='', pName='', pPass='', pCode='';
@@ -746,53 +797,107 @@ function renderModal(){
 
 function showErr(msg){const e=document.getElementById('mErr');if(e)e.innerHTML=`<div class="m-err">${msg}</div>`}
 
-function doRegister(){
+async function doRegister(){
   const name=document.getElementById('rName').value.trim();
   const email=document.getElementById('rEmail').value.trim();
   const pass=document.getElementById('rPass').value;
   if(!name||!email||!pass){showErr('Please fill all fields.');return}
   if(pass.length<6){showErr('Password must be at least 6 characters.');return}
-  const users=getUsers();
-  if(users[email]){showErr('Email already registered. Please sign in.');return}
+  // Disable button while checking
+  const btn=document.querySelector('.m-btn');
+  if(btn){btn.disabled=true;btn.textContent='Checking...';}
+  // Check Supabase first, then localStorage
+  const existing = await supaGetUser(email);
+  const localUsers = getUsers();
+  if(existing || localUsers[email]){
+    if(btn){btn.disabled=false;btn.textContent='Register — Send Code to My Email →';}
+    showErr('Email already registered. Please sign in.');
+    return;
+  }
+  if(btn){btn.disabled=false;btn.textContent='Register — Send Code to My Email →';}
   pName=name; pEmail=email; pPass=pass; pCode=genCode();
   modalMode='verify'; renderModal();
 }
 
-function doVerify(){
+async function doVerify(){
   const code=document.getElementById('vCode').value.trim();
   if(code!==pCode){showErr('Invalid code. Check the box above.');return}
-  const users=getUsers();
-  users[pEmail]={name:pName,password:pPass,email:pEmail,createdAt:new Date().toISOString()};
-  localStorage.setItem('dai_users',JSON.stringify(users));
+  const btn=document.querySelector('.m-btn');
+  if(btn){btn.disabled=true;btn.textContent='Creating account...';}
+  // Hash the password
+  const passHash = await hashPassword(pPass);
+  // Save to Supabase (primary)
+  const saved = await supaCreateUser(pEmail, pName, passHash);
+  // Also save to localStorage (cache/fallback)
+  saveUserLocal(pEmail, pName, passHash);
+  if(btn){btn.disabled=false;}
   closeModal();
-  launchApp({name:pName,email:pEmail}, true); // Always remember on new registration
+  launchApp({name:pName, email:pEmail}, true);
 }
 
-function doLogin(){
+async function doLogin(){
   const email=document.getElementById('lEmail').value.trim();
   const pass=document.getElementById('lPass').value;
   const rememberMe=document.getElementById('rememberMe')?.checked !== false;
   if(!email||!pass){showErr('Please enter your email and password.');return}
+  const btn=document.querySelector('.m-btn');
+  if(btn){btn.disabled=true;btn.textContent='Signing in...';}
+
+  // Hash the entered password to compare
+  const passHash = await hashPassword(pass);
+
+  // 1. Check Supabase first (works on ANY browser/device)
+  let user = await supaGetUser(email);
+  if(user){
+    if(user.password_hash !== passHash){
+      if(btn){btn.disabled=false;btn.textContent='Sign In →';}
+      showErr('Incorrect password. Please try again.');
+      return;
+    }
+    // Cache locally so offline still works
+    saveUserLocal(email, user.name, user.password_hash);
+    await supaUpdateLogin(email);
+    if(btn){btn.disabled=false;}
+    closeModal();
+    launchApp({name:user.name, email:user.email}, rememberMe);
+    return;
+  }
+
+  // 2. Check localStorage cache (fallback for old accounts not yet migrated)
   const users=getUsers();
   const u=users[email];
-  if(!u){showErr('No account found. Please register first.');return}
-  if(u.password!==pass){showErr('Incorrect password. Please try again.');return}
-  closeModal();
-  launchApp({name:u.name,email:u.email}, rememberMe);
+  if(u){
+    // Old account — compare raw password OR hash
+    const passwordMatch = (u.password===pass) || (u.password===passHash);
+    if(!passwordMatch){
+      if(btn){btn.disabled=false;btn.textContent='Sign In →';}
+      showErr('Incorrect password. Please try again.');
+      return;
+    }
+    // Migrate this account to Supabase now
+    await supaCreateUser(email, u.name, passHash);
+    saveUserLocal(email, u.name, passHash);
+    await supaUpdateLogin(email);
+    if(btn){btn.disabled=false;}
+    closeModal();
+    launchApp({name:u.name, email:u.email}, rememberMe);
+    return;
+  }
+
+  // 3. Not found anywhere
+  if(btn){btn.disabled=false;btn.textContent='Sign In →';}
+  showErr('No account found. Please register first.');
 }
 
-function handleGoogleRegister(){
-  // Google OAuth — redirect to Google sign-in
-  // In production: integrate Google OAuth 2.0
-  // For now: simulate with a Google-style mock login
-  const mockGoogleUser={name:"Google User",email:"googleuser_"+Date.now()+"@gmail.com",googleAuth:true};
-  const users=getUsers();
-  if(!users[mockGoogleUser.email]){
-    users[mockGoogleUser.email]={name:mockGoogleUser.name,password:"google_oauth_"+Date.now(),email:mockGoogleUser.email,createdAt:new Date().toISOString(),googleAuth:true};
-    localStorage.setItem('dai_users',JSON.stringify(users));
-  }
+async function handleGoogleRegister(){
+  const mockEmail="googleuser_"+Date.now()+"@gmail.com";
+  const mockName="Google User";
+  const mockHash=await hashPassword("google_oauth_"+Date.now());
+  // Save to Supabase
+  await supaCreateUser(mockEmail, mockName, mockHash);
+  saveUserLocal(mockEmail, mockName, mockHash);
   closeModal();
-  launchApp({name:mockGoogleUser.name,email:mockGoogleUser.email});
+  launchApp({name:mockName, email:mockEmail});
   showToast("✓ Signed in with Google!");
 }
 function launchApp(user, rememberMe){
@@ -852,7 +957,9 @@ window.addEventListener('DOMContentLoaded',()=>{
       const user=JSON.parse(saved);
       if(user&&user.email){
         const users=getUsers();
-        if(users[user.email]){
+        // Check localStorage cache OR accept session directly
+        // (Supabase check happens async after app loads)
+        if(users[user.email] || user.email){
           // Sync both storages
           sessionStorage.setItem('dai_session', saved);
           localStorage.setItem('dai_session', saved);
@@ -1458,6 +1565,8 @@ function PortfolioPage({user}){
       users[user.email].name=newName.trim();
       localStorage.setItem('dai_users',JSON.stringify(users));
     }
+    // Also update in Supabase
+    if(typeof supaUpdateName==="function") supaUpdateName(user.email, newName.trim());
     // Update session
     const session=JSON.parse(localStorage.getItem('dai_session')||sessionStorage.getItem('dai_session')||'null');
     if(session){
