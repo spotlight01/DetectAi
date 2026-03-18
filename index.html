@@ -1658,43 +1658,143 @@ function VoicePage({email}){
 }
 function VideoPage({email}){
   const{remaining,canUse,isPro,recordUse,upgrade}=useToolUsage(email,"video");
-  const[videoFile,setVideoFile]=useState(null);const[videoUrl,setVideoUrl]=useState(null);const[thumb,setThumb]=useState(null);const[desc,setDesc]=useState("");const[filename,setFilename]=useState("");const[duration,setDuration]=useState("");const[result,setResult]=useState(()=>{try{const r=localStorage.getItem("dai_vid_result_"+email);return r?JSON.parse(r):null}catch{return null}});const[loading,setLoading]=useState(false);const[show,setShow]=useState(false);const[stage,setStage]=useState("");const fileRef=useRef();const videoRef=useRef();const canvasRef=useRef();
-  const onFile=e=>{const f=e.target.files[0];if(!f)return;setVideoFile(f);setFilename(f.name);setResult(null);setThumb(null);setDuration("");setVideoUrl(URL.createObjectURL(f))};
-  const captureThumb=()=>{const v=videoRef.current;const c=canvasRef.current;if(!v||!c)return;c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0);setThumb(c.toDataURL("image/jpeg",.8));if(v.duration&&!isNaN(v.duration))setDuration(`${Math.round(v.duration)}s`)};
-  const go=async()=>{if(!canUse){setShow(true);return}if(!videoFile&&!desc.trim())return;setLoading(true);setResult(null);recordUse("video");const stages=["Extracting key frames...","Checking for AI tool signatures...","Analyzing facial authenticity...","Scanning for deepfake artifacts...","Running Sora/Kling/Runway pattern match...","Computing final AI probability..."];for(let i=0;i<stages.length;i++){setStage(stages[i]);await new Promise(r=>setTimeout(r,560))}const b64thumb=thumb?thumb.split(",")[1]:null;const promptText=`Analyze for AI/deepfake: Filename:"${filename||"unknown"}", Duration:${duration||"unknown"}, ${videoFile?`Size:${(videoFile.size/1024/1024).toFixed(2)}MB`:""}, Desc:"${desc||"N/A"}"`;const messages=b64thumb?[{role:"user",content:[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64thumb}},{type:"text",text:promptText}]}]:[{role:"user",content:promptText}];const r=await callClaude(messages,`You are an expert AI video and deepfake detection analyst. Always respond ONLY with valid JSON. Return: {"scores":{"visual_authenticity":0-100,"motion_naturalness":0-100,"temporal_consistency":0-100,"audio_visual_sync":0-100,"deepfake_likelihood":0-100,"overall":0-100},"confidence":"High|Medium|Low","verdict":"AI Generated|Deepfake|Likely AI|Uncertain|Likely Real|Real Footage","summary":"2-3 sentences","indicators":["3-6 items"],"riskLevel":"Low|Medium|High|Critical"}`);setResult(r);localStorage.setItem("dai_vid_result_"+email,JSON.stringify(r));setLoading(false);setStage("")};
-  return(<Section icon="🎬" color="#fb7185" title="Video Detector" desc="Detect Sora · Kling · Runway · Luma · Pika · Veo 2 · Deepfakes">
-    {show&&<PaywallModal onClose={()=>setShow(false)} onUpgrade={upgrade} toolName="Video"/>}
-    <TrialBadge remaining={remaining} isPro={isPro}/>
-    {/* AI tool chips */}
-    <div style={{marginBottom:12}}>
-      <div style={{color:"#3a4080",fontSize:9,fontFamily:"monospace",letterSpacing:2,marginBottom:8}}>SUSPECT A SPECIFIC AI TOOL? TAP TO SELECT</div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-        {["Sora","Kling AI","Runway Gen-3","Luma Dream Machine","Pika Labs","Google Veo 2","Synthesia","HeyGen"].map(tool=>(
-          <button key={tool} onClick={()=>setDesc(d=>d.toLowerCase().includes(tool.toLowerCase())?d:d+" "+tool.toLowerCase())} style={{padding:"5px 11px",borderRadius:99,border:"1px solid rgba(251,113,133,.3)",background:"rgba(251,113,133,.07)",color:"#fb7185",fontSize:10,cursor:"pointer",fontFamily:"inherit",transition:"all .2s"}}>
-            {tool}
-          </button>
-        ))}
+  const[videoFile,setVideoFile]=useState(null);
+  const[videoUrl,setVideoUrl]=useState(null);
+  const[thumb,setThumb]=useState(null);
+  const[desc,setDesc]=useState("");
+  const[filename,setFilename]=useState("");
+  const[duration,setDuration]=useState("");
+  const[result,setResult]=useState(()=>{try{const r=localStorage.getItem("dai_vid_result_"+email);return r?JSON.parse(r):null}catch{return null}});
+  const[loading,setLoading]=useState(false);
+  const[show,setShow]=useState(false);
+  const[stage,setStage]=useState("");
+  const fileRef=useRef();
+  const videoRef=useRef();
+  const canvasRef=useRef();
+
+  const onFile=e=>{
+    const f=e.target.files[0];
+    if(!f)return;
+    setVideoFile(f);setFilename(f.name);setResult(null);setThumb(null);setDuration("");
+    setVideoUrl(URL.createObjectURL(f));
+  };
+  const captureThumb=()=>{
+    const v=videoRef.current;const cv=canvasRef.current;
+    if(!v||!cv)return;
+    cv.width=v.videoWidth;cv.height=v.videoHeight;
+    cv.getContext("2d").drawImage(v,0,0);
+    setThumb(cv.toDataURL("image/jpeg",.8));
+    if(v.duration&&!isNaN(v.duration))setDuration(`${Math.round(v.duration)}s`);
+  };
+
+  const toggleTool=tool=>{
+    const lower=tool.toLowerCase();
+    setDesc(d=>d.toLowerCase().includes(lower)?d.replace(lower,"").trim():d+" "+lower);
+  };
+
+  const go=async()=>{
+    if(!canUse){setShow(true);return}
+    if(!videoFile&&!desc.trim())return;
+    setLoading(true);setResult(null);recordUse("video");
+    const stages=[
+      "Extracting key frames...",
+      "Checking for AI tool signatures...",
+      "Analyzing facial authenticity...",
+      "Scanning for deepfake artifacts...",
+      "Running Sora/Kling/Runway pattern match...",
+      "Computing final AI probability..."
+    ];
+    for(let i=0;i<stages.length;i++){
+      setStage(stages[i]);
+      await new Promise(r=>setTimeout(r,500));
+    }
+    const b64thumb=thumb?thumb.split(",")[1]:null;
+    const promptText=`Analyze for AI/deepfake: Filename:"${filename||"unknown"}", Duration:${duration||"unknown"}, ${videoFile?`Size:${(videoFile.size/1024/1024).toFixed(2)}MB`:""}, Description:"${desc||"N/A"}"`;
+    const messages=b64thumb
+      ?[{role:"user",content:[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64thumb}},{type:"text",text:promptText}]}]
+      :[{role:"user",content:promptText}];
+    const r=await callClaude(messages,`You are an expert AI video and deepfake detection analyst. Always respond ONLY with valid JSON. Return: {"scores":{"visual_authenticity":0-100,"motion_naturalness":0-100,"temporal_consistency":0-100,"audio_visual_sync":0-100,"deepfake_likelihood":0-100,"overall":0-100},"confidence":"High|Medium|Low","verdict":"AI Generated|Deepfake|Likely AI|Uncertain|Likely Real|Real Footage","summary":"2-3 sentences","indicators":["3-6 items"],"riskLevel":"Low|Medium|High|Critical"}`);
+    setResult(r);
+    localStorage.setItem("dai_vid_result_"+email,JSON.stringify(r));
+    setLoading(false);setStage("");
+  };
+
+  const AI_TOOLS=["Sora","Kling AI","Runway Gen-3","Luma Dream Machine","Pika Labs","Google Veo 2","Synthesia","HeyGen"];
+
+  return(
+    <Section icon="🎬" color="#fb7185" title="Video Detector" desc="Detect Sora · Kling · Runway · Luma · Pika · Veo 2 · Deepfakes">
+      {show&&<PaywallModal onClose={()=>setShow(false)} onUpgrade={upgrade} toolName="Video"/>}
+      <TrialBadge remaining={remaining} isPro={isPro}/>
+
+      {/* AI Tool Chips */}
+      <div style={{marginBottom:12}}>
+        <div style={{color:"#3a4080",fontSize:9,fontFamily:"monospace",letterSpacing:2,marginBottom:8}}>SUSPECT A SPECIFIC AI TOOL? TAP TO SELECT</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+          {AI_TOOLS.map(tool=>{
+            const active=desc.toLowerCase().includes(tool.toLowerCase());
+            return(
+              <button key={tool} onClick={()=>toggleTool(tool)} style={{padding:"5px 11px",borderRadius:99,border:`1px solid ${active?"#fb7185":"rgba(251,113,133,.3)"}`,background:active?"rgba(251,113,133,.15)":"rgba(251,113,133,.05)",color:active?"#fb7185":"#6068a8",fontSize:10,cursor:"pointer",fontFamily:"inherit",transition:"all .2s",fontWeight:active?700:400}}>
+                {tool}
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </div>
-    <div onClick={()=>fileRef.current.click()} style={{border:"2px dashed #2a2a6a",borderRadius:14,cursor:"pointer",background:"#101035",transition:"border-color .2s",overflow:"hidden",marginBottom:10}} onMouseEnter={e=>e.currentTarget.style.borderColor="#f43f5e"} onMouseLeave={e=>e.currentTarget.style.borderColor="#2a2a6a"}>
-      {videoUrl?(<div style={{position:"relative"}}><video ref={videoRef} src={videoUrl} style={{width:"100%",maxHeight:210,display:"block",background:"#000"}} controls onLoadedMetadata={captureThumb}/><canvas ref={canvasRef} style={{display:"none"}}/><div style={{position:"absolute",top:8,right:8,background:"#fb7185",borderRadius:6,padding:"3px 8px",fontSize:9,fontFamily:"monospace",color:"#fff",fontWeight:700,pointerEvents:"none"}}>VIDEO LOADED</div></div>)
-      :(<div style={{padding:"30px 20px",textAlign:"center"}}><div style={{fontSize:42,marginBottom:10}}>🎬</div><div style={{color:"#e8eeff",fontWeight:700,fontSize:14,marginBottom:4}}>Upload Video to Analyze</div>
-          <div style={{color:"#6068a8",fontSize:11,marginBottom:8}}>MP4 · MOV · AVI · WEBM · Max 200MB</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center"}}>
-            {["Sora","Kling","Runway","Luma","Pika","Veo 2","Deepfakes"].map(t=>(
-              <span key={t} style={{background:"rgba(251,113,133,.1)",border:"1px solid rgba(251,113,133,.2)",borderRadius:99,padding:"2px 8px",fontSize:9,color:"#fb7185",fontFamily:"monospace"}}>{t}</span>
-            ))}
-          </div></div></div>)}
-      <input ref={fileRef} type="file" accept="video/*" onChange={onFile} style={{display:"none"}}/>
-    </div>
-    {filename&&<div style={{padding:"8px 12px",background:"#101035",border:"1px solid #2a2a6a",borderRadius:8,display:"flex",alignItems:"center",gap:8,marginBottom:10}}><span style={{fontSize:14}}>🎬</span><span style={{color:"#6068a8",fontSize:11,fontFamily:"monospace",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filename}</span>{duration&&<span style={{color:"#f43f5e",fontSize:10,fontFamily:"monospace",flexShrink:0}}>{duration}</span>}<button onClick={e=>{e.stopPropagation();setVideoFile(null);setVideoUrl(null);setFilename("");setDuration("");setThumb(null);setResult(null)}} style={{background:"none",border:"none",color:"#3a4080",cursor:"pointer",fontSize:14,padding:0,flexShrink:0}}>×</button></div>}
-    <div style={{color:"#3a4080",fontSize:9,fontFamily:"monospace",letterSpacing:1,marginBottom:5}}>DESCRIBE THE VIDEO (boosts accuracy)</div>
-    <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Describe what looks suspicious — e.g. Face looks fake, lips don't match audio, background shifts, made with Sora / Kling / Runway..." style={{...inp,minHeight:80,resize:"vertical",lineHeight:1.7}} onFocus={e=>e.target.style.borderColor="#f43f5e"} onBlur={e=>e.target.style.borderColor="#2a2a6a"}/>
-    <Btn onClick={go} disabled={loading||(!videoFile&&!desc.trim())} color="#f43f5e">{loading?"Analyzing...":canUse?"🎬 Detect AI Video":"🔒 Upgrade to Continue"}</Btn>
-    {loading&&stage&&<div style={{marginTop:14,background:"#101035",border:"1px solid #f43f5e20",borderRadius:10,padding:14,textAlign:"center"}}><div style={{width:28,height:28,border:"3px solid #2a2a6a",borderTopColor:"#f43f5e",borderRadius:"50%",margin:"0 auto 10px",animation:"spin .8s linear infinite"}}/><div style={{color:"#f43f5e",fontSize:12,fontFamily:"monospace",letterSpacing:1}}>{stage}</div></div>}
-    <ResultCard result={result} loading={false} accentColor="#f43f5e"/>
-  </Section>);
+
+      {/* Upload Box */}
+      <div onClick={()=>fileRef.current.click()} style={{border:"2px dashed #2a2a6a",borderRadius:14,cursor:"pointer",background:"#101035",transition:"border-color .2s",overflow:"hidden",marginBottom:10}} onMouseEnter={e=>e.currentTarget.style.borderColor="#fb7185"} onMouseLeave={e=>e.currentTarget.style.borderColor="#2a2a6a"}>
+        {videoUrl?(
+          <div style={{position:"relative"}}>
+            <video ref={videoRef} src={videoUrl} style={{width:"100%",maxHeight:210,display:"block",background:"#000"}} controls onLoadedMetadata={captureThumb}/>
+            <canvas ref={canvasRef} style={{display:"none"}}/>
+            <div style={{position:"absolute",top:8,right:8,background:"#fb7185",borderRadius:6,padding:"3px 8px",fontSize:9,fontFamily:"monospace",color:"#fff",fontWeight:700,pointerEvents:"none"}}>VIDEO LOADED</div>
+          </div>
+        ):(
+          <div style={{padding:"24px 20px",textAlign:"center"}}>
+            <div style={{fontSize:40,marginBottom:8}}>🎬</div>
+            <div style={{color:"#e8eeff",fontWeight:700,fontSize:14,marginBottom:6}}>Upload Video to Analyze</div>
+            <div style={{color:"#6068a8",fontSize:11,marginBottom:10}}>MP4 · MOV · AVI · WEBM · Max 200MB</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center"}}>
+              {["Sora","Kling","Runway","Luma","Pika","Veo 2"].map(t=>(
+                <span key={t} style={{background:"rgba(251,113,133,.1)",border:"1px solid rgba(251,113,133,.2)",borderRadius:99,padding:"2px 8px",fontSize:9,color:"#fb7185",fontFamily:"monospace"}}>{t}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        <input ref={fileRef} type="file" accept="video/*" onChange={onFile} style={{display:"none"}}/>
+      </div>
+
+      {/* Filename pill */}
+      {filename&&(
+        <div style={{padding:"8px 12px",background:"#101035",border:"1px solid #2a2a6a",borderRadius:8,display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+          <span style={{fontSize:14}}>🎬</span>
+          <span style={{color:"#6068a8",fontSize:11,fontFamily:"monospace",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filename}</span>
+          {duration&&<span style={{color:"#fb7185",fontSize:10,fontFamily:"monospace",flexShrink:0}}>{duration}</span>}
+          <button onClick={e=>{e.stopPropagation();setVideoFile(null);setVideoUrl(null);setFilename("");setDuration("");setThumb(null);setResult(null)}} style={{background:"none",border:"none",color:"#3a4080",cursor:"pointer",fontSize:14,padding:0,flexShrink:0}}>×</button>
+        </div>
+      )}
+
+      {/* Description textarea */}
+      <div style={{color:"#3a4080",fontSize:9,fontFamily:"monospace",letterSpacing:1,marginBottom:5}}>DESCRIBE WHAT LOOKS SUSPICIOUS (boosts accuracy)</div>
+      <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="e.g. Face looks fake, lips don't match audio, background shifts, made with Sora / Kling..." style={{width:"100%",background:"#101035",border:"1px solid #2a2a6a",borderRadius:10,color:"#e8eeff",padding:"12px 16px",fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"inherit",minHeight:80,resize:"vertical",lineHeight:1.7}} onFocus={e=>e.target.style.borderColor="#fb7185"} onBlur={e=>e.target.style.borderColor="#2a2a6a"}/>
+
+      <Btn onClick={go} disabled={loading||(!videoFile&&!desc.trim())} color="#fb7185">
+        {loading?"Analyzing...":canUse?"🎬 Detect AI Video":"🔒 Upgrade to Continue"}
+      </Btn>
+
+      {/* Stage indicator */}
+      {loading&&stage&&(
+        <div style={{marginTop:12,background:"#101035",border:"1px solid rgba(251,113,133,.2)",borderRadius:10,padding:14,textAlign:"center"}}>
+          <div style={{width:28,height:28,border:"3px solid #2a2a6a",borderTopColor:"#fb7185",borderRadius:"50%",margin:"0 auto 10px",animation:"spin .8s linear infinite"}}/>
+          <div style={{color:"#fb7185",fontSize:12,fontFamily:"monospace",letterSpacing:1}}>{stage}</div>
+        </div>
+      )}
+
+      <ResultCard result={result} loading={false} accentColor="#fb7185"/>
+    </Section>
+  );
 }
+
 function SocialPage({subPage,setSubPage,email}){
   if(subPage==="instagram")return <InstagramPage goBack={()=>setSubPage(null)} email={email}/>;
   if(subPage==="tiktok")return <TikTokPage goBack={()=>setSubPage(null)} email={email}/>;
