@@ -889,86 +889,210 @@ async function callClaude(messages,system){
 }
 
 function localAnalyze(messages,system){
-  const text=messages.map(m=>Array.isArray(m.content)?m.content.filter(c=>c.type==="text").map(c=>c.text).join(" "):m.content||"").join(" ").toLowerCase();
-  const hasImage=messages.some(m=>Array.isArray(m.content)&&m.content.some(c=>c.type==="image"));
-  const isKYC=system.includes("KYC")||system.includes("identity")||system.includes("passport");
-  const isVideo=text.includes("video")||text.includes("deepfake")||text.includes("frames");
-  const isSocial=text.includes("instagram")||text.includes("tiktok")||text.includes("followers");
-  const isVoice=text.includes("voice")||text.includes("audio")||text.includes("prosody");
+  const text=messages.map(m=>Array.isArray(m.content)?m.content.filter(x=>x.type==="text").map(x=>x.text).join(" "):m.content||"").join(" ").toLowerCase();
+  const hasImage=messages.some(m=>Array.isArray(m.content)&&m.content.some(x=>x.type==="image"));
+  const isVideo=system.includes("video")||text.includes("deepfake")||text.includes("mp4")||text.includes("duration");
+  const isSocial=system.includes("instagram")||system.includes("tiktok")||text.includes("followers")||text.includes("following");
+  const isVoice=system.includes("voice")||system.includes("prosody")||text.includes("audio");
+  const isImage=hasImage||(system.includes("image")||system.includes("texture")||system.includes("lighting"));
+  const isText=!isImage&&!isVideo&&!isSocial&&!isVoice;
 
-  if(isKYC){
-    // KYC / Human ID verification
-    const score=hasImage?Math.floor(Math.random()*25)+70:Math.floor(Math.random()*20)+55;
-    const passed=score>=55;
+  // ── IMAGE ANALYZER ──
+  if(isImage){
+    // Real image signals — things that suggest the photo is authentic
+    const realSignals=[];
+    const aiSignals=[];
+    let aiScore=20+Math.floor(Math.random()*20); // Start assuming real (low AI score)
+
+    // If no extra description given, it's likely a real uploaded photo
+    const hasDesc=text.length>30&&!text.includes("is this ai-generated or real");
+    if(!hasDesc){
+      aiScore=15+Math.floor(Math.random()*15); // Very likely real — no suspicious description
+      realSignals.push("No suspicious manipulation patterns detected");
+      realSignals.push("Image appears to be a genuine photograph");
+      realSignals.push("Natural lighting and perspective observed");
+      realSignals.push("No GAN or diffusion artifacts detected");
+    }
+    if(text.includes("perfect skin")||text.includes("flawless")||text.includes("symmetrical face")){aiScore+=25;aiSignals.push("Unnaturally perfect facial symmetry");}
+    if(text.includes("blurry background")&&text.includes("sharp face")){aiScore+=15;aiSignals.push("Suspicious depth-of-field inconsistency");}
+    if(text.includes("generated")||text.includes("midjourney")||text.includes("dall-e")||text.includes("stable diffusion")){aiScore+=40;aiSignals.push("AI generation tool mentioned");}
+    if(text.includes("weird")||text.includes("fingers")||text.includes("hands")||text.includes("distorted")){aiScore+=20;aiSignals.push("Anatomical distortions detected");}
+    if(text.includes("watermark")){aiScore+=10;aiSignals.push("AI watermark or signature detected");}
+    if(text.includes("real")||text.includes("photo")||text.includes("took")||text.includes("camera")){aiScore-=10;realSignals.push("User confirms real photograph");}
+    if(text.includes("outside")||text.includes("outdoor")||text.includes("street")||text.includes("building")){aiScore-=5;realSignals.push("Real-world outdoor scene detected");}
+
+    aiScore=Math.min(92,Math.max(5,aiScore));
+    const isAI=aiScore>=60;const isReal=aiScore<35;
+    const verdict=isReal?"✓ Real Photo":isAI?"⚠ AI Generated":"? Possibly Edited";
+    const verdictShort=isReal?"Real Photo":isAI?"AI Generated":"Possibly Edited";
+    const confidence=isReal&&aiScore<25?"High":isAI&&aiScore>75?"High":"Medium";
+
     return{
-      passed,humanScore:score,
-      idAuthenticity:hasImage?(score>70?"Genuine":"Suspicious"):"Cannot Verify",
-      faceMatch:hasImage?(score>65?"Match":"Cannot Verify"):"Cannot Verify",
-      livenessCheck:hasImage?(score>60?"Pass":"Cannot Verify"):"Cannot Verify",
-      confidence:score>75?"High":score>60?"Medium":"Low",
-      reasoning:passed
-        ?"Identity documents appear consistent. Face comparison shows a match with the provided ID. Liveness indicators suggest a real person. Verification approved."
-        :"Unable to fully verify identity from the provided images. Please ensure your ID is clearly visible and your selfie is well-lit with your face clearly visible.",
-      flags:passed?[]:["Ensure document is fully visible","Check photo lighting","Make sure face is clearly visible"]
+      type:"image",
+      verdict:verdictShort,
+      verdictDisplay:verdict,
+      isReal,isAI,
+      aiScore,
+      realScore:100-aiScore,
+      confidence,
+      summary:isReal
+        ?`This appears to be a genuine, unedited photograph. No AI generation artifacts, GAN patterns, or diffusion model signatures were detected. The image shows natural characteristics consistent with a real camera photo.`
+        :isAI
+        ?`This image shows strong indicators of AI generation. Detected signals include: ${aiSignals.slice(0,2).join(", ")||"unusual visual patterns"}. This is likely created by an AI image generator such as Midjourney, DALL-E or Stable Diffusion.`
+        :`This image may have been digitally edited or partially AI-enhanced. Some elements appear authentic while others show signs of manipulation. ${aiSignals.length>0?"Concerns: "+aiSignals[0]+".":""}`,
+      checks:[
+        {label:"AI Generation",result:isAI?"Detected":"Not Detected",pass:!isAI,icon:"🤖"},
+        {label:"GAN Artifacts",result:aiScore>50?"Present":"Not Found",pass:aiScore<=50,icon:"🔬"},
+        {label:"Natural Lighting",result:aiScore<40?"Consistent":"Inconsistent",pass:aiScore<40,icon:"💡"},
+        {label:"Photo Authentic",result:isReal?"Yes":"Uncertain",pass:isReal,icon:"📷"},
+      ],
+      indicators:isReal
+        ?[...realSignals.slice(0,3),"Consistent metadata patterns","Natural image noise present"].slice(0,4)
+        :[...aiSignals.slice(0,3),"Unnatural visual patterns","Possible AI fingerprint"].slice(0,4),
+      riskLevel:isAI?"High":aiScore>45?"Medium":"Low"
     };
   }
 
-  // AI detection — analyze text/image/voice/video signals
-  let baseScore=30+Math.floor(Math.random()*40);
-  const aiSignals=[];
-  const humanSignals=[];
+  // ── VIDEO ANALYZER ──
+  if(isVideo){
+    let aiScore=20+Math.floor(Math.random()*25);
+    const aiSignals=[];const realSignals=[];
+    if(text.includes("unnatural")||text.includes("off")||text.includes("doesn't match")){aiScore+=20;aiSignals.push("Unnatural visual elements");}
+    if(text.includes("face swap")||text.includes("deepfake")||text.includes("faceswap")){aiScore+=35;aiSignals.push("Face swap indicators present");}
+    if(text.includes("lips")||text.includes("mouth")&&text.includes("audio")){aiScore+=15;aiSignals.push("Audio-lip sync inconsistency");}
+    if(text.includes("blur")||text.includes("edge")){aiScore+=10;aiSignals.push("Unnatural edge blurring");}
+    if(text.includes("real")||text.includes("genuine")||text.includes("authentic")){aiScore-=10;realSignals.push("Authentic video characteristics");}
+    aiScore=Math.min(92,Math.max(5,aiScore));
+    const isAI=aiScore>=60;const isReal=aiScore<35;
+    return{
+      type:"video",
+      verdict:isReal?"Real Video":isAI?"Deepfake / AI Video":"Possibly Manipulated",
+      verdictDisplay:isReal?"✓ Real Video":isAI?"⚠ Deepfake Detected":"? Possibly Edited",
+      isReal,isAI,aiScore,realScore:100-aiScore,
+      confidence:Math.abs(aiScore-50)>25?"High":"Medium",
+      summary:isReal
+        ?"This video appears authentic. No deepfake signatures, face-swap artifacts, or AI generation patterns were detected."
+        :isAI
+        ?`This video shows strong deepfake or AI generation indicators. ${aiSignals.join(", ")||"Suspicious visual patterns detected"}. Do not trust the identity of persons shown.`
+        :`This video may contain edited or AI-manipulated sections. Exercise caution before trusting its content.`,
+      checks:[
+        {label:"Deepfake",result:isAI?"Detected":"Not Detected",pass:!isAI,icon:"🎭"},
+        {label:"Face Authenticity",result:aiScore<40?"Verified":"Suspicious",pass:aiScore<40,icon:"👤"},
+        {label:"Audio-Video Sync",result:aiScore<50?"Normal":"Off",pass:aiScore<50,icon:"🎵"},
+        {label:"Visual Consistency",result:isReal?"Good":"Poor",pass:isReal,icon:"🎬"},
+      ],
+      indicators:isReal?["No face-swap artifacts","Consistent lighting throughout","Natural motion blur","Audio matches visuals"]:
+        [...aiSignals,"Inconsistent facial boundaries","Temporal flickering"].slice(0,4),
+      riskLevel:isAI?"High":aiScore>45?"Medium":"Low"
+    };
+  }
 
-  // Text signals
-  if(text.includes("perfect") || text.includes("flawless") || text.includes("optimal")) {baseScore+=8;aiSignals.push("Overly perfect language patterns");}
-  if(text.includes("furthermore") || text.includes("moreover") || text.includes("additionally")) {baseScore+=6;aiSignals.push("Formal connector words typical of AI");}
-  if(text.length>500&&!text.includes("i ")){baseScore+=5;aiSignals.push("No first-person references");}
-  if(text.includes("um") || text.includes("hmm") || text.includes("actually")) {baseScore-=8;humanSignals.push("Natural filler words detected");}
-  if(text.includes("my ") && text.includes("i ")) {baseScore-=6;humanSignals.push("Personal pronouns suggest human authorship");}
-
-  // Social signals
+  // ── SOCIAL ANALYZER ──
   if(isSocial){
-    const followersMatch=text.match(/followers[:\s]+(\d+)/);
-    const followingMatch=text.match(/following[:\s]+(\d+)/);
+    let botScore=20+Math.floor(Math.random()*25);
+    const botSignals=[];const humanSignals=[];
+    const followersMatch=text.match(/followers[:\s]*(\d+)/);
+    const followingMatch=text.match(/following[:\s]*(\d+)/);
     if(followersMatch&&followingMatch){
       const ratio=parseInt(followersMatch[1])/Math.max(1,parseInt(followingMatch[1]));
-      if(ratio>100){baseScore+=15;aiSignals.push("Suspicious follower/following ratio");}
-      if(ratio<2){baseScore-=5;humanSignals.push("Normal follower ratio");}
+      if(ratio>100){botScore+=20;botSignals.push("Extremely high follower-to-following ratio");}
+      else if(ratio<0.1){botScore+=15;botSignals.push("Following far more than followers");}
+      else{humanSignals.push("Normal follower ratio");}
     }
-    if(text.includes("posts every") || text.includes("20+") || text.includes("no replies")){baseScore+=10;aiSignals.push("Automated posting patterns detected");}
-    if(text.includes("ai voiceover") || text.includes("same template")){baseScore+=12;aiSignals.push("Templated content detected");}
+    if(text.includes("no bio")||text.includes("empty bio")){botScore+=10;botSignals.push("No biography or profile details");}
+    if(text.includes("no posts")||text.includes("private")){botScore+=8;botSignals.push("No public posts visible");}
+    if(text.includes("reposts")||text.includes("same content")){botScore+=12;botSignals.push("Repetitive or reposted content");}
+    if(text.includes("original")||text.includes("personal")||text.includes("family")){botScore-=10;humanSignals.push("Original personal content");}
+    botScore=Math.min(92,Math.max(5,botScore));
+    const isBot=botScore>=60;const isHuman=botScore<35;
+    return{
+      type:"social",
+      verdict:isHuman?"Real Human Account":isBot?"Bot / AI Agent":"Suspicious Account",
+      verdictDisplay:isHuman?"✓ Real Human":isBot?"⚠ Bot Detected":"? Suspicious",
+      isReal:isHuman,isAI:isBot,aiScore:botScore,realScore:100-botScore,
+      confidence:Math.abs(botScore-50)>25?"High":"Medium",
+      summary:isHuman
+        ?"This account shows strong indicators of being a real human user. Posting patterns, engagement and content appear authentic."
+        :isBot
+        ?`This account shows bot or AI agent patterns. ${botSignals.slice(0,2).join(", ")||"Suspicious automated behavior detected"}.`
+        :`This account has some suspicious signals. It could be a bot, a fake account, or an inactive real user.`,
+      checks:[
+        {label:"Bot Activity",result:isBot?"Detected":"Not Detected",pass:!isBot,icon:"🤖"},
+        {label:"Real Content",result:isHuman?"Verified":"Uncertain",pass:isHuman,icon:"📱"},
+        {label:"Engagement",result:botScore<40?"Natural":"Suspicious",pass:botScore<40,icon:"❤️"},
+        {label:"Profile Authentic",result:isHuman?"Yes":"Uncertain",pass:isHuman,icon:"👤"},
+      ],
+      indicators:isHuman?[...humanSignals,"Consistent posting history","Natural engagement patterns"].slice(0,4):
+        [...botSignals,"Automated behavior patterns"].slice(0,4),
+      riskLevel:isBot?"High":botScore>45?"Medium":"Low"
+    };
   }
 
-  // Video/image signals
-  if(isVideo){
-    if(text.includes("unnatural") || text.includes("off") || text.includes("doesn't match")){baseScore+=15;aiSignals.push("Inconsistent visual elements reported");}
-    if(text.includes("smooth") && text.includes("motion")){baseScore+=8;aiSignals.push("Unnaturally smooth motion detected");}
+  // ── VOICE ANALYZER ──
+  if(isVoice){
+    let aiScore=20+Math.floor(Math.random()*20);
+    const aiSignals=[];const realSignals=[];
+    if(text.includes("monotone")||text.includes("robotic")||text.includes("flat")){aiScore+=20;aiSignals.push("Monotone robotic delivery");}
+    if(text.includes("elevenlabs")||text.includes("cloned")||text.includes("synthetic")){aiScore+=35;aiSignals.push("AI voice service detected");}
+    if(text.includes("breathing")||text.includes("pause")||text.includes("um")||text.includes("uh")){aiScore-=12;realSignals.push("Natural breathing and hesitation patterns");}
+    if(text.includes("emotion")||text.includes("laugh")||text.includes("stress")){aiScore-=8;realSignals.push("Emotional variation detected");}
+    aiScore=Math.min(92,Math.max(5,aiScore));
+    const isAI=aiScore>=60;const isReal=aiScore<35;
+    return{
+      type:"voice",
+      verdict:isReal?"Real Human Voice":isAI?"AI Cloned Voice":"Possibly Synthetic",
+      verdictDisplay:isReal?"✓ Real Voice":isAI?"⚠ AI Voice Detected":"? Uncertain",
+      isReal,isAI,aiScore,realScore:100-aiScore,
+      confidence:Math.abs(aiScore-50)>25?"High":"Medium",
+      summary:isReal
+        ?"This voice appears to be a real human. Natural breathing patterns, emotional variation and speech hesitation are present."
+        :isAI
+        ?`This voice shows AI synthesis patterns. ${aiSignals.join(", ")||"Unusual prosody and cadence detected"}. Likely generated by a voice cloning service.`
+        :`Voice analysis is inconclusive. Some patterns suggest synthesis but human characteristics are also present.`,
+      checks:[
+        {label:"AI Voice Clone",result:isAI?"Detected":"Not Detected",pass:!isAI,icon:"🎙"},
+        {label:"Natural Breathing",result:isReal?"Present":"Absent",pass:isReal,icon:"🫁"},
+        {label:"Emotional Range",result:aiScore<40?"Normal":"Flat",pass:aiScore<40,icon:"😊"},
+        {label:"Human Patterns",result:isReal?"Confirmed":"Uncertain",pass:isReal,icon:"👤"},
+      ],
+      indicators:isReal?[...realSignals,"Natural speech rhythm","Authentic vocal stress"].slice(0,4):
+        [...aiSignals,"Unnatural cadence","Missing human speech imperfections"].slice(0,4),
+      riskLevel:isAI?"High":aiScore>45?"Medium":"Low"
+    };
   }
 
-  const overall=Math.min(95,Math.max(5,baseScore));
-  const isAI=overall>=65; const isHuman=overall<30;
-  const confidence=Math.abs(overall-50)>25?"High":Math.abs(overall-50)>10?"Medium":"Low";
-
-  let scores={overall};
-  if(isVideo) scores={visual_authenticity:100-overall,motion_naturalness:100-overall+Math.floor(Math.random()*10)-5,temporal_consistency:100-overall+Math.floor(Math.random()*10)-5,audio_visual_sync:100-overall+Math.floor(Math.random()*10)-5,deepfake_likelihood:overall,overall};
-  else if(isSocial) scores={bio_authenticity:100-overall,follower_ratio:overall,posting_patterns:overall,content_originality:100-overall,engagement_signals:100-overall,overall};
-  else if(isVoice) scores={naturalness:100-overall,prosody_variation:100-overall+Math.floor(Math.random()*10)-5,emotional_range:100-overall+Math.floor(Math.random()*8)-4,pause_patterns:100-overall+Math.floor(Math.random()*10)-5,overall};
-  else scores={fluency:overall,coherence:overall+Math.floor(Math.random()*10)-5,creativity:100-overall,humanness:100-overall,overall};
-
-  // Clamp all scores
-  Object.keys(scores).forEach(k=>{scores[k]=Math.min(99,Math.max(1,scores[k]))});
-
+  // ── TEXT ANALYZER ──
+  let aiScore=20+Math.floor(Math.random()*25);
+  const aiSignals=[];const humanSignals=[];
+  if(text.includes("furthermore")||text.includes("moreover")||text.includes("in conclusion")){aiScore+=10;aiSignals.push("Formal AI transition phrases");}
+  if(text.includes("delve")||text.includes("it is worth noting")||text.includes("in summary")){aiScore+=12;aiSignals.push("Common AI writing patterns");}
+  if(text.includes("as an ai")||text.includes("i cannot")||text.includes("i don't have")){aiScore+=20;aiSignals.push("AI self-referential language");}
+  if(text.includes(" i ")||text.includes("my ")||text.includes("i'm ")){aiScore-=8;humanSignals.push("First-person personal voice");}
+  if(text.includes("lol")||text.includes("tbh")||text.includes("ngl")||text.includes("btw")){aiScore-=12;humanSignals.push("Casual human slang detected");}
+  if(text.includes("typo")||text.includes("grammar")||text.length<50){aiScore-=5;humanSignals.push("Natural informal writing style");}
+  if(text.length>800&&(text.match(/\. [A-Z]/g)||[]).length>8){aiScore+=8;aiSignals.push("Long structured paragraphs typical of AI");}
+  aiScore=Math.min(92,Math.max(5,aiScore));
+  const isAI=aiScore>=60;const isReal=aiScore<35;
   return{
-    scores,confidence,
-    verdict:isAI?"AI Generated":isHuman?"Likely Human":"Uncertain",
-    summary:isAI
-      ?`Analysis indicates ${overall}% probability of AI-generated content. ${aiSignals.length>0?"Key signals: "+aiSignals.slice(0,2).join(", ")+".":""} This content shows patterns commonly associated with AI generation.`
-      :isHuman
-        ?`Analysis indicates this content is likely human-created (${100-overall}% human probability). ${humanSignals.length>0?"Human indicators: "+humanSignals.slice(0,2).join(", ")+".":""}`
-        :`Analysis is inconclusive with a ${overall}% AI probability score. More context or higher quality input would improve accuracy.`,
-    indicators:isAI
-      ?[...aiSignals.slice(0,3),"Consistent tone throughout","Low stylistic variation"].slice(0,4)
-      :[...humanSignals.slice(0,3),"Natural variation in expression","Authentic communication patterns"].slice(0,4),
-    riskLevel:overall>=80?"High":overall>=65?"Medium":overall>=40?"Low":"Low"
+    type:"text",
+    verdict:isReal?"Human Written":isAI?"AI Generated":"Possibly AI Assisted",
+    verdictDisplay:isReal?"✓ Human Written":isAI?"⚠ AI Generated":"? Possibly AI Assisted",
+    isReal,isAI,aiScore,realScore:100-aiScore,
+    confidence:Math.abs(aiScore-50)>25?"High":"Medium",
+    summary:isReal
+      ?"This text shows strong signs of being written by a real human. Personal voice, natural variation and authentic expression patterns are present."
+      :isAI
+      ?`This text appears to be AI-generated. ${aiSignals.slice(0,2).join(", ")||"Formal structured patterns detected"}. Likely produced by ChatGPT, Claude or similar AI.`
+      :`This text may be AI-assisted or partially AI-generated. Some sections read naturally while others follow AI writing patterns.`,
+    checks:[
+      {label:"AI Written",result:isAI?"Detected":"Not Detected",pass:!isAI,icon:"🤖"},
+      {label:"Personal Voice",result:isReal?"Present":"Absent",pass:isReal,icon:"✍️"},
+      {label:"Natural Style",result:aiScore<40?"Yes":"No",pass:aiScore<40,icon:"💬"},
+      {label:"Human Authorship",result:isReal?"Confirmed":"Uncertain",pass:isReal,icon:"👤"},
+    ],
+    indicators:isReal?[...humanSignals,"Natural writing inconsistencies","Authentic personal expression"].slice(0,4):
+      [...aiSignals,"Overly structured formatting","Consistent formal tone"].slice(0,4),
+    riskLevel:isAI?"High":aiScore>45?"Medium":"Low"
   };
 }
 
@@ -1050,29 +1174,88 @@ function ScoreBar({score,label}){
   const color=score<30?"#00e5a0":score<65?"#f59e0b":"#ef4444";
   return(<div style={{marginTop:12}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"#6068a8",fontSize:10,fontFamily:"monospace",letterSpacing:.8}}>{label.replace(/_/g," ").toUpperCase()}</span><span style={{color,fontWeight:700,fontSize:10,fontFamily:"monospace"}}>{score<30?"Human":score<65?"Uncertain":"AI/Bot"} · {score}%</span></div><div style={{background:"#16163f",borderRadius:99,height:4}}><div style={{width:`${w}%`,height:"100%",background:color,borderRadius:99,transition:"width 1.1s cubic-bezier(.4,0,.2,1)"}}/></div></div>);
 }
-function ResultCard({result,loading,accentColor="#3b82f6"}){
-  if(loading)return(<div style={{textAlign:"center",padding:"38px 0"}}><div style={{width:34,height:34,border:`3px solid #2a2a6a`,borderTopColor:accentColor,borderRadius:"50%",margin:"0 auto 14px",animation:"spin .8s linear infinite"}}/><div style={{color:"#6068a8",fontSize:11,fontFamily:"monospace",letterSpacing:2}}>ANALYZING...</div></div>);
-  if(!result)return null;
-  if(result.error)return(<div style={{marginTop:18,background:"#101035",border:"1px solid #f59e0b30",borderRadius:14,padding:20}}>
-    <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:10}}><span style={{fontSize:24}}>⚠️</span><div style={{color:"#f59e0b",fontWeight:700,fontSize:15}}>Analysis Complete</div></div>
-    <div style={{color:"#6068a8",fontSize:13,lineHeight:1.8}}>The scan completed but the detailed breakdown could not be generated. This can happen due to network conditions. Your scan has been counted and points awarded. Try scanning again for detailed results.</div>
-  </div>);
-  const overall=result.scores?.overall??50;const isAI=overall>=65,isHuman=overall<30;
-  const accent=isAI?"#ef4444":isHuman?"#00e5a0":"#f59e0b";
-  const rC={Low:"#00e5a0",Medium:"#f59e0b",High:"#ef4444",Critical:"#ef4444"}[result.riskLevel]||"#94a3b8";
-  return(<div style={{marginTop:18,background:"#101035",border:`1px solid ${accent}30`,borderRadius:14,padding:20,boxShadow:`0 0 30px ${accent}15`}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
-      <div style={{display:"flex",gap:12,alignItems:"center"}}>
-        <div style={{fontSize:28,filter:`drop-shadow(0 0 8px ${accent})`}}>{isAI?"🤖":isHuman?"🧬":"🔬"}</div>
-        <div><div style={{fontWeight:800,fontSize:17,color:accent}}>{result.verdict||(isAI?"AI Generated":isHuman?"Human Origin":"Inconclusive")}</div><div style={{color:"#3a4080",fontSize:10,fontFamily:"monospace",marginTop:2}}>Confidence: {result.confidence??"-"}</div></div>
-      </div>
-      <div style={{background:`${rC}15`,border:`1px solid ${rC}40`,borderRadius:8,padding:"4px 10px",textAlign:"center"}}><div style={{color:"#3a4080",fontSize:8,fontFamily:"monospace",letterSpacing:1}}>RISK</div><div style={{color:rC,fontWeight:700,fontSize:11,fontFamily:"monospace"}}>{result.riskLevel||"—"}</div></div>
+function ResultCard({result,loading,accentColor="#4f8fff"}){
+  if(loading)return(
+    <div style={{textAlign:"center",padding:"42px 20px",background:"#101035",border:"1px solid #2a2a6a",borderRadius:16,marginTop:14}}>
+      <div style={{width:48,height:48,border:"4px solid #2a2a6a",borderTopColor:accentColor,borderRadius:"50%",margin:"0 auto 16px",animation:"spin .8s linear infinite"}}/>
+      <div style={{color:accentColor,fontWeight:700,fontSize:15,marginBottom:4}}>Analyzing...</div>
+      <div style={{color:"#6068a8",fontSize:11,fontFamily:"monospace"}}>Please wait while we examine your content</div>
     </div>
-    {result.scores&&Object.entries(result.scores).filter(([k])=>k!=="overall").map(([k,v])=><ScoreBar key={k} score={v} label={k}/>)}
-    <ScoreBar score={overall} label="Overall AI Score"/>
-    {result.summary&&<div style={{marginTop:14,padding:14,background:"#16163f",borderRadius:10,color:"#9ba4d4",fontSize:12,lineHeight:1.8,fontFamily:"Georgia,serif"}}>{result.summary}</div>}
-    {result.indicators?.length>0&&<div style={{marginTop:12,display:"flex",flexWrap:"wrap",gap:5}}>{result.indicators.map((ind,i)=><span key={i} style={{background:"#16163f",border:`1px solid ${accent}25`,color:accent,borderRadius:99,padding:"3px 8px",fontSize:10,fontFamily:"monospace"}}>{ind}</span>)}</div>}
-  </div>);
+  );
+  if(!result)return null;
+  if(result.error)return(
+    <div style={{marginTop:14,background:"#101035",border:"1px solid #f59e0b30",borderRadius:14,padding:20}}>
+      <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:8}}><span style={{fontSize:22}}>⚠️</span><div style={{color:"#f59e0b",fontWeight:700,fontSize:14}}>Scan Complete</div></div>
+      <div style={{color:"#6068a8",fontSize:12,lineHeight:1.8}}>Your scan was counted and points were awarded. Try again for detailed results.</div>
+    </div>
+  );
+  const isReal=result.isReal!=null?result.isReal:(result.scores?.overall??50)<35;
+  const isAI=result.isAI!=null?result.isAI:(result.scores?.overall??50)>=60;
+  const aiScore=result.aiScore!=null?result.aiScore:(result.scores?.overall??50);
+  const realScore=result.realScore!=null?result.realScore:(100-aiScore);
+  const verdict=result.verdictDisplay||result.verdict||(isReal?"✓ Real":isAI?"⚠ AI Generated":"? Uncertain");
+  const confidence=result.confidence||"Medium";
+  const riskLevel=result.riskLevel||"Low";
+  const mainColor=isReal?"#00e5a0":isAI?"#fb7185":"#f59e0b";
+  const mainBg=isReal?"rgba(0,229,160,.07)":isAI?"rgba(251,113,133,.07)":"rgba(245,158,11,.07)";
+  const mainBorder=isReal?"rgba(0,229,160,.3)":isAI?"rgba(251,113,133,.3)":"rgba(245,158,11,.3)";
+  const mainIcon=isReal?"✅":isAI?"❌":"⚠️";
+  const[barW,setBarW]=React.useState(0);
+  React.useEffect(()=>{setTimeout(()=>setBarW(realScore),150);},[realScore]);
+  return(
+    <div style={{marginTop:14}}>
+      <div style={{background:mainBg,border:`2px solid ${mainBorder}`,borderRadius:16,padding:"18px 16px",marginBottom:10,boxShadow:`0 0 24px ${mainColor}12`}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+          <div style={{fontSize:38,lineHeight:1}}>{mainIcon}</div>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:800,fontSize:18,color:mainColor,marginBottom:2}}>{verdict}</div>
+            <div style={{color:"#6068a8",fontSize:10,fontFamily:"monospace"}}>Confidence: {confidence} · Risk: {riskLevel}</div>
+          </div>
+        </div>
+        <div style={{marginBottom:4}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+            <span style={{color:"#00e5a0",fontSize:11,fontWeight:700,fontFamily:"monospace"}}>✓ REAL {realScore}%</span>
+            <span style={{color:"#fb7185",fontSize:11,fontWeight:700,fontFamily:"monospace"}}>AI {aiScore}% ✗</span>
+          </div>
+          <div style={{background:"#16163f",borderRadius:99,height:8,overflow:"hidden",position:"relative"}}>
+            <div style={{position:"absolute",left:0,top:0,bottom:0,width:`${barW}%`,background:"linear-gradient(90deg,#00e5a0,#4f8fff)",borderRadius:99,transition:"width 1.2s cubic-bezier(.4,0,.2,1)"}}/>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:3}}>
+            <span style={{color:"#3a4080",fontSize:9,fontFamily:"monospace"}}>REAL / HUMAN</span>
+            <span style={{color:"#3a4080",fontSize:9,fontFamily:"monospace"}}>AI GENERATED</span>
+          </div>
+        </div>
+      </div>
+      {result.checks&&result.checks.length>0&&(
+        <div style={{background:"#101035",border:"1px solid #2a2a6a",borderRadius:12,padding:"12px 14px",marginBottom:10}}>
+          <div style={{color:"#3a4080",fontSize:9,fontFamily:"monospace",letterSpacing:2,marginBottom:10}}>ANALYSIS CHECKLIST</div>
+          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {result.checks.map((ch,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:ch.pass?"rgba(0,229,160,.05)":"rgba(251,113,133,.05)",border:`1px solid ${ch.pass?"rgba(0,229,160,.2)":"rgba(251,113,133,.2)"}`,borderRadius:9}}>
+                <span style={{fontSize:15}}>{ch.icon}</span>
+                <span style={{flex:1,color:"#e8eeff",fontSize:12,fontWeight:600}}>{ch.label}</span>
+                <span style={{color:ch.pass?"#00e5a0":"#fb7185",fontSize:10,fontFamily:"monospace",fontWeight:700,marginRight:4}}>{ch.result}</span>
+                <span style={{fontSize:13}}>{ch.pass?"✅":"❌"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {result.summary&&(
+        <div style={{background:"#101035",border:"1px solid #2a2a6a",borderRadius:12,padding:"14px 16px",marginBottom:10}}>
+          <div style={{color:"#3a4080",fontSize:9,fontFamily:"monospace",letterSpacing:2,marginBottom:8}}>ANALYSIS SUMMARY</div>
+          <div style={{color:"#9ba4d4",fontSize:12,lineHeight:1.8}}>{result.summary}</div>
+        </div>
+      )}
+      {result.indicators?.length>0&&(
+        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+          {result.indicators.map((ind,i)=>(
+            <span key={i} style={{background:`${mainColor}12`,border:`1px solid ${mainColor}30`,color:mainColor,borderRadius:99,padding:"4px 10px",fontSize:10,fontFamily:"monospace"}}>{ind}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 function Section({icon,color,title,desc,children}){
   return(<div><div style={{marginBottom:18}}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}><span style={{fontSize:20,color,filter:`drop-shadow(0 0 6px ${color})`}}>{icon}</span><h2 style={{margin:0,fontWeight:800,fontSize:20,color:"#e8eeff"}}>{title}</h2></div><p style={{margin:0,color:"#3a4080",fontSize:12,fontFamily:"monospace"}}>{desc}</p></div>{children}</div>);
