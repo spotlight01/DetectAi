@@ -936,49 +936,9 @@ function showToast(msg){
 </script>
 
 <!-- ══ REACT APP ══ -->
-<script type="text/babel">
-const {useState,useRef,useEffect}=React;
 
-// ── CONSTANTS ──
-const PRICING={monthly:{price:"$4.99",period:"/month",label:"Monthly Plan",scans:"Unlimited scans",badge:"MOST POPULAR"},lifetime:{price:"$9.99",period:" one-time",label:"Lifetime Access",scans:"Unlimited forever",badge:"BEST VALUE"}};
-const FREE_TRIALS=5;
-const POINTS_PER_USE=2;
-const REWARDS=[
-  {id:"r1",pts:50,icon:"🎟",label:"1 Free Bonus Scan",desc:"Redeem for 1 extra scan on any tool",color:"#3b82f6"},
-  {id:"r2",pts:100,icon:"⚡",label:"7-Day Pro Trial",desc:"Unlock all tools free for 7 days",color:"#f59e0b"},
-  {id:"r3",pts:200,icon:"🛡",label:"1 Month Free Pro",desc:"Full Pro access for 30 days",color:"#8b5cf6"},
-  {id:"r4",pts:300,icon:"⬟",label:"Priority Human ID",desc:"Skip queue — instant verification",color:"#00e5a0"},
-  {id:"r5",pts:500,icon:"👑",label:"Lifetime Pro Access",desc:"Unlimited scans forever at no cost",color:"#f43f5e"},
-  {id:"r6",pts:750,icon:"💎",label:"Founding Member Badge",desc:"Exclusive badge + early feature access",color:"#4f8fff"},
-];
-const NAV=[
-  {id:"home",icon:"⬡",label:"Dashboard"},
-  {id:"portfolio",icon:"◉",label:"My Portfolio"},
-  {id:"text",icon:"✦",label:"Text Detector"},
-  {id:"image",icon:"◈",label:"Image Detector"},
-  {id:"voice",icon:"◎",label:"Voice Detector"},
-  {id:"video",icon:"◼",label:"Video Detector"},
-  {id:"social",icon:"◭",label:"Social Accounts",sub:[
-    {id:"instagram",icon:"▣",label:"Instagram",color:"#e1306c"},
-    {id:"tiktok",icon:"▶",label:"TikTok",color:"#69c9d0"},
-  ]},
-  {id:"humanid",icon:"⬟",label:"Human ID"},
-  {id:"support",icon:"💬",label:"Support"},
-  {id:"whitepaper",icon:"📄",label:"Whitepaper"},
-];
-
-// ── HELPERS ──
-// Smart local analyzer — works on GitHub Pages without API key
-// Also tries the real Claude API and uses it if available
-async function callClaude(messages,system){
-  try{
-    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system,messages})});
-    if(r.ok){const d=await r.json();const t=d.content?.map(i=>i.text||"").join("")||"";try{return JSON.parse(t.replace(/```json|```/g,"").trim())}catch{}}
-  }catch(e){}
-  // Fallback: smart local analysis based on input signals
-  return localAnalyze(messages,system);
-}
-
+<script>
+// ── LOCAL ANALYZERS (moved out of Babel for performance) ──
 function localAnalyze(messages,system){
   const text=messages.map(m=>Array.isArray(m.content)?m.content.filter(x=>x.type==="text").map(x=>x.text).join(" "):m.content||"").join(" ").toLowerCase();
   const hasImage=messages.some(m=>Array.isArray(m.content)&&m.content.some(x=>x.type==="image"));
@@ -1232,6 +1192,51 @@ function localKYCAnalyze(form,hasIdFront,hasIdBack,hasSelfie){
       :"Verification could not be fully completed. Please ensure your ID document is clearly photographed with all text visible, and your selfie shows your face clearly in good lighting.",
     flags:passed?[]:["Ensure ID is fully in frame","Use good lighting for selfie","Make sure ID text is readable"]
   };
+}
+
+</script>
+
+<script type="text/babel">
+const {useState,useRef,useEffect}=React;
+
+// ── CONSTANTS ──
+const PRICING={monthly:{price:"$4.99",period:"/month",label:"Monthly Plan",scans:"Unlimited scans",badge:"MOST POPULAR"},lifetime:{price:"$9.99",period:" one-time",label:"Lifetime Access",scans:"Unlimited forever",badge:"BEST VALUE"}};
+const FREE_TRIALS=5;
+const POINTS_PER_USE=2;
+const REWARDS=[
+  {id:"r1",pts:50,icon:"🎟",label:"1 Free Bonus Scan",desc:"Redeem for 1 extra scan on any tool",color:"#3b82f6"},
+  {id:"r2",pts:100,icon:"⚡",label:"7-Day Pro Trial",desc:"Unlock all tools free for 7 days",color:"#f59e0b"},
+  {id:"r3",pts:200,icon:"🛡",label:"1 Month Free Pro",desc:"Full Pro access for 30 days",color:"#8b5cf6"},
+  {id:"r4",pts:300,icon:"⬟",label:"Priority Human ID",desc:"Skip queue — instant verification",color:"#00e5a0"},
+  {id:"r5",pts:500,icon:"👑",label:"Lifetime Pro Access",desc:"Unlimited scans forever at no cost",color:"#f43f5e"},
+  {id:"r6",pts:750,icon:"💎",label:"Founding Member Badge",desc:"Exclusive badge + early feature access",color:"#4f8fff"},
+];
+const NAV=[
+  {id:"home",icon:"⬡",label:"Dashboard"},
+  {id:"portfolio",icon:"◉",label:"My Portfolio"},
+  {id:"text",icon:"✦",label:"Text Detector"},
+  {id:"image",icon:"◈",label:"Image Detector"},
+  {id:"voice",icon:"◎",label:"Voice Detector"},
+  {id:"video",icon:"◼",label:"Video Detector"},
+  {id:"social",icon:"◭",label:"Social Accounts",sub:[
+    {id:"instagram",icon:"▣",label:"Instagram",color:"#e1306c"},
+    {id:"tiktok",icon:"▶",label:"TikTok",color:"#69c9d0"},
+  ]},
+  {id:"humanid",icon:"⬟",label:"Human ID"},
+  {id:"support",icon:"💬",label:"Support"},
+  {id:"whitepaper",icon:"📄",label:"Whitepaper"},
+];
+
+// ── HELPERS ──
+// Smart local analyzer — works on GitHub Pages without API key
+// Also tries the real Claude API and uses it if available
+async function callClaude(messages,system){
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system,messages})});
+    if(r.ok){const d=await r.json();const t=d.content?.map(i=>i.text||"").join("")||"";try{return JSON.parse(t.replace(/```json|```/g,"").trim())}catch{}}
+  }catch(e){}
+  // Fallback: smart local analysis based on input signals
+  return localAnalyze(messages,system);
 }
 
 const DSYS=`You are an expert AI/bot detection analyst. Always respond ONLY with valid JSON.
@@ -1790,7 +1795,6 @@ function Dashboard({setPage,user}){
     <div style={{textAlign:"center",color:"#1e2255",fontSize:9,fontFamily:"monospace",marginTop:12}}>© 2026 Detect AI & Prove You Are A Real Human</div>
   </div>);
 }
-
 
 function TextPage({email}){
   const{remaining,canUse,isPro,recordUse,upgrade}=useToolUsage(email,"text");
@@ -2426,7 +2430,6 @@ function WhitepaperPage(){
     </div>
   );
 }
-
 
 // ── SUPPORT PAGE ──
 const SUPPORT_EMAIL = "workingplace0111@gmail.com";
