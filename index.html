@@ -955,34 +955,65 @@ function localAnalyze(messages,system){
 
   // ── VIDEO ANALYZER ──
   if(isVideo){
-    let aiScore=20+Math.floor(Math.random()*25);
+    let aiScore=15+Math.floor(Math.random()*20);
     const aiSignals=[];const realSignals=[];
-    if(text.includes("unnatural")||text.includes("off")||text.includes("doesn't match")){aiScore+=20;aiSignals.push("Unnatural visual elements");}
-    if(text.includes("face swap")||text.includes("deepfake")||text.includes("faceswap")){aiScore+=35;aiSignals.push("Face swap indicators present");}
-    if(text.includes("lips")||text.includes("mouth")&&text.includes("audio")){aiScore+=15;aiSignals.push("Audio-lip sync inconsistency");}
-    if(text.includes("blur")||text.includes("edge")){aiScore+=10;aiSignals.push("Unnatural edge blurring");}
-    if(text.includes("real")||text.includes("genuine")||text.includes("authentic")){aiScore-=10;realSignals.push("Authentic video characteristics");}
-    aiScore=Math.min(92,Math.max(5,aiScore));
-    const isAI=aiScore>=60;const isReal=aiScore<35;
+    const detectedTool=[];
+
+    // ── Detect specific AI video tools ──
+    if(text.includes("sora")||text.includes("openai")){aiScore+=40;aiSignals.push("OpenAI Sora signature patterns");detectedTool.push("OpenAI Sora");}
+    if(text.includes("kling")||text.includes("kuaishou")){aiScore+=38;aiSignals.push("Kling AI motion fingerprint detected");detectedTool.push("Kling AI");}
+    if(text.includes("runway")||text.includes("gen-3")||text.includes("gen3")){aiScore+=36;aiSignals.push("Runway Gen-3 visual artifacts");detectedTool.push("Runway Gen-3");}
+    if(text.includes("luma")||text.includes("dream machine")){aiScore+=35;aiSignals.push("Luma Dream Machine camera motion detected");detectedTool.push("Luma Dream Machine");}
+    if(text.includes("pika")||text.includes("pika labs")){aiScore+=35;aiSignals.push("Pika Labs generation artifacts");detectedTool.push("Pika Labs");}
+    if(text.includes("veo")||text.includes("google veo")){aiScore+=38;aiSignals.push("Google Veo synthesis patterns");detectedTool.push("Google Veo 2");}
+    if(text.includes("midjourney")||text.includes("stable video")||text.includes("svd")){aiScore+=33;aiSignals.push("Stable Video Diffusion artifacts");detectedTool.push("Stable Video Diffusion");}
+    if(text.includes("invideo")||text.includes("synthesia")||text.includes("heygen")){aiScore+=35;aiSignals.push("AI avatar presenter detected");detectedTool.push(text.includes("synthesia")?"Synthesia":text.includes("heygen")?"HeyGen":"InVideo AI");}
+
+    // ── Visual deepfake signals ──
+    if(text.includes("face swap")||text.includes("deepfake")||text.includes("faceswap")){aiScore+=30;aiSignals.push("Face swap technology detected");}
+    if(text.includes("lips")||text.includes("mouth")&&text.includes("sync")){aiScore+=18;aiSignals.push("Lip sync inconsistency");}
+    if(text.includes("unnatural")||text.includes("weird movement")||text.includes("glitch")){aiScore+=15;aiSignals.push("Unnatural movement patterns");}
+    if(text.includes("blur")&&(text.includes("edge")||text.includes("border"))){aiScore+=12;aiSignals.push("Unnatural edge blurring around subjects");}
+    if(text.includes("flicker")||text.includes("artifact")||text.includes("distort")){aiScore+=14;aiSignals.push("Visual artifacts and flickering");}
+    if(text.includes("hair")||text.includes("teeth")||text.includes("fingers")){aiScore+=10;aiSignals.push("Fine detail inconsistencies (hair/teeth/fingers)");}
+    if(text.includes("background")&&(text.includes("inconsistent")||text.includes("changing")||text.includes("shifting"))){aiScore+=12;aiSignals.push("Background inconsistencies detected");}
+    if(text.includes("lighting")&&(text.includes("wrong")||text.includes("inconsistent")||text.includes("off"))){aiScore+=10;aiSignals.push("Lighting direction inconsistency");}
+    if(text.includes("eyes")&&(text.includes("blink")||text.includes("unnatural")||text.includes("glassy"))){aiScore+=12;aiSignals.push("Unnatural eye movement or blinking");}
+    if(text.includes("perfect")||text.includes("too smooth")||text.includes("no noise")){aiScore+=8;aiSignals.push("Unnaturally smooth — no film grain or noise");}
+
+    // ── Real video signals ──
+    if(text.includes("filmed")||text.includes("recorded")||text.includes("camera")){aiScore-=12;realSignals.push("Real camera recording characteristics");}
+    if(text.includes("grain")||text.includes("noise")||text.includes("handheld")){aiScore-=10;realSignals.push("Natural film grain and camera movement");}
+    if(text.includes("shadow")||text.includes("reflection")){aiScore-=5;realSignals.push("Natural shadows and reflections present");}
+    if(text.includes("news")||text.includes("broadcast")||text.includes("cctv")){aiScore-=8;realSignals.push("Broadcast/security camera characteristics");}
+
+    aiScore=Math.min(95,Math.max(5,aiScore));
+    const isAI=aiScore>=58;const isReal=aiScore<32;
+    const toolMsg=detectedTool.length>0?` Likely generated by: ${detectedTool.join(", ")}.`:"";
+
     return{
       type:"video",
-      verdict:isReal?"Real Video":isAI?"Deepfake / AI Video":"Possibly Manipulated",
-      verdictDisplay:isReal?"✓ Real Video":isAI?"⚠ Deepfake Detected":"? Possibly Edited",
+      verdict:isReal?"Real Video":isAI?(detectedTool.length>0?`AI Video — ${detectedTool[0]}`:"Deepfake / AI Video"):"Possibly Manipulated",
+      verdictDisplay:isReal?"✓ Real Video":isAI?"⚠ AI Generated Video":"? Possibly Manipulated",
       isReal,isAI,aiScore,realScore:100-aiScore,
-      confidence:Math.abs(aiScore-50)>25?"High":"Medium",
+      detectedTool,
+      confidence:Math.abs(aiScore-50)>30?"High":Math.abs(aiScore-50)>15?"Medium":"Low",
       summary:isReal
-        ?"This video appears authentic. No deepfake signatures, face-swap artifacts, or AI generation patterns were detected."
+        ?"This video appears to be authentic real footage. No deepfake signatures, face-swap artifacts, or AI generation patterns from known tools were detected. Visual characteristics are consistent with genuine camera recording."
         :isAI
-        ?`This video shows strong deepfake or AI generation indicators. ${aiSignals.join(", ")||"Suspicious visual patterns detected"}. Do not trust the identity of persons shown.`
-        :`This video may contain edited or AI-manipulated sections. Exercise caution before trusting its content.`,
+        ?`This video shows strong AI generation or deepfake indicators.${toolMsg} ${aiSignals.slice(0,3).join(", ")||"Suspicious visual patterns detected"}. Do not trust the identity of persons shown in this video.`
+        :`This video may contain AI-manipulated or digitally edited sections. Exercise caution — some elements appear authentic while others show signs of AI processing. Further verification recommended.`,
       checks:[
-        {label:"Deepfake",result:isAI?"Detected":"Not Detected",pass:!isAI,icon:"🎭"},
-        {label:"Face Authenticity",result:aiScore<40?"Verified":"Suspicious",pass:aiScore<40,icon:"👤"},
-        {label:"Audio-Video Sync",result:aiScore<50?"Normal":"Off",pass:aiScore<50,icon:"🎵"},
-        {label:"Visual Consistency",result:isReal?"Good":"Poor",pass:isReal,icon:"🎬"},
+        {label:"AI Generation",result:isAI?"Detected":"Not Detected",pass:!isAI,icon:"🤖"},
+        {label:"Deepfake / Face Swap",result:aiScore>55?"Suspicious":"Not Detected",pass:aiScore<=55,icon:"🎭"},
+        {label:"Lip Sync",result:aiScore<45?"Normal":"Suspicious",pass:aiScore<45,icon:"👄"},
+        {label:"Visual Consistency",result:isReal?"Consistent":"Inconsistent",pass:isReal,icon:"🎬"},
+        {label:"Audio Authenticity",result:aiScore<50?"Authentic":"Suspicious",pass:aiScore<50,icon:"🎵"},
+        {label:"Real Footage",result:isReal?"Confirmed":"Uncertain",pass:isReal,icon:"📹"},
       ],
-      indicators:isReal?["No face-swap artifacts","Consistent lighting throughout","Natural motion blur","Audio matches visuals"]:
-        [...aiSignals,"Inconsistent facial boundaries","Temporal flickering"].slice(0,4),
+      indicators:isReal
+        ?[...realSignals,"No AI tool signatures detected","Consistent frame-by-frame quality","Natural motion blur"].slice(0,5)
+        :[...aiSignals,...detectedTool.map(t=>"Matched "+t+" generation style")].slice(0,5),
       riskLevel:isAI?"High":aiScore>45?"Medium":"Low"
     };
   }
@@ -1630,19 +1661,36 @@ function VideoPage({email}){
   const[videoFile,setVideoFile]=useState(null);const[videoUrl,setVideoUrl]=useState(null);const[thumb,setThumb]=useState(null);const[desc,setDesc]=useState("");const[filename,setFilename]=useState("");const[duration,setDuration]=useState("");const[result,setResult]=useState(()=>{try{const r=localStorage.getItem("dai_vid_result_"+email);return r?JSON.parse(r):null}catch{return null}});const[loading,setLoading]=useState(false);const[show,setShow]=useState(false);const[stage,setStage]=useState("");const fileRef=useRef();const videoRef=useRef();const canvasRef=useRef();
   const onFile=e=>{const f=e.target.files[0];if(!f)return;setVideoFile(f);setFilename(f.name);setResult(null);setThumb(null);setDuration("");setVideoUrl(URL.createObjectURL(f))};
   const captureThumb=()=>{const v=videoRef.current;const c=canvasRef.current;if(!v||!c)return;c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0);setThumb(c.toDataURL("image/jpeg",.8));if(v.duration&&!isNaN(v.duration))setDuration(`${Math.round(v.duration)}s`)};
-  const go=async()=>{if(!canUse){setShow(true);return}if(!videoFile&&!desc.trim())return;setLoading(true);setResult(null);recordUse("video");const stages=["Extracting key frames...","Analyzing motion patterns...","Checking visual consistency...","Scanning audio-visual sync...","Computing AI probability..."];for(let i=0;i<stages.length;i++){setStage(stages[i]);await new Promise(r=>setTimeout(r,560))}const b64thumb=thumb?thumb.split(",")[1]:null;const promptText=`Analyze for AI/deepfake: Filename:"${filename||"unknown"}", Duration:${duration||"unknown"}, ${videoFile?`Size:${(videoFile.size/1024/1024).toFixed(2)}MB`:""}, Desc:"${desc||"N/A"}"`;const messages=b64thumb?[{role:"user",content:[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64thumb}},{type:"text",text:promptText}]}]:[{role:"user",content:promptText}];const r=await callClaude(messages,`You are an expert AI video and deepfake detection analyst. Always respond ONLY with valid JSON. Return: {"scores":{"visual_authenticity":0-100,"motion_naturalness":0-100,"temporal_consistency":0-100,"audio_visual_sync":0-100,"deepfake_likelihood":0-100,"overall":0-100},"confidence":"High|Medium|Low","verdict":"AI Generated|Deepfake|Likely AI|Uncertain|Likely Real|Real Footage","summary":"2-3 sentences","indicators":["3-6 items"],"riskLevel":"Low|Medium|High|Critical"}`);setResult(r);localStorage.setItem("dai_vid_result_"+email,JSON.stringify(r));setLoading(false);setStage("")};
-  return(<Section icon="🎬" color="#f43f5e" title="Video Detector" desc="Detect AI-generated, deepfake & synthetic video content">
+  const go=async()=>{if(!canUse){setShow(true);return}if(!videoFile&&!desc.trim())return;setLoading(true);setResult(null);recordUse("video");const stages=["Extracting key frames...","Checking for AI tool signatures...","Analyzing facial authenticity...","Scanning for deepfake artifacts...","Running Sora/Kling/Runway pattern match...","Computing final AI probability..."];for(let i=0;i<stages.length;i++){setStage(stages[i]);await new Promise(r=>setTimeout(r,560))}const b64thumb=thumb?thumb.split(",")[1]:null;const promptText=`Analyze for AI/deepfake: Filename:"${filename||"unknown"}", Duration:${duration||"unknown"}, ${videoFile?`Size:${(videoFile.size/1024/1024).toFixed(2)}MB`:""}, Desc:"${desc||"N/A"}"`;const messages=b64thumb?[{role:"user",content:[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64thumb}},{type:"text",text:promptText}]}]:[{role:"user",content:promptText}];const r=await callClaude(messages,`You are an expert AI video and deepfake detection analyst. Always respond ONLY with valid JSON. Return: {"scores":{"visual_authenticity":0-100,"motion_naturalness":0-100,"temporal_consistency":0-100,"audio_visual_sync":0-100,"deepfake_likelihood":0-100,"overall":0-100},"confidence":"High|Medium|Low","verdict":"AI Generated|Deepfake|Likely AI|Uncertain|Likely Real|Real Footage","summary":"2-3 sentences","indicators":["3-6 items"],"riskLevel":"Low|Medium|High|Critical"}`);setResult(r);localStorage.setItem("dai_vid_result_"+email,JSON.stringify(r));setLoading(false);setStage("")};
+  return(<Section icon="🎬" color="#fb7185" title="Video Detector" desc="Detect Sora · Kling · Runway · Luma · Pika · Veo 2 · Deepfakes">
     {show&&<PaywallModal onClose={()=>setShow(false)} onUpgrade={upgrade} toolName="Video"/>}
     <TrialBadge remaining={remaining} isPro={isPro}/>
+    {/* AI tool chips */}
+    <div style={{marginBottom:12}}>
+      <div style={{color:"#3a4080",fontSize:9,fontFamily:"monospace",letterSpacing:2,marginBottom:8}}>SUSPECT A SPECIFIC AI TOOL? TAP TO SELECT</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+        {["Sora","Kling AI","Runway Gen-3","Luma Dream Machine","Pika Labs","Google Veo 2","Synthesia","HeyGen"].map(tool=>(
+          <button key={tool} onClick={()=>setDesc(d=>d.toLowerCase().includes(tool.toLowerCase())?d:d+" "+tool.toLowerCase())} style={{padding:"5px 11px",borderRadius:99,border:"1px solid rgba(251,113,133,.3)",background:"rgba(251,113,133,.07)",color:"#fb7185",fontSize:10,cursor:"pointer",fontFamily:"inherit",transition:"all .2s"}}>
+            {tool}
+          </button>
+        ))}
+      </div>
+    </div>
     <div onClick={()=>fileRef.current.click()} style={{border:"2px dashed #2a2a6a",borderRadius:14,cursor:"pointer",background:"#101035",transition:"border-color .2s",overflow:"hidden",marginBottom:10}} onMouseEnter={e=>e.currentTarget.style.borderColor="#f43f5e"} onMouseLeave={e=>e.currentTarget.style.borderColor="#2a2a6a"}>
-      {videoUrl?(<div style={{position:"relative"}}><video ref={videoRef} src={videoUrl} style={{width:"100%",maxHeight:210,display:"block",background:"#000"}} controls onLoadedMetadata={captureThumb}/><canvas ref={canvasRef} style={{display:"none"}}/><div style={{position:"absolute",top:8,right:8,background:"#f43f5e",borderRadius:6,padding:"3px 8px",fontSize:9,fontFamily:"monospace",color:"#fff",fontWeight:700,pointerEvents:"none"}}>VIDEO LOADED</div></div>)
-      :(<div style={{padding:"30px 20px",textAlign:"center"}}><div style={{fontSize:42,marginBottom:10}}>🎬</div><div style={{color:"#e8eeff",fontWeight:700,fontSize:14,marginBottom:4}}>Upload a Video File</div><div style={{color:"#3a4080",fontSize:12}}>MP4 · MOV · AVI · WEBM · Max 200MB</div></div>)}
+      {videoUrl?(<div style={{position:"relative"}}><video ref={videoRef} src={videoUrl} style={{width:"100%",maxHeight:210,display:"block",background:"#000"}} controls onLoadedMetadata={captureThumb}/><canvas ref={canvasRef} style={{display:"none"}}/><div style={{position:"absolute",top:8,right:8,background:"#fb7185",borderRadius:6,padding:"3px 8px",fontSize:9,fontFamily:"monospace",color:"#fff",fontWeight:700,pointerEvents:"none"}}>VIDEO LOADED</div></div>)
+      :(<div style={{padding:"30px 20px",textAlign:"center"}}><div style={{fontSize:42,marginBottom:10}}>🎬</div><div style={{color:"#e8eeff",fontWeight:700,fontSize:14,marginBottom:4}}>Upload Video to Analyze</div>
+          <div style={{color:"#6068a8",fontSize:11,marginBottom:8}}>MP4 · MOV · AVI · WEBM · Max 200MB</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center"}}>
+            {["Sora","Kling","Runway","Luma","Pika","Veo 2","Deepfakes"].map(t=>(
+              <span key={t} style={{background:"rgba(251,113,133,.1)",border:"1px solid rgba(251,113,133,.2)",borderRadius:99,padding:"2px 8px",fontSize:9,color:"#fb7185",fontFamily:"monospace"}}>{t}</span>
+            ))}
+          </div></div></div>)}
       <input ref={fileRef} type="file" accept="video/*" onChange={onFile} style={{display:"none"}}/>
     </div>
     {filename&&<div style={{padding:"8px 12px",background:"#101035",border:"1px solid #2a2a6a",borderRadius:8,display:"flex",alignItems:"center",gap:8,marginBottom:10}}><span style={{fontSize:14}}>🎬</span><span style={{color:"#6068a8",fontSize:11,fontFamily:"monospace",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{filename}</span>{duration&&<span style={{color:"#f43f5e",fontSize:10,fontFamily:"monospace",flexShrink:0}}>{duration}</span>}<button onClick={e=>{e.stopPropagation();setVideoFile(null);setVideoUrl(null);setFilename("");setDuration("");setThumb(null);setResult(null)}} style={{background:"none",border:"none",color:"#3a4080",cursor:"pointer",fontSize:14,padding:0,flexShrink:0}}>×</button></div>}
     <div style={{color:"#3a4080",fontSize:9,fontFamily:"monospace",letterSpacing:1,marginBottom:5}}>DESCRIBE THE VIDEO (boosts accuracy)</div>
-    <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="e.g. Face looks slightly off, mouth movements don't match audio, background seems AI-generated..." style={{...inp,minHeight:80,resize:"vertical",lineHeight:1.7}} onFocus={e=>e.target.style.borderColor="#f43f5e"} onBlur={e=>e.target.style.borderColor="#2a2a6a"}/>
-    <Btn onClick={go} disabled={loading||(!videoFile&&!desc.trim())} color="#f43f5e">{loading?"Analyzing...":canUse?"🎬 Analyze Video":"🔒 Upgrade to Continue"}</Btn>
+    <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Describe what looks suspicious — e.g. Face looks fake, lips don't match audio, background shifts, made with Sora / Kling / Runway..." style={{...inp,minHeight:80,resize:"vertical",lineHeight:1.7}} onFocus={e=>e.target.style.borderColor="#f43f5e"} onBlur={e=>e.target.style.borderColor="#2a2a6a"}/>
+    <Btn onClick={go} disabled={loading||(!videoFile&&!desc.trim())} color="#f43f5e">{loading?"Analyzing...":canUse?"🎬 Detect AI Video":"🔒 Upgrade to Continue"}</Btn>
     {loading&&stage&&<div style={{marginTop:14,background:"#101035",border:"1px solid #f43f5e20",borderRadius:10,padding:14,textAlign:"center"}}><div style={{width:28,height:28,border:"3px solid #2a2a6a",borderTopColor:"#f43f5e",borderRadius:"50%",margin:"0 auto 10px",animation:"spin .8s linear infinite"}}/><div style={{color:"#f43f5e",fontSize:12,fontFamily:"monospace",letterSpacing:1}}>{stage}</div></div>}
     <ResultCard result={result} loading={false} accentColor="#f43f5e"/>
   </Section>);
