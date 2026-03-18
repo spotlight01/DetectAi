@@ -1439,6 +1439,31 @@ function PortfolioPage({user}){
   const[history]=useState(()=>{try{return JSON.parse(localStorage.getItem(`dai_pts_hist_${user.email}`)||"[]")}catch{return[]}});
   const[redeemed,setRedeemed]=useState(()=>getRedeemedRewards(user.email));
   const[toast2,setToast2]=useState(null);
+  const[editingName,setEditingName]=useState(false);
+  const[newName,setNewName]=useState(user.name||"");
+
+  const saveName=()=>{
+    if(!newName.trim())return;
+    // Update in localStorage users db
+    const users=JSON.parse(localStorage.getItem('dai_users')||'{}');
+    if(users[user.email]){
+      users[user.email].name=newName.trim();
+      localStorage.setItem('dai_users',JSON.stringify(users));
+    }
+    // Update session
+    const session=JSON.parse(localStorage.getItem('dai_session')||sessionStorage.getItem('dai_session')||'null');
+    if(session){
+      session.name=newName.trim();
+      localStorage.setItem('dai_session',JSON.stringify(session));
+      sessionStorage.setItem('dai_session',JSON.stringify(session));
+    }
+    user.name=newName.trim();
+    setEditingName(false);
+    setToast2("✓ Name updated successfully!");
+    setTimeout(()=>setToast2(null),3000);
+    // Force page reload to reflect name change everywhere
+    setTimeout(()=>window.location.reload(),1200);
+  };
   const isPro=()=>{try{return ADMIN_EMAILS.includes((user.email||"").toLowerCase())||JSON.parse(localStorage.getItem(`dai_pro_${user.email}`)||"false")}catch{return false}};
   const usage=getUsage(user.email);
   const totalScans=Object.values(usage).reduce((a,b)=>a+b,0);
@@ -1467,8 +1492,19 @@ function PortfolioPage({user}){
         </div>
         <div style={{flex:1}}>
           <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-            <div style={{color:"#e8eeff",fontWeight:800,fontSize:18}}>{user.name}</div>
-            {savedHid&&<div style={{display:"inline-flex",alignItems:"center",gap:4,background:"linear-gradient(135deg,#00e5a020,#4f8fff20)",border:"1px solid #00e5a050",borderRadius:99,padding:"3px 10px"}}>
+            {editingName?(
+              <div style={{display:"flex",gap:6,alignItems:"center",width:"100%",flexWrap:"wrap"}}>
+                <input value={newName} onChange={e=>setNewName(e.target.value)} style={{flex:1,minWidth:120,background:"#16163f",border:"1px solid #4f8fff",borderRadius:8,color:"#e8eeff",padding:"7px 10px",fontSize:14,fontWeight:700,outline:"none",fontFamily:"inherit"}} autoFocus onKeyDown={e=>{if(e.key==="Enter")saveName();if(e.key==="Escape")setEditingName(false)}}/>
+                <button onClick={saveName} style={{background:"linear-gradient(135deg,#4f8fff,#a855f7)",border:"none",borderRadius:8,padding:"7px 14px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Save ✓</button>
+                <button onClick={()=>setEditingName(false)} style={{background:"#16163f",border:"1px solid #2a2a6a",borderRadius:8,padding:"7px 10px",color:"#6068a8",fontSize:12,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>✕</button>
+              </div>
+            ):(
+              <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                <div style={{color:"#e8eeff",fontWeight:800,fontSize:18}}>{user.name}</div>
+                <button onClick={()=>{setNewName(user.name||"");setEditingName(true)}} style={{background:"none",border:"1px solid #2a2a6a",borderRadius:6,padding:"3px 9px",color:"#6068a8",fontSize:10,cursor:"pointer",fontFamily:"monospace",transition:"all .2s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor="#4f8fff";e.currentTarget.style.color="#4f8fff"}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#2a2a6a";e.currentTarget.style.color="#6068a8"}}>✏ Edit</button>
+              </div>
+            )}
+            {!editingName&&savedHid&&<div style={{display:"inline-flex",alignItems:"center",gap:4,background:"linear-gradient(135deg,#00e5a020,#4f8fff20)",border:"1px solid #00e5a050",borderRadius:99,padding:"3px 10px"}}>
               <span style={{fontSize:10}}>✅</span>
               <span style={{color:"#00e5a0",fontSize:10,fontFamily:"monospace",fontWeight:700}}>VERIFIED HUMAN</span>
             </div>}
@@ -1587,6 +1623,8 @@ function Dashboard({setPage,user}){
     {id:"humanid",icon:"⬟", label:"Human ID",desc:"Free KYC verification",  color:"#00e5a0", glow:"rgba(0,229,160,.15)"},
   ];
 
+  // Always read fresh name from session in case user edited it
+  const freshName=(()=>{try{const s=JSON.parse(localStorage.getItem('dai_session')||sessionStorage.getItem('dai_session')||'null');return s?s.name:user.name}catch{return user.name}})();
   return(
   <div style={{paddingBottom:8}}>
 
@@ -1604,7 +1642,7 @@ function Dashboard({setPage,user}){
         </div>
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontSize:11,fontFamily:"monospace",color:"#3a4080",letterSpacing:2,marginBottom:2}}>WELCOME BACK</div>
-          <div style={{fontWeight:800,fontSize:20,color:"#e8eeff",lineHeight:1.2}}>{user?.name?.split(" ")[0]} 👋</div>
+          <div style={{fontWeight:800,fontSize:20,color:"#e8eeff",lineHeight:1.2}}>{freshName?.split(" ")[0]||user?.name?.split(" ")[0]} 👋</div>
           <div style={{color:"#6068a8",fontSize:11,fontFamily:"monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:2}}>{user?.email}</div>
         </div>
         {/* Pro/Admin badge */}
