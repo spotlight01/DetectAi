@@ -261,6 +261,64 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
   .stat-item:last-child{border-bottom:none;}
 }
 </style>
+<script>
+// Critical functions in head - guaranteed to load before any button click
+function openModal(m){
+  var el=document.getElementById('modal');
+  var box=document.getElementById('modal-content');
+  if(!el||!box){alert('Modal not found');return;}
+  el.style.display='flex';
+  if(m==='login'){
+    box.innerHTML='<div style="position:relative;background:linear-gradient(135deg,#0c0c2b,#101035);border:1px solid #2a2a6a;border-radius:20px;padding:28px;width:100%;max-width:400px;">'
+    +'<button onclick="closeModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#6068a8;font-size:24px;cursor:pointer;">×</button>'
+    +'<div style="text-align:center;margin-bottom:22px;"><div style="font-size:9px;font-family:monospace;color:#3a4080;letter-spacing:3px;margin-bottom:8px;">DETECT AI · PROVE YOU ARE A REAL HUMAN</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#e8eeff;">Welcome Back</div>'
+    +'<div style="font-size:12px;color:#6068a8;margin-top:4px;">Sign in to your DetectAI account</div></div>'
+    +'<div id="l-err" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.3);border-radius:8px;padding:10px 14px;color:#fb7185;font-size:12px;display:none;margin-bottom:10px;"></div>'
+    +'<div style="font-size:9px;font-family:monospace;color:#3a4080;letter-spacing:2px;margin-bottom:5px;">EMAIL ADDRESS</div>'
+    +'<input id="l-email" type="email" placeholder="you@email.com" style="width:100%;background:#101035;border:1px solid #2a2a6a;border-radius:10px;color:#e8eeff;padding:11px 14px;font-size:13px;outline:none;font-family:Syne,sans-serif;margin-bottom:10px;box-sizing:border-box;"/>'
+    +'<div style="font-size:9px;font-family:monospace;color:#3a4080;letter-spacing:2px;margin-bottom:5px;">PASSWORD</div>'
+    +'<input id="l-pass" type="password" placeholder="Your password" style="width:100%;background:#101035;border:1px solid #2a2a6a;border-radius:10px;color:#e8eeff;padding:11px 14px;font-size:13px;outline:none;font-family:Syne,sans-serif;margin-bottom:10px;box-sizing:border-box;" onkeydown="if(event.key==='Enter')doLogin()"/>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><input type="checkbox" id="rem" checked style="accent-color:#4f8fff;"/><label for="rem" style="color:#6068a8;font-size:12px;">Keep me signed in</label></div>'
+    +'<button id="l-btn" onclick="doLogin()" style="width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#4f8fff,#a855f7);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:Syne,sans-serif;">Sign In →</button>'
+    +'<div style="text-align:center;margin-top:12px;font-size:12px;color:#6068a8;">No account? <span style="color:#4f8fff;cursor:pointer;font-weight:700;" onclick="openModal('register')">Register Free</span></div>'
+    +'</div>';
+  } else if(m==='register'){
+    box.innerHTML='<div style="position:relative;background:linear-gradient(135deg,#0c0c2b,#101035);border:1px solid #2a2a6a;border-radius:20px;padding:28px;width:100%;max-width:400px;">'
+    +'<button onclick="closeModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#6068a8;font-size:24px;cursor:pointer;">×</button>'
+    +'<div style="text-align:center;margin-bottom:22px;"><div style="font-size:9px;font-family:monospace;color:#3a4080;letter-spacing:3px;margin-bottom:8px;">DETECT AI · PROVE YOU ARE A REAL HUMAN</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#e8eeff;">Create Account</div>'
+    +'<div style="font-size:12px;color:#6068a8;margin-top:4px;">Join DetectAI — free to start</div></div>'
+    +'<div id="r-err" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.3);border-radius:8px;padding:10px 14px;color:#fb7185;font-size:12px;display:none;margin-bottom:10px;"></div>'
+    +'<div style="font-size:9px;font-family:monospace;color:#3a4080;letter-spacing:2px;margin-bottom:5px;">FULL NAME</div>'
+    +'<input id="r-name" type="text" placeholder="Your full name" style="width:100%;background:#101035;border:1px solid #2a2a6a;border-radius:10px;color:#e8eeff;padding:11px 14px;font-size:13px;outline:none;font-family:Syne,sans-serif;margin-bottom:10px;box-sizing:border-box;"/>'
+    +'<div style="font-size:9px;font-family:monospace;color:#3a4080;letter-spacing:2px;margin-bottom:5px;">EMAIL ADDRESS</div>'
+    +'<input id="r-email" type="email" placeholder="you@email.com" style="width:100%;background:#101035;border:1px solid #2a2a6a;border-radius:10px;color:#e8eeff;padding:11px 14px;font-size:13px;outline:none;font-family:Syne,sans-serif;margin-bottom:10px;box-sizing:border-box;"/>'
+    +'<div style="font-size:9px;font-family:monospace;color:#3a4080;letter-spacing:2px;margin-bottom:5px;">PASSWORD</div>'
+    +'<input id="r-pass" type="password" placeholder="Min 6 characters" style="width:100%;background:#101035;border:1px solid #2a2a6a;border-radius:10px;color:#e8eeff;padding:11px 14px;font-size:13px;outline:none;font-family:Syne,sans-serif;margin-bottom:16px;box-sizing:border-box;" onkeydown="if(event.key==='Enter')doRegister()"/>'
+    +'<button id="r-btn" onclick="doRegister()" style="width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#4f8fff,#a855f7);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:Syne,sans-serif;">Register Free →</button>'
+    +'<div style="text-align:center;margin-top:12px;font-size:12px;color:#6068a8;">Have account? <span style="color:#4f8fff;cursor:pointer;font-weight:700;" onclick="openModal('login')">Sign In</span></div>'
+    +'</div>';
+  } else if(m==='verify'){
+    var code=window._regCode||'000000';
+    box.innerHTML='<div style="background:linear-gradient(135deg,#0c0c2b,#101035);border:1px solid #2a2a6a;border-radius:20px;padding:28px;width:100%;max-width:400px;text-align:center;">'
+    +'<div style="font-size:40px;margin-bottom:10px;">📧</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#e8eeff;margin-bottom:8px;">Verify Your Email</div>'
+    +'<div style="font-size:12px;color:#6068a8;margin-bottom:16px;">Enter the code below to create your account</div>'
+    +'<div style="background:rgba(79,143,255,.1);border:2px solid rgba(79,143,255,.3);border-radius:12px;padding:20px;margin-bottom:16px;">'
+    +'<div style="font-size:9px;font-family:monospace;color:#6068a8;margin-bottom:6px;">YOUR CODE</div>'
+    +'<div style="font-size:36px;font-weight:800;color:#4f8fff;letter-spacing:10px;">'+code+'</div></div>'
+    +'<div id="v-err" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.3);border-radius:8px;padding:10px;color:#fb7185;font-size:12px;display:none;margin-bottom:10px;"></div>'
+    +'<input id="v-code" type="text" placeholder="6-digit code" maxlength="6" style="width:100%;background:#101035;border:1px solid #2a2a6a;border-radius:10px;color:#e8eeff;padding:11px 14px;font-size:20px;outline:none;text-align:center;letter-spacing:8px;margin-bottom:16px;box-sizing:border-box;" onkeydown="if(event.key==='Enter')doVerify()"/>'
+    +'<button id="v-btn" onclick="doVerify()" style="width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#4f8fff,#a855f7);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:Syne,sans-serif;">Verify & Create Account →</button>'
+    +'</div>';
+  }
+}
+function closeModal(){
+  var el=document.getElementById('modal');
+  if(el) el.style.display='none';
+}
+</script>
 </head>
 <body>
 
@@ -640,8 +698,8 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
 </div>
 
 <!-- AUTH MODAL -->
-<div class="modal-bg" id="modal">
-  <div class="modal-box" id="modal-content"></div>
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(7,7,26,.95);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);">
+  <div id="modal-content" style="display:flex;justify-content:center;width:100%;max-width:440px;"></div>
 </div>
 
 <!-- TOAST -->
@@ -754,63 +812,10 @@ function toggleFaq(i){
 }
 
 // ── AUTH MODAL ──
-window.openModal = function openModal(mode){ document.getElementById("modal").classList.add("open"); renderModal(mode); }; function openModal(mode){ window.openModal(mode); }
+function openModal(mode){ document.getElementById("modal").classList.add("open"); renderModal(mode); }
 function closeModal(){ document.getElementById("modal").classList.remove("open"); }
 
-function renderModal(mode){
-  var box = document.getElementById("modal-content");
-  if (mode === "login") {
-    box.innerHTML = '<button onclick="closeModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;">×</button>'
-    +'<div style="text-align:center;margin-bottom:22px;">'
-    +'<div style="font-size:9px;font-family:var(--mono);color:var(--text4);letter-spacing:3px;margin-bottom:8px;">DETECT AI · PROVE YOU ARE A REAL HUMAN</div>'
-    +'<div style="font-size:22px;font-weight:800;">Welcome Back</div>'
-    +'<div style="font-size:12px;color:var(--text3);margin-top:4px;">Sign in to your DetectAI account</div>'
-    +'</div>'
-    +'<div class="err" id="l-err"></div>'
-    +'<div class="inp-label">EMAIL ADDRESS</div>'
-    +'<input class="inp" id="l-email" type="email" placeholder="you@email.com" style="margin-bottom:10px;"/>'
-    +'<div class="inp-label">PASSWORD</div>'
-    +'<input class="inp" id="l-pass" type="password" placeholder="Your password" style="margin-bottom:10px;" onkeydown="if(event.key===\'Enter\')doLogin()"/>'
-    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">'
-    +'<input type="checkbox" id="remember-me" checked style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;"/>'
-    +'<label for="remember-me" style="color:var(--text3);font-size:12px;cursor:pointer;">Keep me signed in</label>'
-    +'</div>'
-    +'<button class="btn btn-primary btn-block" id="l-btn" onclick="doLogin()">Sign In →</button>'
-    +'<div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3);">No account? <span style="color:var(--blue);cursor:pointer;font-weight:700;" onclick="renderModal('register')">Register Free</span></div>';
-    box.style.position="relative";
-  } else if (mode === "register") {
-    box.innerHTML = '<button onclick="closeModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;">×</button>'
-    +'<div style="text-align:center;margin-bottom:22px;">'
-    +'<div style="font-size:9px;font-family:var(--mono);color:var(--text4);letter-spacing:3px;margin-bottom:8px;">DETECT AI · PROVE YOU ARE A REAL HUMAN</div>'
-    +'<div style="font-size:22px;font-weight:800;">Create Account</div>'
-    +'<div style="font-size:12px;color:var(--text3);margin-top:4px;">Join DetectAI — always free to start</div>'
-    +'</div>'
-    +'<div class="err" id="r-err"></div>'
-    +'<div class="inp-label">FULL NAME</div>'
-    +'<input class="inp" id="r-name" type="text" placeholder="Your full name" style="margin-bottom:10px;"/>'
-    +'<div class="inp-label">EMAIL ADDRESS</div>'
-    +'<input class="inp" id="r-email" type="email" placeholder="you@email.com" style="margin-bottom:10px;"/>'
-    +'<div class="inp-label">PASSWORD</div>'
-    +'<input class="inp" id="r-pass" type="password" placeholder="Min 6 characters" style="margin-bottom:16px;" onkeydown="if(event.key===\'Enter\')doRegister()"/>'
-    +'<button class="btn btn-primary btn-block" id="r-btn" onclick="doRegister()">Register Free →</button>'
-    +'<div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3);">Have account? <span style="color:var(--blue);cursor:pointer;font-weight:700;" onclick="renderModal('login')">Sign In</span></div>';
-    box.style.position="relative";
-  } else if (mode === "verify") {
-    box.innerHTML = '<div style="text-align:center;margin-bottom:22px;">'
-    +'<div style="font-size:40px;margin-bottom:10px;">📧</div>'
-    +'<div style="font-size:22px;font-weight:800;">Verify Your Email</div>'
-    +'<div style="font-size:12px;color:var(--text3);margin-top:6px;line-height:1.7;">Your 6-digit verification code is shown below.<br/>In production this would be sent to your email.</div>'
-    +'</div>'
-    +'<div style="background:rgba(79,143,255,.1);border:2px solid rgba(79,143,255,.3);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;">'
-    +'<div style="font-size:9px;font-family:var(--mono);color:var(--text4);margin-bottom:8px;">YOUR VERIFICATION CODE</div>'
-    +'<div style="font-size:36px;font-weight:800;color:var(--blue);letter-spacing:10px;">'+regData.code+'</div>'
-    +'</div>'
-    +'<div class="err" id="v-err"></div>'
-    +'<div class="inp-label">ENTER CODE</div>'
-    +'<input class="inp" id="v-code" type="text" placeholder="6-digit code" maxlength="6" style="margin-bottom:16px;text-align:center;font-size:20px;letter-spacing:6px;" onkeydown="if(event.key===\'Enter\')doVerify()"/>'
-    +'<button class="btn btn-primary btn-block" id="v-btn" onclick="doVerify()">Verify & Create Account →</button>';
-  }
-}
+// renderModal moved to <head>
 
 async function doLogin(){
   var email = document.getElementById("l-email").value.trim();
@@ -857,7 +862,8 @@ async function doRegister(){
   if(existing||locals[email]){ btn.disabled=false; btn.textContent="Register Free →"; err.textContent="Email already registered. Please sign in."; err.style.display="block"; return; }
   btn.disabled=false; btn.textContent="Register Free →";
   regData = {name:name, email:email, pass:pass, code:Math.floor(100000+Math.random()*900000).toString()};
-  renderModal("verify");
+  window._regCode = regData.code;
+  openModal('verify');
 }
 
 async function doVerify(){
@@ -1658,8 +1664,9 @@ function buildWhitepaperPage(){
 }
 
 // ── STARTUP ──
-// Make all critical functions globally accessible
-window.closeModal = function(){ document.getElementById("modal").classList.remove("open"); };
+// Make all critical functions globally accessible on window
+window.openModal = openModal;
+window.closeModal = closeModal;
 window.doLogin = doLogin;
 window.doRegister = doRegister;
 window.doVerify = doVerify;
@@ -1678,6 +1685,7 @@ window.kycBack = kycBack;
 window.editProfileName = editProfileName;
 window.saveProfileName = saveProfileName;
 window.cancelEditName = cancelEditName;
+
 
 window.addEventListener("DOMContentLoaded", function(){
   loadStats();
