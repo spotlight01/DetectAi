@@ -423,7 +423,7 @@ section.landing-section{padding:80px 5%}
         <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Human ID — always free ⬟</div>
         <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>2x points earning boost</div>
       </div>
-      <button style="width:100%;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;background:linear-gradient(135deg,#4f8fff,#a855f7);color:#fff;border:none;box-shadow:0 4px 16px rgba(79,143,255,.25)" onclick="openModal('register')">Start Monthly Plan →</button>
+      <button style="width:100%;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;background:linear-gradient(135deg,#4f8fff,#a855f7);color:#fff;border:none;box-shadow:0 4px 16px rgba(79,143,255,.25)" onclick="window.open('https://buy.stripe.com/test_cNiaEX78FdJD1PF34g6Ri00','_blank')">Start Monthly Plan →</button>
     </div>
     <div class="p-card">
       <div class="p-badge" style="background:var(--green)">BEST VALUE</div>
@@ -436,7 +436,7 @@ section.landing-section{padding:80px 5%}
         <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Founding Member badge</div>
         <div style="display:flex;gap:8px;font-size:12px;color:var(--text3)"><span style="color:var(--green)">✓</span>Lifetime rewards multiplier</div>
       </div>
-      <button style="width:100%;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;background:linear-gradient(135deg,var(--green),#00c88a);color:#fff;border:none;box-shadow:0 4px 16px rgba(0,229,160,.25)" onclick="openModal('register')">Get Lifetime Access →</button>
+      <button style="width:100%;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;background:linear-gradient(135deg,var(--green),#00c88a);color:#fff;border:none;box-shadow:0 4px 16px rgba(0,229,160,.25)" onclick="window.open('https://buy.stripe.com/test_6oUfZh64B20V65VfR26Ri01','_blank')">Get Lifetime Access →</button>
     </div>
   </div>
   <div style="text-align:center;margin-top:16px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text5)">⬟ Human ID is always 100% free — no plan required</div>
@@ -614,8 +614,51 @@ async function supaCheckVerified(email){
 }
 
 // Load stats when landing page opens
-window.addEventListener('DOMContentLoaded', function(){ 
+window.addEventListener('DOMContentLoaded', function(){
   setTimeout(loadGlobalStats, 500);
+
+  // ── STRIPE PAYMENT SUCCESS DETECTION ──
+  const params = new URLSearchParams(window.location.search);
+  const paymentStatus = params.get('payment');
+  const sessionId = params.get('session_id');
+  const stripeRedirect = paymentStatus === 'success' || !!sessionId;
+
+  if(stripeRedirect){
+    // Check if we have a pending upgrade
+    const pending = JSON.parse(localStorage.getItem('dai_pending_upgrade')||'null');
+    const session = JSON.parse(localStorage.getItem('dai_session') || sessionStorage.getItem('dai_session') || 'null');
+    const email = (pending && pending.email) || (session && session.email) || '';
+
+    if(email){
+      const plan = pending ? pending.plan : 'lifetime';
+      // Unlock Pro for this user
+      localStorage.setItem('dai_pro_' + email, 'true');
+      localStorage.setItem('dai_plan_' + email, JSON.stringify({
+        plan: plan,
+        activatedAt: new Date().toISOString(),
+        stripeSession: sessionId || 'payment_success'
+      }));
+      localStorage.removeItem('dai_pending_upgrade');
+
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      // If user is logged in, go straight to dashboard with success message
+      if(session && session.email){
+        document.body.classList.add('app-mode');
+        document.getElementById('landing').style.display='none';
+        document.getElementById('app-root').style.display='block';
+        const nav=document.querySelector('nav');
+        if(nav)nav.style.display='none';
+        window._pendingAutoLogin = session;
+        window._paymentSuccess = plan;
+        tryAutoLogin();
+        return;
+      }
+    }
+    // Clean URL even if no email found
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 });
 
 // ── Helpers ──
@@ -1333,25 +1376,56 @@ function Section({icon,color,title,desc,children}){
   return(<div><div style={{marginBottom:18}}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}><span style={{fontSize:20,color,filter:`drop-shadow(0 0 6px ${color})`}}>{icon}</span><h2 style={{margin:0,fontWeight:800,fontSize:20,color:"#e8eeff"}}>{title}</h2></div><p style={{margin:0,color:"#3a4080",fontSize:12,fontFamily:"monospace"}}>{desc}</p></div>{children}</div>);
 }
 function PaywallModal({onClose,onUpgrade,toolName}){
-  const[sel,setSel]=useState("monthly");
-  return(<div style={{position:"fixed",inset:0,background:"#07071aee",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,backdropFilter:"blur(4px)"}}>
-    <div style={{background:"#0c0c2b",border:"1px solid #2a2a6a",borderRadius:20,padding:28,maxWidth:380,width:"100%",boxShadow:"0 0 80px #4f8fff20"}}>
-      <div style={{textAlign:"center",marginBottom:20}}><div style={{fontSize:36,marginBottom:10}}>🔒</div><div style={{color:"#ef4444",fontSize:10,fontFamily:"monospace",letterSpacing:2,marginBottom:6}}>FREE TRIALS USED</div><h3 style={{margin:0,fontWeight:800,fontSize:18,color:"#e8eeff"}}>You've used all 5 free {toolName} scans</h3><p style={{color:"#6068a8",fontSize:12,marginTop:8,lineHeight:1.7}}>Upgrade to continue. Cancel anytime.</p></div>
-      <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-        {Object.entries(PRICING).map(([key,plan])=>(
-          <button key={key} onClick={()=>setSel(key)} style={{background:sel===key?"#4f8fff15":"#101035",border:`1px solid ${sel===key?"#4f8fff60":"#2a2a6a"}`,borderRadius:12,padding:"14px 16px",cursor:"pointer",textAlign:"left",fontFamily:"inherit",transition:"all .2s",position:"relative"}}>
-            {plan.badge&&<div style={{position:"absolute",top:-8,right:12,background:sel===key?"#4f8fff":"#2a2a6a",color:"#fff",fontSize:8,fontFamily:"monospace",padding:"2px 8px",borderRadius:99,letterSpacing:1}}>{plan.badge}</div>}
+  const[sel,setSel]=useState("lifetime");
+
+  const handleCheckout=(plan)=>{
+    localStorage.setItem('dai_pending_upgrade', JSON.stringify({plan, email:localStorage.getItem('dai_last_email')||'', ts:Date.now()}));
+    const url = plan==="monthly" ? "https://buy.stripe.com/test_cNiaEX78FdJD1PF34g6Ri00" : "https://buy.stripe.com/test_6oUfZh64B20V65VfR26Ri01";
+    window.open(url, '_blank');
+    onClose();
+    setTimeout(()=>alert("✅ Complete your payment in the new tab opened.\n\nOnce paid, come back here and refresh — your Pro access will be unlocked automatically!"), 400);
+  };
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(7,7,26,.95)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,backdropFilter:"blur(8px)"}}>
+      <div style={{background:"linear-gradient(135deg,#0c0c2b,#101035)",border:"1px solid #2a2a6a",borderRadius:22,padding:26,maxWidth:390,width:"100%",boxShadow:"0 0 80px rgba(79,143,255,.15)"}}>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:40,marginBottom:10}}>🔒</div>
+          <div style={{color:"#fb7185",fontSize:10,fontFamily:"monospace",letterSpacing:2,marginBottom:8}}>FREE SCANS USED</div>
+          <div style={{fontWeight:800,fontSize:18,color:"#e8eeff",marginBottom:6}}>You've used all 5 free {toolName} scans</div>
+          <div style={{color:"#6068a8",fontSize:12,lineHeight:1.7}}>Upgrade to unlock unlimited scans on all tools.</div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+          <button onClick={()=>setSel("lifetime")} style={{background:sel==="lifetime"?"rgba(0,229,160,.08)":"rgba(255,255,255,.02)",border:`2px solid ${sel==="lifetime"?"#00e5a0":"#2a2a6a"}`,borderRadius:14,padding:"16px",cursor:"pointer",textAlign:"left",fontFamily:"inherit",transition:"all .2s",position:"relative"}}>
+            <div style={{position:"absolute",top:-10,right:14,background:"linear-gradient(135deg,#00c88a,#00e5a0)",color:"#07071a",fontSize:8,fontFamily:"monospace",padding:"3px 10px",borderRadius:99,letterSpacing:1,fontWeight:700}}>BEST VALUE</div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div><div style={{color:"#e8eeff",fontWeight:700,fontSize:14}}>{plan.label}</div><div style={{color:"#6068a8",fontSize:11,marginTop:2}}>{plan.scans} · All tools</div></div>
-              <div><span style={{color:"#4f8fff",fontWeight:800,fontSize:20}}>{plan.price}</span><span style={{color:"#3a4080",fontSize:11}}>{plan.period}</span></div>
+              <div><div style={{color:"#e8eeff",fontWeight:800,fontSize:15}}>Lifetime Access</div><div style={{color:"#6068a8",fontSize:11,marginTop:3}}>Unlimited scans forever · All tools</div><div style={{color:"#00e5a0",fontSize:10,fontFamily:"monospace",marginTop:4}}>✓ Pay once, never pay again</div></div>
+              <div style={{textAlign:"right",flexShrink:0,marginLeft:10}}><div style={{color:"#00e5a0",fontWeight:800,fontSize:26}}>$9.99</div><div style={{color:"#3a4080",fontSize:10}}>one time</div></div>
             </div>
           </button>
-        ))}
+          <button onClick={()=>setSel("monthly")} style={{background:sel==="monthly"?"rgba(79,143,255,.08)":"rgba(255,255,255,.02)",border:`2px solid ${sel==="monthly"?"#4f8fff":"#2a2a6a"}`,borderRadius:14,padding:"16px",cursor:"pointer",textAlign:"left",fontFamily:"inherit",transition:"all .2s",position:"relative"}}>
+            <div style={{position:"absolute",top:-10,right:14,background:"linear-gradient(135deg,#3b7fff,#4f8fff)",color:"#fff",fontSize:8,fontFamily:"monospace",padding:"3px 10px",borderRadius:99,letterSpacing:1,fontWeight:700}}>MOST POPULAR</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><div style={{color:"#e8eeff",fontWeight:800,fontSize:15}}>Monthly Pro</div><div style={{color:"#6068a8",fontSize:11,marginTop:3}}>Unlimited scans · Cancel anytime</div><div style={{color:"#4f8fff",fontSize:10,fontFamily:"monospace",marginTop:4}}>✓ Billed monthly</div></div>
+              <div style={{textAlign:"right",flexShrink:0,marginLeft:10}}><div style={{color:"#4f8fff",fontWeight:800,fontSize:26}}>$4.99</div><div style={{color:"#3a4080",fontSize:10}}>/month</div></div>
+            </div>
+          </button>
+        </div>
+        <div style={{background:"rgba(255,255,255,.02)",border:"1px solid #2a2a6a",borderRadius:10,padding:"10px 14px",marginBottom:14}}>
+          {["Unlimited scans on ALL 6 detection tools","Human ID verification — always free","Points & rewards — 2x boost","All future tools included"].map((f,i)=>(
+            <div key={i} style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}><span style={{color:"#00e5a0",fontSize:12,flexShrink:0}}>✓</span><span style={{color:"#9ba4d4",fontSize:12}}>{f}</span></div>
+          ))}
+        </div>
+        <button onClick={()=>handleCheckout(sel)} style={{width:"100%",padding:"14px 0",borderRadius:12,border:"none",background:sel==="lifetime"?"linear-gradient(135deg,#00c88a,#00e5a0)":"linear-gradient(135deg,#3b7fff,#4f8fff)",color:sel==="lifetime"?"#07071a":"#fff",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"inherit",boxShadow:sel==="lifetime"?"0 6px 24px rgba(0,229,160,.3)":"0 6px 24px rgba(79,143,255,.3)"}}>
+          {sel==="lifetime"?"💳 Get Lifetime Access — $9.99":"💳 Start Monthly — $4.99/mo"}
+        </button>
+        <div style={{textAlign:"center",marginTop:10,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+          <span style={{color:"#3a4080",fontSize:10,fontFamily:"monospace"}}>🔒 Secure payment by Stripe · SSL encrypted</span>
+        </div>
+        <button onClick={onClose} style={{width:"100%",padding:"9px 0",marginTop:6,borderRadius:10,border:"none",background:"none",color:"#3a4080",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>Maybe later</button>
       </div>
-      <button onClick={()=>{onUpgrade();onClose()}} style={{width:"100%",padding:"13px 0",borderRadius:10,border:"none",background:"linear-gradient(135deg,#0891b2,#4f8fff)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>Upgrade Now — {PRICING[sel].price}{PRICING[sel].period} →</button>
-      <button onClick={onClose} style={{width:"100%",padding:"9px 0",marginTop:8,borderRadius:10,border:"none",background:"none",color:"#3a4080",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>Maybe later</button>
     </div>
-  </div>);
+  );
 }
 
 // ── PORTFOLIO ──
@@ -2145,6 +2219,17 @@ function App({initialUser}){
   const[collapsed,setCollapsed]=useState(false);
   const[socialOpen,setSocialOpen]=useState(false);
   const[subPage,setSubPage]=useState(null);
+  const[paymentToast,setPaymentToast]=useState(null);
+
+  useEffect(()=>{
+    // Show payment success notification if coming from Stripe
+    if(window._paymentSuccess){
+      const plan=window._paymentSuccess;
+      window._paymentSuccess=null;
+      setPaymentToast(plan==="lifetime"?"🎉 Lifetime Access Unlocked! You now have unlimited scans forever.":"🎉 Monthly Pro Unlocked! You now have unlimited scans.");
+      setTimeout(()=>setPaymentToast(null), 6000);
+    }
+  },[]);
 
   const onLogout=()=>{
     // Clear both storages on logout
@@ -2210,6 +2295,12 @@ function App({initialUser}){
         .mob-soc-btn{flex:1;max-width:150px;padding:10px;border-radius:12px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px}
       `}</style>
 
+      {/* Payment success toast */}
+      {paymentToast&&(
+        <div style={{position:"fixed",top:20,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#00c88a,#00e5a0)",color:"#07071a",padding:"14px 24px",borderRadius:14,fontWeight:800,fontSize:14,zIndex:9999,boxShadow:"0 8px 32px rgba(0,229,160,.4)",textAlign:"center",maxWidth:"90vw",animation:"fadeUp .4s ease"}}>
+          {paymentToast}
+        </div>
+      )}
       <div className="app-layout">
         {/* ── DESKTOP SIDEBAR ── */}
         <div className="app-sidebar" style={{width:collapsed?60:220}}>
