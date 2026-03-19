@@ -214,21 +214,28 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
   .stat-item{border-right:none!important;border-bottom:1px solid var(--border);}
   .stat-item:last-child{border-bottom:none;}
 }
-@media(min-width:768px){
-  #app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:52px 1fr;min-height:100vh;}
-  .app-nav{grid-column:1/-1;grid-row:1;}
-  .app-tab-bar{grid-column:1;grid-row:2;overflow-y:auto;overflow-x:hidden;border-bottom:none;border-right:1px solid var(--border);background:var(--bg2);}
-  .tab-row{flex-direction:column;padding:16px 10px;gap:4px;align-items:stretch;min-height:calc(100vh - 52px);}
-  .app-tab{text-align:left;padding:10px 14px;border-radius:10px;font-size:13px;}
-  .app-tab.on{background:rgba(79,143,255,.15);color:var(--blue);font-weight:700;}
-  .folder-btn{text-align:left;padding:10px 14px;font-size:13px;border-radius:10px;width:100%;}
-  .folder-children{flex-direction:column;padding:4px 0 4px 14px;gap:2px;}
-  .folder-children .app-tab{font-size:12px;padding:8px 12px;}
-  #pages{grid-column:2;grid-row:2;overflow-y:auto;}
-  .page-view{max-width:680px;margin:0 auto;padding:28px 32px 80px;}
-  .float-btn{right:32px;bottom:32px;}
-  .tools2{grid-template-columns:1fr 1fr 1fr;}
-  .s3{grid-template-columns:1fr 1fr 1fr;}
+@media(min-width:1024px){
+  #app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto;}
+  .app-nav{grid-column:1/-1;position:sticky;top:0;z-index:200;}
+  .app-tab-bar{grid-column:1;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;overflow-x:hidden;border-right:1px solid var(--border);border-bottom:none;background:var(--bg2);scrollbar-width:thin;}
+  .tab-row{flex-direction:column;padding:24px 14px;gap:4px;align-items:stretch;}
+  .app-tab{text-align:left;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;}
+  .app-tab.on{background:rgba(79,143,255,.14);color:var(--blue);font-weight:700;}
+  .folder-group{flex-direction:column;width:100%;}
+  .folder-btn{text-align:left;padding:11px 16px;font-size:13px;border-radius:10px;width:100%;}
+  .folder-children{flex-direction:column;padding:4px 0 6px 16px;gap:2px;background:transparent;}
+  .folder-children .app-tab{font-size:12px;padding:9px 12px;}
+  #pages{grid-column:2;}
+  .page-view{max-width:720px;margin:0 auto;padding:36px 48px 100px;}
+  .tools2{grid-template-columns:repeat(3,1fr);}
+  .s3{grid-template-columns:repeat(3,1fr);}
+  .float-btn{right:40px;bottom:40px;}
+  .app-tab-bar::-webkit-scrollbar{width:4px;}
+  .app-tab-bar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  .sidebar-label{display:block;font-size:9px;font-family:var(--mono);color:var(--dark);letter-spacing:3px;padding:16px 16px 6px;}
+}
+@media(min-width:1400px){
+  .page-view{max-width:860px;}
 }
 </style>
 </head>
@@ -586,7 +593,7 @@ var STRIPE_URLS = [
 function openStripe(idx){ window.open(STRIPE_URLS[idx], "_blank"); }
 function hideEl(id){ var e=document.getElementById(id); if(e) e.style.display="none"; }
 function showEl(id){ var e=document.getElementById(id); if(e) e.style.display="block"; }
-function resetFile(inputId,previewId,labelId){ hideEl(previewId); showEl(labelId); var inp=document.getElementById(inputId); if(inp) inp.value=""; }
+function resetFile(iid,pid,lid){ hideEl(pid); showEl(lid); var inp=document.getElementById(iid); if(inp) inp.value=""; }
 function goTo(page){ navigate(page); }
 var FILE_IDS = ["img-file","vid-file","kf-id","kf-self","img-file","vid-file","kf-id-back"];
 function clickFile(n){ var el=document.getElementById(FILE_IDS[n]); if(el) el.click(); }
@@ -681,12 +688,7 @@ function loadStats() {
     if (si) si.textContent = fmt(s.human_ids);
     if (sb) sb.textContent = fmt(s.bots);
   });
-  fetch(SUPA + "/rest/v1/users?select=count", {
-    headers: {"apikey": SKEY, "Authorization": "Bearer " + SKEY, "Prefer": "count=exact"}
-  }).then(function(r) {
-    var range = r.headers.get("content-range");
-    if (range) { var total=parseInt(range.split("/")[1])||0; function fmt2(n){return n>=1000?(n/1000).toFixed(1)+"K":String(n);} var su=q("stat-users"); if(su) su.textContent=fmt2(total); }
-  }).catch(function(){});
+  fetch(SUPA+"/rest/v1/users?select=count",{headers:{"apikey":SKEY,"Authorization":"Bearer "+SKEY,"Prefer":"count=exact"}}).then(function(r){var range=r.headers.get("content-range");if(range){var total=parseInt(range.split("/")[1])||0;function fmt2(n){return n>=1000?(n/1000).toFixed(1)+"K":String(n);}var su=q("stat-users");if(su)su.textContent=fmt2(total);}}).catch(function(){});
 }
 
 // ── LOCAL HELPERS ─────────────────────────────────────────────────
@@ -928,8 +930,9 @@ function buildNav() {
   row.innerHTML = "";
 
   // Home
+  function sideLabel(txt){var s=document.createElement("span");s.className="sidebar-label";s.textContent=txt;return s;}
+  row.appendChild(sideLabel("MAIN"));
   row.appendChild(tabBtn("home","&#11041;","Home"));
-  // Profile
   row.appendChild(tabBtn("portfolio","&#9673;","Profile"));
   // Scan Tools folder
   var scanOpen = SCAN_TOOLS.indexOf(CP) >= 0;
@@ -985,9 +988,9 @@ function renderPage(pid) {
   for (var k in usage) totalScans+=usage[k];
   if (pid==="home") {
     el2.innerHTML = buildHome(user,pts,tier,pro,admin,hid,totalScans);
-    ["text","image","voice","video","instagram","tiktok"].forEach(function(tid) {
-      var btn = document.getElementById("tbtn-" + tid);
-      if (btn) btn.addEventListener("click", function(){ navigate(tid); });
+    ["text","image","voice","video","instagram","tiktok"].forEach(function(tid){
+      var b=document.getElementById("tbtn-"+tid);
+      if(b) b.addEventListener("click",function(){navigate(tid);});
     });
   }
   else if (pid==="portfolio") { el2.innerHTML = buildPortfolio(user,pts,tier,pro,admin,hid,totalScans); bindProfileEdit(); }
@@ -1058,7 +1061,7 @@ function buildHome(user,pts,tier,pro,admin,hid,totalScans) {
   var usage = getUsage(CU.email);
   for (var i=0; i<tools.length; i++) {
     var t=tools[i], used=usage[t[0]]||0, rem=(pro||admin)?"&#8734;":Math.max(0,5-used)+" left";
-    h += '<div class="tool-btn" id="tbtn-' + t[0] + '">' ;
+    h += '<div class="tool-btn" id="tbtn-' + t[0] + '">';
     h += '<div style="font-size:24px;margin-bottom:6px;">' + t[1] + '</div>';
     h += '<div style="font-weight:700;font-size:14px;margin-bottom:2px;">' + t[2] + '</div>';
     h += '<div style="font-size:11px;color:var(--dim);margin-bottom:6px;">' + t[3] + '</div>';
@@ -1191,9 +1194,7 @@ function buildDetect(toolId, user, pro, admin, usage) {
   }
 
   if (toolId === "video") {
-    h += '<div id="vid-prev-box" style="display:none;margin-bottom:10px;">';
-    h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="color:var(--green);font-size:12px;font-weight:700;">&#10003; Video ready</span><button id="vid-remove-btn" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.3);color:var(--rose);border-radius:8px;padding:4px 12px;cursor:pointer;font-size:13px;font-family:Syne,sans-serif;">&times; Remove</button></div>';
-    h += '<video id="vid-prev" style="width:100%;border-radius:10px;max-height:200px;" controls></video></div>';
+    h += '<div id="vid-prev-box" style="display:none;margin-bottom:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="color:var(--green);font-size:12px;font-weight:700;">&#10003; Video ready</span><button id="vid-remove-btn" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.3);color:var(--rose);border-radius:8px;padding:4px 12px;cursor:pointer;font-size:13px;font-family:Syne,sans-serif;">&times; Remove</button></div><video id="vid-prev" style="width:100%;border-radius:10px;max-height:200px;" controls></video></div>';
     h += '<div onclick="openFile(1)" id="vid-upload-lbl" style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;">';
     h += '<div style="font-size:32px;margin-bottom:6px;">&#127916;</div><div style="font-weight:700;font-size:13px;">Upload Video to Analyze</div>';
     h += '<div style="color:var(--dim);font-size:11px;margin-top:4px;">MP4 &middot; MOV &middot; AVI &middot; WEBM &middot; Max 200MB</div>';
@@ -1228,20 +1229,10 @@ function buildDetect(toolId, user, pro, admin, usage) {
       var f = imgFile.files[0]; if (!f) return;
       var r = new FileReader(); r.onload = function(e) { var i=q("img-prev"); i.src=e.target.result; q("img-prev-box").style.display="block"; }; r.readAsDataURL(f);
     });
-    var vidFile = q("vid-file");
-    if (vidFile) vidFile.addEventListener("change", function() {
-      var f = vidFile.files[0]; if (!f) return;
-      q("vid-prev").src = URL.createObjectURL(f);
-      q("vid-prev-box").style.display = "block";
-      q("vid-upload-lbl").style.display = "none";
-    });
-    var vrmBtn = q("vid-remove-btn");
-    if (vrmBtn) vrmBtn.addEventListener("click", function() {
-      q("vid-prev").src = "";
-      q("vid-prev-box").style.display = "none";
-      q("vid-upload-lbl").style.display = "block";
-      if (vidFile) vidFile.value = "";
-    });
+    var vidFile=q("vid-file");
+    if(vidFile) vidFile.addEventListener("change",function(){var f=vidFile.files[0];if(!f)return;q("vid-prev").src=URL.createObjectURL(f);q("vid-prev-box").style.display="block";q("vid-upload-lbl").style.display="none";});
+    var vrmBtn=q("vid-remove-btn");
+    if(vrmBtn) vrmBtn.addEventListener("click",function(){q("vid-prev").src="";q("vid-prev-box").style.display="none";q("vid-upload-lbl").style.display="block";if(vidFile)vidFile.value="";});
     var chips = q("vid-chips");
     if (chips) {
       ["Sora","Kling AI","Runway Gen-3","Luma Dream Machine","Pika Labs","Google Veo 2","Deepfake"].forEach(function(name) {
@@ -1267,14 +1258,19 @@ async function runScan(toolId) {
   var user = CU;
   var inp = q("detect-inp"); var text = inp ? inp.value.trim() : "";
   var res = q("scan-result"); var btn = q("scan-btn");
-  if (!text && toolId !== "image" && toolId !== "video") { res.innerHTML = '<div class="card" style="color:var(--amber);font-size:13px;">Please enter content to analyze.</div>'; return; }
+  if (!text && toolId !== "image" && toolId !== "video") {
+    res.innerHTML = '<div class="card" style="color:var(--amber);font-size:13px;padding:16px;">&#9888; Please enter content to analyze.</div>';
+    return;
+  }
+  if (!text && toolId === "video") text = "analyze for deepfake and AI generation signs";
+  if (!text && toolId === "image") text = "analyze for AI generation signs";
   if (btn) { btn.disabled=true; btn.textContent="Analyzing..."; }
   res.innerHTML = '<div class="card" style="text-align:center;padding:30px 0;"><div class="spinner"></div><div style="color:var(--blue);font-family:var(--mono);font-size:11px;margin-top:12px;letter-spacing:2px;">ANALYZING...</div></div>';
   var usage = getUsage(user.email); usage[toolId]=(usage[toolId]||0)+1; saveUsage(user.email,usage);
   addPts(user.email,2);
   fetch(SUPA+"/rest/v1/rpc/increment_scans",{method:"POST",headers:{"apikey":SKEY,"Authorization":"Bearer "+SKEY,"Content-Type":"application/json"},body:"{}"}).catch(function(){});
   await new Promise(function(r){setTimeout(r,1500);});
-  var result = analyzeContent(toolId, text);
+  var result = await runDeepAnalysis(toolId, text);
   if (btn) { btn.disabled=false; btn.textContent="&#128269; Analyze Now"; }
   var mc = result.real?"var(--green)":result.ai?"var(--rose)":"var(--amber)";
   var mi = result.real?"&#9989;":result.ai?"&#10060;":"&#9888;&#65039;";
@@ -1300,6 +1296,45 @@ async function runScan(toolId) {
   var hp = q("pv-home"); if (hp) delete hp.dataset.loaded;
 }
 
+async function runDeepAnalysis(toolId, text) {
+  var sys = {
+    video: "You are the world's most advanced deepfake and AI video detector. Analyze for: unnatural body movements, hand/finger glitching (extra fingers, merging, impossible bending), facial flickering, hair physics violations, background instability, lighting direction inconsistencies, temporal artifacts, audio-visual sync problems, skin texture over-smoothness, edge artifacts around hair and face. Even subtle anomalies a human eye would miss - you catch them all. Be technical and specific.",
+    image: "You are an expert AI image forensics analyst. Detect: GAN artifacts, unnatural texture smoothness, impossible lighting, anatomy errors (distorted fingers, asymmetric faces), background incoherence, AI upscaling artifacts, metadata anomalies, Midjourney/DALL-E/Stable Diffusion/Flux signatures.",
+    text: "You are an expert AI text detector. Identify: sentence structure uniformity, lack of personal voice, formal hedging, overuse of transitional phrases, ChatGPT/Claude/Gemini linguistic patterns, absence of genuine emotion or lived experience.",
+    voice: "You are an expert AI voice detector. Identify: prosody flatness, missing breathing artifacts, formant irregularities, consistent microphone noise (no room acoustics), ElevenLabs/voice clone signatures, pitch quantization, limited emotional range.",
+    instagram: "You are an expert social media bot detector. Analyze: follower/following ratio, engagement rate vs follower count, generic comment patterns, posting frequency anomalies, account age vs activity, sudden follower spikes.",
+    tiktok: "You are an expert TikTok AI content and bot detector. Identify: AI-generated video content, automated posting patterns, synthetic voiceovers, unnatural engagement ratios."
+  };
+  var prompt = "Analyze this " + toolId + " content for AI generation or manipulation. Content: " + text + "\n\nReturn ONLY valid JSON (no markdown): {\"verdict\":\"Real|AI Generated|Uncertain\",\"realScore\":75,\"aiScore\":25,\"confidence\":\"High|Medium|Low\",\"risk\":\"High|Medium|Low\",\"summary\":\"3-4 sentence technical analysis with specific anomalies found\",\"tool\":\"specific AI tool name or Unknown\",\"checks\":[{\"label\":\"check name\",\"result\":\"OK|Flagged\",\"pass\":true}]}";
+  var defChecks = {
+    video:["Body Movement","Hand & Fingers","Facial Consistency","Hair Physics","Background","Lighting","Audio Sync","Temporal Coherence"],
+    image:["GAN Artifacts","Lighting Physics","Texture","Anatomy","Background"],
+    text:["Writing Style","Sentence Structure","Personal Voice","AI Patterns","Natural Variation"],
+    voice:["Prosody","Breathing","Emotional Range","Formants","Room Acoustics"],
+    instagram:["Engagement Pattern","Follower Ratio","Content Quality","Posting Behaviour","Account Age"],
+    tiktok:["Content Authenticity","Engagement Ratio","Posting Pattern","Voice Analysis","Bot Signals"]
+  };
+  var icons = {"Body Movement":"&#129464;","Hand & Fingers":"&#129311;","Facial Consistency":"&#128100;","Hair Physics":"&#127807;","Background":"&#127968;","Lighting":"&#128161;","Audio Sync":"&#127897;","Temporal Coherence":"&#127909;","GAN Artifacts":"&#128300;","Lighting Physics":"&#128161;","Texture":"&#127775;","Anatomy":"&#129421;","Writing Style":"&#9997;","Sentence Structure":"&#128172;","Personal Voice":"&#128483;","AI Patterns":"&#129302;","Natural Variation":"&#127922;","Prosody":"&#127925;","Breathing":"&#129754;","Emotional Range":"&#128522;","Formants":"&#127897;","Room Acoustics":"&#127968;","Engagement Pattern":"&#10084;","Follower Ratio":"&#128101;","Content Quality":"&#128249;","Posting Behaviour":"&#128197;","Account Age":"&#128336;","Content Authenticity":"&#128249;","Engagement Ratio":"&#10084;","Posting Pattern":"&#128197;","Voice Analysis":"&#127897;","Bot Signals":"&#129302;"};
+  try {
+    var resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({model:"claude-sonnet-4-20250514", max_tokens:800, system:sys[toolId]||sys.text, messages:[{role:"user",content:prompt}]})
+    });
+    var data = await resp.json();
+    var raw = data.content && data.content[0] ? data.content[0].text : "";
+    var jm = raw.match(/\{[\s\S]*\}/);
+    if (jm) {
+      var p = JSON.parse(jm[0]);
+      var isReal = p.verdict==="Real", isAI = p.verdict==="AI Generated";
+      var chks = (p.checks||[]).map(function(ch){return{label:ch.label,result:ch.result,pass:ch.pass!==false&&ch.result!=="Flagged",icon:icons[ch.label]||"&#128269;"};});
+      if (!chks.length)(defChecks[toolId]||defChecks.text).forEach(function(l){chks.push({label:l,result:isAI?"Flagged":"OK",pass:!isAI,icon:icons[l]||"&#128269;"});});
+      var toolNote = (p.tool&&p.tool!=="Unknown") ? " Detected tool: "+p.tool+"." : "";
+      return {real:isReal,ai:isAI,aiScore:p.aiScore||50,realScore:p.realScore||50,conf:p.confidence||"High",risk:p.risk||(isAI?"High":"Low"),verdict:(isReal?"&#10003; ":isAI?"&#10007; ":"&#9888; ")+p.verdict,summary:(p.summary||"Analysis complete.")+toolNote,checks:chks};
+    }
+  } catch(e) { console.log("API fallback:", e); }
+  return analyzeContent(toolId, text);
+}
 function analyzeContent(toolId, text) {
   text = (text||"").toLowerCase();
   var ai = 20 + Math.floor(Math.random()*20);
@@ -1408,21 +1443,15 @@ function buildHumanID(user, hid) {
   h += '<button id="ks1-btn" class="btn btn-blue btn-block" style="border:none;cursor:pointer;">Continue &rarr;</button></div>';
   h += '<div id="ks2" style="display:none;">';
   h += '<span class="slabel">STEP 2 &mdash; ID DOCUMENT</span>';
-  h += '<div style="background:rgba(79,143,255,.06);border:1px solid rgba(79,143,255,.2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--muted);">&#9432; Upload clear colour photos. Black &amp; white or blurry images will be rejected.</div>';
+  h += '<div style="background:rgba(79,143,255,.06);border:1px solid rgba(79,143,255,.2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--muted);">&#9432; Colour photos only &mdash; black &amp; white or blurry rejected.</div>';
   h += '<div class="ilabel">FRONT OF ID (required)</div>';
-  h += '<div onclick="openFile(2)" id="kf-front-lbl" style="border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:8px;">';
-  h += '<div style="font-size:26px;margin-bottom:4px;">&#129436;</div><div style="font-weight:700;font-size:13px;">Upload Front of ID</div><div style="color:var(--dim);font-size:11px;margin-top:2px;">Passport page or ID card front &middot; Colour only</div></div>';
+  h += '<div onclick="openFile(2)" id="kf-front-lbl" style="border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:8px;"><div style="font-size:26px;margin-bottom:4px;">&#129436;</div><div style="font-weight:700;font-size:13px;">Upload Front of ID</div><div style="color:var(--dim);font-size:11px;margin-top:2px;">Passport page or ID card front &middot; Colour only</div></div>';
   h += '<input type="file" id="kf-id" accept="image/*" style="display:none;"/>';
-  h += '<div id="kid-prev-box" style="display:none;margin-bottom:8px;">';
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="color:var(--green);font-size:12px;font-weight:700;">&#10003; Front uploaded</span><button id="kid-remove" onclick="resetFile(&quot;kf-id&quot;,&quot;kid-prev-box&quot;,&quot;kf-front-lbl&quot;)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:20px;line-height:1;">&times;</button></div>';
-  h += '<img id="kid-prev" style="width:100%;border-radius:10px;max-height:150px;object-fit:cover;"/></div>';
-  h += '<div class="ilabel" style="margin-top:4px;">BACK OF ID (for ID cards &mdash; skip if passport)</div>';
-  h += '<div onclick="openFile(6)" id="kf-back-lbl" style="border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:8px;">';
-  h += '<div style="font-size:26px;margin-bottom:4px;">&#129438;</div><div style="font-weight:700;font-size:13px;">Upload Back of ID</div><div style="color:var(--dim);font-size:11px;margin-top:2px;">ID card back &middot; Skip if passport</div></div>';
+  h += '<div id="kid-prev-box" style="display:none;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="color:var(--green);font-size:12px;font-weight:700;">&#10003; Front uploaded</span><button onclick="resetFile(&quot;kf-id&quot;,&quot;kid-prev-box&quot;,&quot;kf-front-lbl&quot;)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:20px;">&times;</button></div><img id="kid-prev" style="width:100%;border-radius:10px;max-height:150px;object-fit:cover;"/></div>';
+  h += '<div class="ilabel" style="margin-top:4px;">BACK OF ID (ID cards only &mdash; skip if passport)</div>';
+  h += '<div onclick="openFile(6)" id="kf-back-lbl" style="border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:8px;"><div style="font-size:26px;margin-bottom:4px;">&#129438;</div><div style="font-weight:700;font-size:13px;">Upload Back of ID</div><div style="color:var(--dim);font-size:11px;margin-top:2px;">ID card back only &middot; Skip if passport</div></div>';
   h += '<input type="file" id="kf-id-back" accept="image/*" style="display:none;"/>';
-  h += '<div id="kid-back-box" style="display:none;margin-bottom:8px;">';
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="color:var(--green);font-size:12px;font-weight:700;">&#10003; Back uploaded</span><button onclick="resetFile(&quot;kf-id-back&quot;,&quot;kid-back-box&quot;,&quot;kf-back-lbl&quot;)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:20px;line-height:1;">&times;</button></div>';
-  h += '<img id="kid-back-prev" style="width:100%;border-radius:10px;max-height:150px;object-fit:cover;"/></div>';
+  h += '<div id="kid-back-box" style="display:none;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="color:var(--green);font-size:12px;font-weight:700;">&#10003; Back uploaded</span><button onclick="resetFile(&quot;kf-id-back&quot;,&quot;kid-back-box&quot;,&quot;kf-back-lbl&quot;)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:20px;">&times;</button></div><img id="kid-back-prev" style="width:100%;border-radius:10px;max-height:150px;object-fit:cover;"/></div>';
   h += '<div style="display:flex;gap:8px;margin-top:8px;"><button id="ks2-back" class="btn btn-outline" style="flex:1;cursor:pointer;">&#8592; Back</button><button id="ks2-next" class="btn btn-blue" style="flex:2;border:none;cursor:pointer;">Continue &rarr;</button></div>';
   h += '</div>';
   h += '<div id="ks3" style="display:none;"><span class="slabel">STEP 3 &mdash; SELFIE</span>';
@@ -1443,14 +1472,11 @@ function buildHumanID(user, hid) {
     });
     q("ks2-back").addEventListener("click", function() { ks2.style.display="none"; ks1.style.display="block"; });
     q("ks2-next").addEventListener("click", function() {
-      if (!q("kid-prev-box") || q("kid-prev-box").style.display==="none") { showToast("Please upload the front of your ID first"); return; }
+      if (!q("kid-prev-box")||q("kid-prev-box").style.display==="none"){showToast("Please upload the front of your ID first");return;}
       ks2.style.display="none"; ks3.style.display="block";
     });
-    var kfback = q("kf-id-back");
-    if (kfback) kfback.addEventListener("change", function() {
-      var f=kfback.files[0]; if(!f) return;
-      var rdr=new FileReader(); rdr.onload=function(ev){ q("kid-back-prev").src=ev.target.result; q("kid-back-box").style.display="block"; q("kf-back-lbl").style.display="none"; }; rdr.readAsDataURL(f);
-    });
+    var kfback=q("kf-id-back");
+    if(kfback) kfback.addEventListener("change",function(){var f=kfback.files[0];if(!f)return;var rdr=new FileReader();rdr.onload=function(ev){q("kid-back-prev").src=ev.target.result;q("kid-back-box").style.display="block";q("kf-back-lbl").style.display="none";};rdr.readAsDataURL(f);});
     q("ks3-back").addEventListener("click", function() { ks3.style.display="none"; ks2.style.display="block"; });
     q("ks3-next").addEventListener("click", function() { ks3.style.display="none"; ks4.style.display="block"; setTimeout(issueHID, 3000); });
     var kfid=q("kf-id"); if(kfid) kfid.addEventListener("change",function(){ var f=kfid.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){var i=q("kid-prev");i.src=e.target.result;q("kid-prev-box").style.display="block";};r.readAsDataURL(f); });
