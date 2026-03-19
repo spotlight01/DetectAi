@@ -215,7 +215,6 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
   .stat-item:last-child{border-bottom:none;}
 }
 </style>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -565,8 +564,8 @@ function openFile(n){
 
 // Helper - called from onclick, avoids quote issues in h+= strings
 var STRIPE_URLS = [
-  "https://buy.stripe.com/test_6oUfZh64B20V65VfR26Ri01",
-  "https://buy.stripe.com/test_cNiaEX78FdJD1PF34g6Ri00"
+  "https://payment.intasend.com/pay/d00f3b1d-a28a-4d57-8511-b7c6cb317a8a/",
+  "https://payment.intasend.com/subscriptions/charge/WY7PP09/plan/"
 ];
 function openStripe(idx){ window.open(STRIPE_URLS[idx], "_blank"); }
 function goTo(page){ navigate(page); }
@@ -584,8 +583,8 @@ function openPage(id){ navigate(id); }
 
 var SUPA = "https://xjwarcttqjwymebgvzgx.supabase.co";
 var SKEY = "sb_publishable_q88VjiymEvxB_jEIBv4Xwg_Z8jVIcFL";
-var STRIPE_M = "https://buy.stripe.com/test_cNiaEX78FdJD1PF34g6Ri00";
-var STRIPE_L = "https://buy.stripe.com/test_6oUfZh64B20V65VfR26Ri01";
+var STRIPE_M = "https://payment.intasend.com/subscriptions/charge/WY7PP09/plan/";
+var STRIPE_L = "https://payment.intasend.com/pay/d00f3b1d-a28a-4d57-8511-b7c6cb317a8a/";
 var MAIL = ["workingplace0111","gmail.com"].join("@");
 var ADMINS = ["thikanspotlight@gmail.com"];
 
@@ -765,18 +764,10 @@ function openModal(mode) {
     var switchLink = el("span", { style: { color:"#4f8fff", cursor:"pointer", fontWeight:"700" }, text:"Register Free", onclick: function() { openModal("register"); } });
     switchRow.appendChild(document.createTextNode("No account? "));
     switchRow.appendChild(switchLink);
-    var gBtn2 = el("button",{style:{width:"100%",padding:"11px",background:"#fff",border:"1px solid #dadce0",borderRadius:"10px",color:"#3c4043",fontWeight:"600",fontSize:"14px",cursor:"pointer",fontFamily:"Syne,sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:"10px",marginTop:"10px"},onclick:function(){signInWithGoogle();}});
-    var gImg2 = document.createElement("img"); gImg2.src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"; gImg2.style.width="18px"; gImg2.style.height="18px";
-    gBtn2.appendChild(gImg2); gBtn2.appendChild(document.createTextNode(" Continue with Google"));
-    [errDiv, emailLbl, emailInp, passLbl, passInp, remRow, signInBtn, switchRow, gBtn2].forEach(function(c) { box.appendChild(c); });
+    [errDiv, emailLbl, emailInp, passLbl, passInp, remRow, signInBtn, switchRow].forEach(function(c) { box.appendChild(c); });
 
   } else if (mode === "register") {
     var errDiv = el("div", { cls:"err-box", id:"r-err" });
-    var gBtn = el("button",{style:{width:"100%",padding:"11px",background:"#fff",border:"1px solid #dadce0",borderRadius:"10px",color:"#3c4043",fontWeight:"600",fontSize:"14px",cursor:"pointer",fontFamily:"Syne,sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:"10px",marginBottom:"8px"},onclick:function(){signInWithGoogle();}});
-    var gImg = document.createElement("img"); gImg.src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"; gImg.style.width="18px"; gImg.style.height="18px";
-    gBtn.appendChild(gImg); gBtn.appendChild(document.createTextNode(" Continue with Google"));
-    var orR = el("div",{style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"14px"}},[el("div",{style:{flex:"1",height:"1px",background:"#2a2a6a"}}),el("div",{style:{color:"#3a4080",fontSize:"11px",fontFamily:"monospace"},text:"OR REGISTER WITH EMAIL"}),el("div",{style:{flex:"1",height:"1px",background:"#2a2a6a"}})]);
-    box.appendChild(gBtn); box.appendChild(orR);
     var nameLbl = el("div", { cls:"ilabel", text:"FULL NAME" });
     var nameInp = el("input", { cls:"inp", id:"r-name", type:"text", placeholder:"Your full name" });
     var emailLbl = el("div", { cls:"ilabel", text:"EMAIL ADDRESS" });
@@ -882,24 +873,6 @@ function launchApp(user, remember) {
   buildApp();
 }
 
-function signInWithGoogle() {
-  if (typeof google === "undefined" || !google.accounts) { showToast("Google sign-in unavailable. Please use email."); return; }
-  google.accounts.id.initialize({client_id:"GOOGLE_CLIENT_ID_HERE",callback:function(response){
-    try {
-      var pl = JSON.parse(atob(response.credential.split(".")[1]));
-      var name = pl.name || pl.email.split("@")[0], email = pl.email;
-      supaGetUser(email).then(function(su){
-        if (su) { launchApp({name:su.name,email:su.email},true); }
-        else { supaCreateUser(email,name,"google_"+email).then(function(){
-          var users=getUsers(); users[email]={name:name,password:"google_"+email,email:email}; lsSet("dai_users",users);
-          launchApp({name:name,email:email},true);
-          showToast("Welcome "+name.split(" ")[0]+"! Account created with Google.");
-        }); }
-      });
-    } catch(e) { showToast("Google sign-in failed. Please try email."); }
-  }});
-  google.accounts.id.prompt();
-}
 function signOut() {
   localStorage.removeItem("dai_session"); sessionStorage.removeItem("dai_session");
   CU=null; CP="home";
@@ -1035,11 +1008,9 @@ function buildHome(user,pts,tier,pro,admin,hid,totalScans) {
     h += '<div class="upgrade-card">';
     h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><span style="font-size:28px;">&#9889;</span><div><div style="font-weight:800;font-size:15px;">Upgrade to Pro</div><div style="color:var(--dim);font-size:11px;margin-top:2px;">Unlimited scans on all 6 tools</div></div></div>';
     h += '<div style="display:flex;gap:8px;">';
-    h += '<button onclick="openStripe(1)" style="flex:1;padding:11px;background:rgba(79,143,255,.1);border:1px solid rgba(79,143,255,.4);color:var(--blue);font-weight:700;font-size:13px;border-radius:10px;cursor:pointer;font-family:Syne,sans-serif;">$4.99 / month</button>';
-    h += '<button onclick="openStripe(0)" style="flex:1;padding:11px;background:linear-gradient(135deg,#00c88a,var(--green));border:none;border-radius:10px;color:#07071a;font-weight:800;font-size:13px;cursor:pointer;font-family:Syne,sans-serif;">&#128142; $9.99 Lifetime</button>';
-    h += '</div>';
-    h += '<div style="text-align:center;font-size:10px;font-family:var(--mono);color:var(--dark);margin-top:8px;">&#10003; Instant access &middot; &#10003; All future tools &middot; &#10003; Human ID always free</div>';
-    h += '</div>';
+    h += '<button onclick="openStripe(0)" style="flex:1;padding:11px;background:linear-gradient(135deg,#00c88a,var(--green));border:none;border-radius:10px;color:#07071a;font-weight:800;font-size:13px;cursor:pointer;font-family:Syne,sans-serif;">&#128179; Lifetime $9.99</button>';
+    h += '<button onclick="openStripe(1)" style="flex:1;padding:11px;background:rgba(79,143,255,.1);border:1px solid rgba(79,143,255,.3);color:var(--blue);font-weight:700;font-size:13px;border-radius:10px;cursor:pointer;font-family:Syne,sans-serif;">$4.99/mo</button>';
+    h += '</div></div>';
   }
 
   // Tools grid
@@ -1254,16 +1225,14 @@ async function runScan(toolId) {
   var user = CU;
   var inp = q("detect-inp"); var text = inp ? inp.value.trim() : "";
   var res = q("scan-result"); var btn = q("scan-btn");
-  if (!text && toolId !== "image" && toolId !== "video") { res.innerHTML = '<div class="card" style="color:var(--amber);font-size:13px;padding:16px;">&#9888; Please enter content to analyze first.</div>'; return; }
-  if (!text && toolId === "video") text = "analyze this video for deepfake or AI generation";
-  if (!text && toolId === "image") text = "analyze this image for AI generation signs";
+  if (!text && toolId !== "image" && toolId !== "video") { res.innerHTML = '<div class="card" style="color:var(--amber);font-size:13px;">Please enter content to analyze.</div>'; return; }
   if (btn) { btn.disabled=true; btn.textContent="Analyzing..."; }
   res.innerHTML = '<div class="card" style="text-align:center;padding:30px 0;"><div class="spinner"></div><div style="color:var(--blue);font-family:var(--mono);font-size:11px;margin-top:12px;letter-spacing:2px;">ANALYZING...</div></div>';
   var usage = getUsage(user.email); usage[toolId]=(usage[toolId]||0)+1; saveUsage(user.email,usage);
   addPts(user.email,2);
   fetch(SUPA+"/rest/v1/rpc/increment_scans",{method:"POST",headers:{"apikey":SKEY,"Authorization":"Bearer "+SKEY,"Content-Type":"application/json"},body:"{}"}).catch(function(){});
   await new Promise(function(r){setTimeout(r,1500);});
-  var result = await analyzeWithClaude(toolId, text);
+  var result = analyzeContent(toolId, text);
   if (btn) { btn.disabled=false; btn.textContent="&#128269; Analyze Now"; }
   var mc = result.real?"var(--green)":result.ai?"var(--rose)":"var(--amber)";
   var mi = result.real?"&#9989;":result.ai?"&#10060;":"&#9888;&#65039;";
@@ -1289,25 +1258,6 @@ async function runScan(toolId) {
   var hp = q("pv-home"); if (hp) delete hp.dataset.loaded;
 }
 
-async function analyzeWithClaude(toolId, text) {
-  var names = {text:"text",image:"image",voice:"audio",video:"video",instagram:"Instagram account",tiktok:"TikTok account"};
-  var pText = "You are a DetectAI expert. Analyze this " + (names[toolId]||"content") + " and determine if it is AI-generated or real/human.\n\nContent: " + text + "\n\nReturn ONLY valid JSON: {\"verdict\":\"Real|AI Generated|Uncertain\",\"realScore\":75,\"aiScore\":25,\"confidence\":\"High|Medium|Low\",\"risk\":\"High|Medium|Low\",\"summary\":\"2-3 sentence analysis\",\"checks\":[{\"label\":\"Check name\",\"result\":\"OK|Flagged\",\"pass\":true}]}";
-  try {
-    var resp = await fetch("https://api.anthropic.com/v1/messages", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:500,messages:[{role:"user",content:pText}]})});
-    var data = await resp.json();
-    var raw = data.content && data.content[0] ? data.content[0].text : "";
-    var jm = raw.match(/[{][\s\S]*[}]/);
-    if (jm) {
-      var p = JSON.parse(jm[0]);
-      var isReal = p.verdict === "Real", isAI = p.verdict === "AI Generated";
-      var icons = {"AI Generation":"&#129302;","Authenticity":"&#128269;","Natural Lighting":"&#128161;","Deepfake":"&#127917;","Bot Activity":"&#129302;","Voice Clone":"&#127897;"};
-      var checks = (p.checks||[]).map(function(ch){return{label:ch.label,result:ch.result,pass:ch.pass!==false&&ch.result!=="Flagged",icon:icons[ch.label]||"&#128269;"};});
-      if (!checks.length) checks=[{label:"AI Detection",result:isAI?"Flagged":"OK",pass:!isAI,icon:"&#129302;"},{label:"Authenticity",result:isReal?"OK":"Flagged",pass:isReal,icon:"&#128269;"}];
-      return {real:isReal,ai:isAI,aiScore:p.aiScore||50,realScore:p.realScore||50,conf:p.confidence||"Medium",risk:p.risk||"Medium",verdict:(isReal?"&#10003; ":isAI?"&#10007; ":"&#9888; ")+p.verdict,summary:p.summary||"Analysis complete.",checks:checks};
-    }
-  } catch(e) {}
-  return analyzeContent(toolId, text);
-}
 function analyzeContent(toolId, text) {
   text = (text||"").toLowerCase();
   var ai = 20 + Math.floor(Math.random()*20);
@@ -1601,8 +1551,8 @@ document.addEventListener("DOMContentLoaded", function() {
   wire("btn-cta-register", function() { openModal("register"); });
   wire("btn-cta-signin", function() { openModal("login"); });
   wire("btn-free-signup", function() { openModal("register"); });
-  wire("btn-stripe-monthly", function() { window.open("https://buy.stripe.com/test_cNiaEX78FdJD1PF34g6Ri00", "_blank"); });
-  wire("btn-stripe-lifetime", function() { window.open("https://buy.stripe.com/test_6oUfZh64B20V65VfR26Ri01", "_blank"); });
+  wire("btn-stripe-monthly", function() { window.open("https://payment.intasend.com/subscriptions/charge/WY7PP09/plan/", "_blank"); });
+  wire("btn-stripe-lifetime", function() { window.open("https://payment.intasend.com/pay/d00f3b1d-a28a-4d57-8511-b7c6cb317a8a/", "_blank"); });
   wire("footer-get-started", function() { openModal("register"); });
 
   // Close modal when clicking overlay
