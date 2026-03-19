@@ -289,9 +289,9 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
 
 <div class="stats-wrap">
   <div class="stats-box">
+    <div class="stat-item"><div class="stat-val" id="stat-users" style="color:var(--purple);">&#8212;</div><div class="stat-lbl">REGISTERED USERS</div></div>
     <div class="stat-item"><div class="stat-val" id="stat-scans">&#8212;</div><div class="stat-lbl">SCANS COMPLETED</div></div>
     <div class="stat-item"><div class="stat-val" id="stat-ids">&#8212;</div><div class="stat-lbl">HUMAN IDs ISSUED</div></div>
-    <div class="stat-item"><div class="stat-val" id="stat-bots">&#8212;</div><div class="stat-lbl">BOTS CAUGHT</div></div>
     <div class="stat-item"><div class="stat-val" style="color:var(--green);">98%</div><div class="stat-lbl">ACCURACY</div></div>
   </div>
 </div>
@@ -486,10 +486,10 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
       </a>
       <p style="color:var(--dim);font-size:13px;line-height:1.7;margin:12px 0 16px;">The world&rsquo;s first platform combining AI content detection with verified human identity. Detect bots, prove humanity, get your Digital Human ID.</p>
       <div class="footer-socials">
-        <a href="https://twitter.com" target="_blank" class="footer-social">&#128038;</a>
+        <a href="https://x.com/DetectAi01" target="_blank" class="footer-social">&#128038;</a>
         <a href="https://t.me" target="_blank" class="footer-social">&#9992;&#65039;</a>
         <a href="https://discord.com" target="_blank" class="footer-social">&#128172;</a>
-        <a href="https://instagram.com" target="_blank" class="footer-social">&#128248;</a>
+        <a href="https://www.instagram.com/detectaii" target="_blank" class="footer-social">&#128248;</a>
       </div>
     </div>
     <div class="footer-col">
@@ -662,6 +662,17 @@ function loadStats() {
     if (si) si.textContent = fmt(s.human_ids);
     if (sb) sb.textContent = fmt(s.bots);
   });
+  fetch(SUPA + "/rest/v1/users?select=count", {
+    headers: {"apikey": SKEY, "Authorization": "Bearer " + SKEY, "Prefer": "count=exact"}
+  }).then(function(r) {
+    var range = r.headers.get("content-range");
+    if (range) {
+      var total = parseInt(range.split("/")[1]) || 0;
+      function fmt2(n) { return n >= 1000 ? (n/1000).toFixed(1)+"K" : String(n); }
+      var su = q("stat-users");
+      if (su) su.textContent = fmt2(total);
+    }
+  }).catch(function(){});
 }
 
 // ── LOCAL HELPERS ─────────────────────────────────────────────────
@@ -1045,10 +1056,10 @@ function buildHome(user,pts,tier,pro,admin,hid,totalScans) {
 
   // Social
   h += '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px;padding-bottom:8px;">';
-  h += '<a href="https://twitter.com" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#128038; Twitter</a>';
+  h += '<a href="https://x.com/DetectAi01" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#128038; Twitter</a>';
   h += '<a href="https://t.me" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#9992;&#65039; Telegram</a>';
   h += '<a href="https://discord.com" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#128172; Discord</a>';
-  h += '<a href="https://instagram.com" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#128248; Instagram</a>';
+  h += '<a href="https://www.instagram.com/detectaii" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#128248; Instagram</a>';
   h += '</div>';
   h += '<div style="text-align:center;color:var(--dark);font-size:11px;padding-bottom:8px;">&copy; 2026 Detect AI &amp; Prove You Are A Real Human</div>';
   return h;
@@ -1424,9 +1435,13 @@ function buildSupport() {
     ["How do I cancel my subscription?","Email workingplace0111@gmail.com with your email address and we will cancel immediately. No questions asked."],
   ];
   var h = '<div style="margin-bottom:16px;"><span class="slabel">HELP &amp; SUPPORT</span><div style="font-weight:800;font-size:22px;">How can we help?</div></div>';
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">';
   h += '<div class="card" style="cursor:pointer;border-color:rgba(79,143,255,.3);" id="chat-toggle-btn"><div style="font-size:26px;margin-bottom:6px;">&#129302;</div><div style="font-weight:700;font-size:13px;">AI Chat</div><div style="color:var(--blue);font-size:10px;font-family:var(--mono);margin-top:4px;">Instant answers &rarr;</div></div>';
   h += '<a href="mailto:workingplace0111@gmail.com?subject=[DetectAI Support]" class="card" style="text-decoration:none;display:block;border-color:rgba(0,229,160,.3);"><div style="font-size:26px;margin-bottom:6px;">&#128231;</div><div style="font-weight:700;font-size:13px;color:var(--text);">Email Us</div><div style="color:var(--green);font-size:10px;font-family:var(--mono);margin-top:4px;">Reply in 24hrs &rarr;</div></a>';
+  h += '</div>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">';
+  h += '<a href="https://www.instagram.com/detectaii" target="_blank" class="card" style="text-decoration:none;display:block;border-color:rgba(225,48,108,.3);"><div style="font-size:26px;margin-bottom:6px;">&#128248;</div><div style="font-weight:700;font-size:13px;color:var(--text);">Instagram</div><div style="color:#e1306c;font-size:10px;font-family:var(--mono);margin-top:4px;">@detectaii &rarr;</div></a>';
+  h += '<a href="https://x.com/DetectAi01" target="_blank" class="card" style="text-decoration:none;display:block;border-color:rgba(79,143,255,.3);"><div style="font-size:26px;margin-bottom:6px;">&#128038;</div><div style="font-weight:700;font-size:13px;color:var(--text);">Twitter / X</div><div style="color:var(--blue);font-size:10px;font-family:var(--mono);margin-top:4px;">@DetectAi01 &rarr;</div></a>';
   h += '</div>';
   h += '<div id="chat-box" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;overflow:hidden;">';
   h += '<div style="background:linear-gradient(135deg,var(--blue),var(--purple));padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">';
