@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://spotlight01.github.io/DetectAi/sitemap.xml
