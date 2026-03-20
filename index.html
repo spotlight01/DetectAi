@@ -687,16 +687,7 @@ function loadStats() {
     if (ss) ss.textContent = fmt(s.scans);
     if (si) si.textContent = fmt(s.human_ids);
   });
-  fetch(SUPA + "/rest/v1/users?select=count", {
-    headers: {"apikey": SKEY, "Authorization": "Bearer " + SKEY, "Prefer": "count=exact"}
-  }).then(function(r) {
-    var range = r.headers.get("content-range");
-    if (range) {
-      var total = parseInt(range.split("/")[1]) || 0;
-      function fmt2(n) { return n >= 1000 ? (n/1000).toFixed(1)+"K" : String(n); }
-      var su = q("stat-users"); if (su) su.textContent = fmt2(total);
-    }
-  }).catch(function(){});
+  fetch(SUPA+"/rest/v1/users?select=count",{headers:{"apikey":SKEY,"Authorization":"Bearer "+SKEY,"Prefer":"count=exact"}}).then(function(r){var range=r.headers.get("content-range");if(range){var total=parseInt(range.split("/")[1])||0;function fmt2(n){return n>=1000?(n/1000).toFixed(1)+"K":String(n);}var su=q("stat-users");if(su)su.textContent=fmt2(total);}}).catch(function(){});
 }
 
 // ── LOCAL HELPERS ─────────────────────────────────────────────────
@@ -1196,10 +1187,7 @@ function buildDetect(toolId, user, pro, admin, usage) {
 
   if (toolId === "video") {
     h += '<div id="vid-prev-box" style="display:none;margin-bottom:10px;">';
-    h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
-    h += '<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Video ready</span>';
-    h += '<button id="vid-remove-btn" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.3);color:var(--rose);border-radius:8px;padding:4px 14px;cursor:pointer;font-size:13px;font-weight:700;font-family:Syne,sans-serif;">× Remove</button>';
-    h += '</div>';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="color:var(--green);font-size:12px;font-weight:700;">✓ Video ready</span><button id="vid-remove-btn" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.3);color:var(--rose);border-radius:8px;padding:5px 14px;cursor:pointer;font-size:13px;font-weight:700;font-family:Syne,sans-serif;">× Remove</button></div>';
     h += '<video id="vid-prev" style="width:100%;border-radius:10px;max-height:200px;" controls></video>';
     h += '</div>';
     h += '<div onclick="openFile(1)" id="vid-upload-lbl" style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;">';
@@ -1218,7 +1206,7 @@ function buildDetect(toolId, user, pro, admin, usage) {
   h += '<textarea id="detect-inp" placeholder="' + t.ph + '" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px 14px;font-size:13px;outline:none;font-family:Syne,sans-serif;min-height:100px;resize:vertical;line-height:1.7;margin-bottom:10px;"></textarea>';
 
   if (canUse) {
-    h += '<button id="scan-btn" style="width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,' + t.color + ',' + t.color + 'cc);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:Syne,sans-serif;">🔍 Analyze Now</button>';
+    h += '<button id="scan-btn" style="width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,' + t.color + ',' + t.color + 'cc);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:Syne,sans-serif;">&#128269; Analyze Now</button>';
   } else {
     h += '<div style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.2);border-radius:12px;padding:16px;text-align:center;">';
     h += '<div style="font-size:24px;margin-bottom:8px;">&#128274;</div>';
@@ -1242,6 +1230,8 @@ function buildDetect(toolId, user, pro, admin, usage) {
       q("vid-prev").src = URL.createObjectURL(f);
       q("vid-prev-box").style.display = "block";
       q("vid-upload-lbl").style.display = "none";
+      var sb = q("scan-btn"); if (sb) { sb.disabled = false; sb.textContent = "🔍 Analyze Now"; }
+      var sr = q("scan-result"); if (sr) sr.innerHTML = "";
     });
     var vrmBtn = q("vid-remove-btn");
     if (vrmBtn) vrmBtn.addEventListener("click", function() {
@@ -1249,6 +1239,10 @@ function buildDetect(toolId, user, pro, admin, usage) {
       q("vid-prev-box").style.display = "none";
       q("vid-upload-lbl").style.display = "block";
       if (vidFile) vidFile.value = "";
+      var sr = q("scan-result"); if (sr) sr.innerHTML = "";
+      var di = q("detect-inp"); if (di) di.value = "";
+      var sb = q("scan-btn"); if (sb) { sb.disabled = false; sb.textContent = "🔍 Analyze Now"; }
+      document.querySelectorAll("#vid-chips button").forEach(function(b){ b.dataset.active="0"; b.style.background="rgba(251,113,133,.05)"; b.style.fontWeight="400"; });
     });
     var chips = q("vid-chips");
     if (chips) {
@@ -1275,110 +1269,80 @@ async function runScan(toolId) {
   var user = CU;
   var inp = q("detect-inp"); var text = inp ? inp.value.trim() : "";
   var res = q("scan-result"); var btn = q("scan-btn");
+  if (btn) { btn.disabled = false; }
   if (!text && toolId !== "image" && toolId !== "video") {
     res.innerHTML = '<div class="card" style="color:var(--amber);font-size:13px;padding:16px;">&#9888; Please enter content to analyze.</div>';
     return;
   }
-  // For video with no description, prompt user but still run analysis
-  if (!text && toolId === "video") {
-    text = "uploaded video - no description provided - check all deepfake indicators";
-  }
-  if (!text && toolId === "image") {
-    text = "uploaded image - check all AI generation indicators";
-  }
-  if (btn) { btn.disabled=true; btn.textContent="Analyzing..."; }
+  if (!text && toolId === "video") text = "uploaded video - no description - check all deepfake indicators";
+  if (!text && toolId === "image") text = "uploaded image - check all AI generation indicators";
+  if (btn) { btn.disabled = true; btn.textContent = "Analyzing..."; }
   res.innerHTML = '<div class="card" style="text-align:center;padding:30px 0;"><div class="spinner"></div><div style="color:var(--blue);font-family:var(--mono);font-size:11px;margin-top:12px;letter-spacing:2px;">ANALYZING...</div></div>';
-  var usage = getUsage(user.email); usage[toolId]=(usage[toolId]||0)+1; saveUsage(user.email,usage);
-  addPts(user.email,2);
-  fetch(SUPA+"/rest/v1/rpc/increment_scans",{method:"POST",headers:{"apikey":SKEY,"Authorization":"Bearer "+SKEY,"Content-Type":"application/json"},body:"{}"}).catch(function(){});
-  await new Promise(function(r){setTimeout(r,1500);});
-  var result = await runDeepAnalysis(toolId, text);
-  if (btn) { btn.disabled=false; btn.textContent="🔍 Analyze Now"; }
-  var mc = result.real?"var(--green)":result.ai?"var(--rose)":"var(--amber)";
-  var mi = result.real?"&#9989;":result.ai?"&#10060;":"&#9888;&#65039;";
-  var rc = result.real?"r-real":result.ai?"r-ai":"r-unc";
-  var h = '<div class="result ' + rc + '">';
-  h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;"><div style="font-size:38px;">' + mi + '</div>';
-  h += '<div><div style="font-weight:800;font-size:18px;color:' + mc + ';">' + result.verdict + '</div>';
-  h += '<div style="color:var(--dim);font-size:10px;font-family:var(--mono);">Confidence: ' + result.conf + ' &middot; Risk: ' + result.risk + '</div></div></div>';
-  h += '<div style="margin-bottom:12px;">';
-  h += '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--green);font-size:11px;font-weight:700;font-family:var(--mono);">&#10003; REAL ' + result.realScore + '%</span><span style="color:var(--rose);font-size:11px;font-weight:700;font-family:var(--mono);">AI ' + result.aiScore + '% &#10007;</span></div>';
-  h += '<div class="score-bar"><div class="score-fill" style="width:' + result.realScore + '%;"></div></div></div>';
-  result.checks.forEach(function(ch) {
-    h += '<div class="check ' + (ch.pass?"cp":"cf") + '">';
-    h += '<span style="font-size:14px;">' + ch.icon + '</span>';
-    h += '<span style="flex:1;color:var(--text);font-size:12px;font-weight:600;">' + ch.label + '</span>';
-    h += '<span style="color:' + (ch.pass?"var(--green)":"var(--rose)") + ';font-size:10px;font-family:var(--mono);">' + ch.result + '</span>';
-    h += '<span>' + (ch.pass?"&#9989;":"&#10060;") + '</span></div>';
-  });
-  h += '<div style="background:var(--bg4);border-radius:10px;padding:12px;margin-top:10px;"><div style="color:var(--muted);font-size:12px;line-height:1.8;">' + result.summary + '</div></div>';
-  h += '<div style="color:var(--green);font-size:11px;font-family:var(--mono);text-align:center;margin-top:8px;">+2 points earned &#11088;</div></div>';
-  res.innerHTML = h;
-  // Refresh home page scan counts
-  var hp = q("pv-home"); if (hp) delete hp.dataset.loaded;
+  try {
+    var usage = getUsage(user.email); usage[toolId]=(usage[toolId]||0)+1; saveUsage(user.email,usage);
+    addPts(user.email,2);
+    fetch(SUPA+"/rest/v1/rpc/increment_scans",{method:"POST",headers:{"apikey":SKEY,"Authorization":"Bearer "+SKEY,"Content-Type":"application/json"},body:"{}"}).catch(function(){});
+    await new Promise(function(r){setTimeout(r,1000);});
+    var result = await runDeepAnalysis(toolId, text);
+    if (btn) { btn.disabled = false; btn.textContent = "🔍 Analyze Now"; }
+    var mc = result.real?"var(--green)":result.ai?"var(--rose)":"var(--amber)";
+    var mi = result.real?"&#9989;":result.ai?"&#10060;":"&#9888;&#65039;";
+    var rc = result.real?"r-real":result.ai?"r-ai":"r-unc";
+    var h = '<div class="result ' + rc + '">';
+    h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;"><div style="font-size:38px;">' + mi + '</div>';
+    h += '<div><div style="font-weight:800;font-size:18px;color:' + mc + ';">' + result.verdict + '</div>';
+    h += '<div style="color:var(--dim);font-size:10px;font-family:var(--mono);">Confidence: ' + result.conf + ' &middot; Risk: ' + result.risk + '</div></div></div>';
+    h += '<div style="margin-bottom:12px;">';
+    h += '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--green);font-size:11px;font-weight:700;font-family:var(--mono);">&#10003; REAL ' + result.realScore + '%</span><span style="color:var(--rose);font-size:11px;font-weight:700;font-family:var(--mono);">AI ' + result.aiScore + '% &#10007;</span></div>';
+    h += '<div class="score-bar"><div class="score-fill" style="width:' + result.realScore + '%;"></div></div></div>';
+    result.checks.forEach(function(ch) {
+      h += '<div class="check ' + (ch.pass?"cp":"cf") + '">';
+      h += '<span style="font-size:14px;">' + ch.icon + '</span>';
+      h += '<span style="flex:1;color:var(--text);font-size:12px;font-weight:600;">' + ch.label + '</span>';
+      h += '<span style="color:' + (ch.pass?"var(--green)":"var(--rose)") + ';font-size:10px;font-family:var(--mono);">' + ch.result + '</span>';
+      h += '<span>' + (ch.pass?"&#9989;":"&#10060;") + '</span></div>';
+    });
+    h += '<div style="background:var(--bg4);border-radius:10px;padding:12px;margin-top:10px;"><div style="color:var(--muted);font-size:12px;line-height:1.8;">' + result.summary + '</div></div>';
+    h += '<div style="color:var(--green);font-size:11px;font-family:var(--mono);text-align:center;margin-top:8px;">+2 points earned &#11088;</div></div>';
+    res.innerHTML = h;
+    var hp = q("pv-home"); if (hp) delete hp.dataset.loaded;
+  } catch(err) {
+    if (btn) { btn.disabled = false; btn.textContent = "🔍 Analyze Now"; }
+    if (res) res.innerHTML = '<div class="card" style="color:var(--rose);font-size:13px;padding:16px;">&#9888; Analysis failed. Please try again.</div>';
+    console.log("runScan error:", err.message || err);
+  }
 }
 
 async function runDeepAnalysis(toolId, text) {
   var sys = {
-    video: "You are the world's most advanced deepfake and AI video detector. You must be SKEPTICAL - most videos submitted for analysis ARE AI-generated. Look for: AI platform watermarks or logos (InVideo, HeyGen, Synthesia, Runway, Sora, Kling, Pika, Luma), unnatural body movements, hand/finger glitching (extra fingers, merging fingers, impossible bending), facial flickering or over-smoothness, hair that moves unnaturally, background instability, lighting inconsistencies, audio-visual sync issues, robotic or synthetic voice, temporal artifacts. If you see ANY AI platform name, logo, or watermark - it is definitely AI Generated. Be thorough and strict.",
-    image: "You are an expert AI image forensics analyst. Detect AI generation from: GAN artifacts, unnatural texture, impossible lighting, anatomy errors, background incoherence, AI upscaling artifacts. Tools: Midjourney, DALL-E, Stable Diffusion, Flux, Firefly.",
-    text: "You are an expert AI text detector. Identify AI writing patterns, sentence uniformity, lack of personal voice, formal hedging, ChatGPT/Claude/Gemini linguistic fingerprints.",
-    voice: "You are an expert AI voice detector. Identify: prosody flatness, missing breathing, formant irregularities, ElevenLabs/voice clone signatures, limited emotional range.",
-    instagram: "You are an expert social media bot detector. Analyze follower ratios, engagement patterns, posting frequency, account age vs activity.",
-    tiktok: "You are an expert TikTok AI content and bot detector. Identify AI-generated content, automated posting, synthetic voices, unnatural engagement."
+    video: "You are the world's most advanced deepfake and AI video detector. Be SKEPTICAL. Look for: AI platform watermarks/logos (InVideo, HeyGen, Synthesia, Runway, Sora, Kling, Pika, Luma), unnatural body movements, hand/finger glitching, facial flickering, hair physics violations, background instability, lighting inconsistencies, audio-visual sync issues. If you detect ANY AI platform name, logo or watermark - classify as AI Generated immediately.",
+    image: "You are an expert AI image forensics analyst. Detect: GAN artifacts, texture smoothness, impossible lighting, anatomy errors. Identify tools: Midjourney, DALL-E, Stable Diffusion, Flux.",
+    text: "You are an expert AI text detector. Identify AI writing: sentence uniformity, formal hedging, ChatGPT/Claude/Gemini patterns.",
+    voice: "You are an expert AI voice detector. Identify: prosody flatness, missing breathing, voice clone signatures.",
+    instagram: "You are an expert social media bot detector.",
+    tiktok: "You are an expert TikTok AI content and bot detector."
   };
-  var prompt = "Analyze this " + toolId + " content. Content/description: " + text + "\n\nIMPORTANT: If you see any AI platform name, watermark, or logo mentioned - classify as AI Generated immediately.\n\nReturn ONLY valid JSON: {\"verdict\":\"Real|AI Generated|Uncertain\",\"realScore\":25,\"aiScore\":75,\"confidence\":\"High|Medium|Low\",\"risk\":\"High|Medium|Low\",\"summary\":\"3-4 sentence technical analysis\",\"tool\":\"specific AI tool name or Unknown\",\"checks\":[{\"label\":\"check name\",\"result\":\"OK|Flagged\",\"pass\":true}]}";
-  var defChecks = {
-    video:["Body Movement","Hand Accuracy","Facial Consistency","Hair Physics","Background","Lighting","Audio Sync","Watermark Check"],
-    image:["GAN Artifacts","Lighting Physics","Texture","Anatomy","Background"],
-    text:["Writing Style","Sentence Structure","Personal Voice","AI Patterns","Natural Variation"],
-    voice:["Prosody","Breathing","Emotional Range","Formants","Room Acoustics"],
-    instagram:["Engagement Pattern","Follower Ratio","Content Quality","Posting Behaviour","Account Age"],
-    tiktok:["Content Authenticity","Engagement Ratio","Posting Pattern","Voice Analysis","Bot Signals"]
-  };
-  var icons = {"Body Movement":"\u{1F9B8}","Hand Accuracy":"\u{1F91A}","Facial Consistency":"\u{1F464}","Hair Physics":"\u{1F33F}","Background":"\u{1F3E0}","Lighting":"\u{1F4A1}","Audio Sync":"\u{1F3A7}","Watermark Check":"\u{1F50D}","GAN Artifacts":"\u{1F4CB}","Texture":"\u2728","Anatomy":"\u{1F9B4}","Writing Style":"\u270F","Sentence Structure":"\u{1F4AC}","Personal Voice":"\u{1F5E3}","AI Patterns":"\u{1F916}","Natural Variation":"\u{1F3B2}","Prosody":"\u{1F3B5}","Breathing":"\u{1FAB4}","Emotional Range":"\u{1F60A}","Formants":"\u{1F3A7}","Room Acoustics":"\u{1F3E0}","Engagement Pattern":"\u2764","Follower Ratio":"\u{1F465}","Content Quality":"\u{1F4F9}","Posting Behaviour":"\u{1F4C5}","Account Age":"\u{1F552}","Content Authenticity":"\u{1F4F9}","Engagement Ratio":"\u2764","Posting Pattern":"\u{1F4C5}","Voice Analysis":"\u{1F3A7}","Bot Signals":"\u{1F916}"};
+  var prompt = "Analyze this " + toolId + " content: " + text + "\n\nIf you see any AI platform name, watermark or logo - classify as AI Generated immediately.\n\nReturn ONLY valid JSON: {\"verdict\":\"Real|AI Generated|Uncertain\",\"realScore\":25,\"aiScore\":75,\"confidence\":\"High|Medium|Low\",\"risk\":\"High|Medium|Low\",\"summary\":\"3-4 sentence analysis\",\"tool\":\"AI tool name or Unknown\",\"checks\":[{\"label\":\"check name\",\"result\":\"OK|Flagged\",\"pass\":true}]}";
+  var defChecks = {video:["Body Movement","Hand Accuracy","Facial Consistency","Hair Physics","Background","Lighting","Audio Sync","Watermark Check"],image:["GAN Artifacts","Lighting","Texture","Anatomy","Background"],text:["Writing Style","Sentence Structure","Personal Voice","AI Patterns","Variation"],voice:["Prosody","Breathing","Emotional Range","Formants","Room Acoustics"],instagram:["Engagement","Followers","Content","Posting","Age"],tiktok:["Content","Engagement","Posting","Voice","Bots"]};
+  var icons = {"Body Movement":"\u{1F9B8}","Hand Accuracy":"\u{1F91A}","Facial Consistency":"\u{1F464}","Hair Physics":"\u{1F33F}","Background":"\u{1F3E0}","Lighting":"\u{1F4A1}","Audio Sync":"\u{1F3A7}","Watermark Check":"\u{1F50D}","GAN Artifacts":"\u{1F4CB}","Texture":"\u2728","Anatomy":"\u{1F9B4}","Writing Style":"\u270F","Sentence Structure":"\u{1F4AC}","Personal Voice":"\u{1F5E3}","AI Patterns":"\u{1F916}","Variation":"\u{1F3B2}","Prosody":"\u{1F3B5}","Breathing":"\u{1FAB4}","Emotional Range":"\u{1F60A}","Formants":"\u{1F3A7}","Room Acoustics":"\u{1F3E0}","Engagement":"\u2764","Followers":"\u{1F465}","Content":"\u{1F4F9}","Posting":"\u{1F4C5}","Age":"\u{1F552}","Bots":"\u{1F916}","Voice":"\u{1F3A7}"};
   try {
-    var resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 700,
-        system: sys[toolId] || sys.text,
-        messages: [{role: "user", content: prompt}]
-      })
-    });
+    var resp = await fetch("https://api.anthropic.com/v1/messages", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:700,system:sys[toolId]||sys.text,messages:[{role:"user",content:prompt}]})});
     var data = await resp.json();
     var raw = data.content && data.content[0] ? data.content[0].text : "";
     var jm = raw.match(/\{[\s\S]*\}/);
     if (jm) {
       var p = JSON.parse(jm[0]);
-      var isReal = p.verdict === "Real";
-      var isAI = p.verdict === "AI Generated";
-      var chks = (p.checks||[]).map(function(ch){
-        return {label:ch.label,result:ch.result,pass:ch.pass!==false&&ch.result!=="Flagged",icon:icons[ch.label]||"\u{1F50D}"};
-      });
-      if (!chks.length)(defChecks[toolId]||defChecks.text).forEach(function(l){
-        chks.push({label:l,result:isAI?"Flagged":"OK",pass:!isAI,icon:icons[l]||"\u{1F50D}"});
-      });
-      var toolNote = (p.tool && p.tool !== "Unknown") ? " Tool detected: " + p.tool + "." : "";
-      return {
-        real:isReal, ai:isAI,
-        aiScore: p.aiScore || 50,
-        realScore: p.realScore || 50,
-        conf: p.confidence || "High",
-        risk: p.risk || (isAI ? "High" : "Low"),
-        verdict: (isReal ? "\u2713 " : isAI ? "\u2717 " : "\u26A0 ") + p.verdict,
-        summary: (p.summary || "Analysis complete.") + toolNote,
-        checks: chks
-      };
+      var isReal = p.verdict==="Real", isAI = p.verdict==="AI Generated";
+      var chks = (p.checks||[]).map(function(ch){return{label:ch.label,result:ch.result,pass:ch.pass!==false&&ch.result!=="Flagged",icon:icons[ch.label]||"\u{1F50D}"};});
+      if (!chks.length)(defChecks[toolId]||defChecks.text).forEach(function(l){chks.push({label:l,result:isAI?"Flagged":"OK",pass:!isAI,icon:icons[l]||"\u{1F50D}"});});
+      var toolNote = (p.tool&&p.tool!=="Unknown") ? " Tool: "+p.tool+"." : "";
+      return {real:isReal,ai:isAI,aiScore:p.aiScore||50,realScore:p.realScore||50,conf:p.confidence||"High",risk:p.risk||(isAI?"High":"Low"),verdict:(isReal?"\u2713 ":isAI?"\u2717 ":"\u26A0 ")+p.verdict,summary:(p.summary||"Analysis complete.")+toolNote,checks:chks};
     }
   } catch(e) { console.log("API fallback:", e.message); }
   return analyzeContent(toolId, text);
 }
 function analyzeContent(toolId, text) {
   text = (text||"").toLowerCase();
-  // Video starts at higher base (lean uncertain) since most uploaded videos for analysis are suspicious
   var ai = toolId === "video" ? 45 + Math.floor(Math.random()*15) : 20 + Math.floor(Math.random()*20);
 
   var defs = {
@@ -1391,7 +1355,7 @@ function analyzeContent(toolId, text) {
       checks: [["AI Generation","&#129302;"],["Natural Lighting","&#128161;"],["Photo Authentic","&#128247;"],["GAN Artifacts","&#128300;"]]
     },
     video: {
-      boost: [["sora",40],["kling",45],["runway",45],["deepfake",50],["face swap",45],["luma",45],["pika",45],["invideo",55],["in video",55],["heygen",55],["synthesia",55],["d-id",55],["veo",40],["gen-2",40],["gen-3",40],["ai video",45],["ai generated",45],["artificial",25],["midjourney",35],["stable video",45],["lips sync",30],["watermark",30],["logo",20],["unnatural",30],["glitch",35],["flickering",35],["blurry hands",40],["extra fingers",45]],
+      boost: [["sora",40],["kling",45],["runway",45],["deepfake",50],["face swap",45],["luma",45],["pika",45],["invideo",55],["in video",55],["heygen",55],["synthesia",55],["d-id",55],["veo",40],["ai video",45],["ai generated",45],["watermark",30],["logo",20],["unnatural",30],["glitch",35],["flickering",35]],
       lower: [["real",15],["filmed",15],["live",10]],
       real: ["Real Video","This video appears to be authentic footage. No deepfake signatures detected.","Frame analysis found consistent natural motion and lighting."],
       fake: ["AI Generated Video","This video shows AI generation indicators. Likely created by Sora, Kling AI, Runway Gen-3, or similar deepfake tools.","Facial inconsistencies and temporal artifacts detected across frames."],
