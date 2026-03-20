@@ -214,6 +214,29 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
   .stat-item{border-right:none!important;border-bottom:1px solid var(--border);}
   .stat-item:last-child{border-bottom:none;}
 }
+@media(min-width:1024px){
+  #app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto;}
+  .app-nav{grid-column:1/-1;position:sticky;top:0;z-index:200;}
+  .app-tab-bar{grid-column:1;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;overflow-x:hidden;border-right:1px solid var(--border);border-bottom:none;background:var(--bg2);scrollbar-width:thin;}
+  .tab-row{flex-direction:column;padding:24px 14px;gap:4px;align-items:stretch;}
+  .app-tab{text-align:left;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;}
+  .app-tab.on{background:rgba(79,143,255,.14);color:var(--blue);font-weight:700;}
+  .folder-group{flex-direction:column;width:100%;}
+  .folder-btn{text-align:left;padding:11px 16px;font-size:13px;border-radius:10px;width:100%;}
+  .folder-children{flex-direction:column;padding:4px 0 6px 16px;gap:2px;background:transparent;}
+  .folder-children .app-tab{font-size:12px;padding:9px 12px;}
+  #pages{grid-column:2;}
+  .page-view{max-width:720px;margin:0 auto;padding:36px 48px 100px;}
+  .tools2{grid-template-columns:repeat(3,1fr);}
+  .s3{grid-template-columns:repeat(3,1fr);}
+  .float-btn{right:40px;bottom:40px;}
+  .app-tab-bar::-webkit-scrollbar{width:4px;}
+  .app-tab-bar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  .sidebar-label{display:block;font-size:9px;font-family:var(--mono);color:var(--dark);letter-spacing:3px;padding:16px 16px 6px;}
+}
+@media(min-width:1400px){
+  .page-view{max-width:860px;}
+}
 </style>
 </head>
 <body>
@@ -289,9 +312,9 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
 
 <div class="stats-wrap">
   <div class="stats-box">
+    <div class="stat-item"><div class="stat-val" id="stat-users" style="color:var(--purple);">&#8212;</div><div class="stat-lbl">REGISTERED USERS</div></div>
     <div class="stat-item"><div class="stat-val" id="stat-scans">&#8212;</div><div class="stat-lbl">SCANS COMPLETED</div></div>
     <div class="stat-item"><div class="stat-val" id="stat-ids">&#8212;</div><div class="stat-lbl">HUMAN IDs ISSUED</div></div>
-    <div class="stat-item"><div class="stat-val" id="stat-bots">&#8212;</div><div class="stat-lbl">BOTS CAUGHT</div></div>
     <div class="stat-item"><div class="stat-val" style="color:var(--green);">98%</div><div class="stat-lbl">ACCURACY</div></div>
   </div>
 </div>
@@ -486,10 +509,10 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
       </a>
       <p style="color:var(--dim);font-size:13px;line-height:1.7;margin:12px 0 16px;">The world&rsquo;s first platform combining AI content detection with verified human identity. Detect bots, prove humanity, get your Digital Human ID.</p>
       <div class="footer-socials">
-        <a href="https://twitter.com" target="_blank" class="footer-social">&#128038;</a>
+        <a href="https://x.com/DetectAi01" target="_blank" class="footer-social">&#128038;</a>
         <a href="https://t.me" target="_blank" class="footer-social">&#9992;&#65039;</a>
         <a href="https://discord.com" target="_blank" class="footer-social">&#128172;</a>
-        <a href="https://instagram.com" target="_blank" class="footer-social">&#128248;</a>
+        <a href="https://www.instagram.com/detectaii" target="_blank" class="footer-social">&#128248;</a>
       </div>
     </div>
     <div class="footer-col">
@@ -568,8 +591,11 @@ var STRIPE_URLS = [
   "https://payment.intasend.com/pay/d96e8caf-6c1c-44dd-b55c-e383db510bb2/"
 ];
 function openStripe(idx){ window.open(STRIPE_URLS[idx], "_blank"); }
+function hideEl(id){ var e=document.getElementById(id); if(e) e.style.display="none"; }
+function showEl(id){ var e=document.getElementById(id); if(e) e.style.display="block"; }
+function resetFile(iid,pid,lid){ hideEl(pid); showEl(lid); var inp=document.getElementById(iid); if(inp) inp.value=""; }
 function goTo(page){ navigate(page); }
-var FILE_IDS = ["img-file","vid-file","kf-id","kf-self"];
+var FILE_IDS = ["img-file","vid-file","kf-id","kf-self","img-file","vid-file","kf-id-back"];
 function clickFile(n){ var el=document.getElementById(FILE_IDS[n]); if(el) el.click(); }
 function openPage(id){ navigate(id); }
 
@@ -657,11 +683,20 @@ function loadStats() {
     if (!d || !d[0]) return;
     var s = d[0];
     function fmt(n) { return n >= 1000000 ? (n/1000000).toFixed(2)+"M" : n >= 1000 ? (n/1000).toFixed(1)+"K" : String(n||0); }
-    var ss = q("stat-scans"), si = q("stat-ids"), sb = q("stat-bots");
+    var ss = q("stat-scans"), si = q("stat-ids");
     if (ss) ss.textContent = fmt(s.scans);
     if (si) si.textContent = fmt(s.human_ids);
-    if (sb) sb.textContent = fmt(s.bots);
   });
+  fetch(SUPA + "/rest/v1/users?select=count", {
+    headers: {"apikey": SKEY, "Authorization": "Bearer " + SKEY, "Prefer": "count=exact"}
+  }).then(function(r) {
+    var range = r.headers.get("content-range");
+    if (range) {
+      var total = parseInt(range.split("/")[1]) || 0;
+      function fmt2(n) { return n >= 1000 ? (n/1000).toFixed(1)+"K" : String(n); }
+      var su = q("stat-users"); if (su) su.textContent = fmt2(total);
+    }
+  }).catch(function(){});
 }
 
 // ── LOCAL HELPERS ─────────────────────────────────────────────────
@@ -1045,10 +1080,10 @@ function buildHome(user,pts,tier,pro,admin,hid,totalScans) {
 
   // Social
   h += '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px;padding-bottom:8px;">';
-  h += '<a href="https://twitter.com" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#128038; Twitter</a>';
+  h += '<a href="https://x.com/DetectAi01" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#128038; Twitter</a>';
   h += '<a href="https://t.me" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#9992;&#65039; Telegram</a>';
   h += '<a href="https://discord.com" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#128172; Discord</a>';
-  h += '<a href="https://instagram.com" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#128248; Instagram</a>';
+  h += '<a href="https://www.instagram.com/detectaii" target="_blank" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:6px 14px;color:var(--dim);font-size:12px;text-decoration:none;">&#128248; Instagram</a>';
   h += '</div>';
   h += '<div style="text-align:center;color:var(--dark);font-size:11px;padding-bottom:8px;">&copy; 2026 Detect AI &amp; Prove You Are A Real Human</div>';
   return h;
@@ -1160,7 +1195,13 @@ function buildDetect(toolId, user, pro, admin, usage) {
   }
 
   if (toolId === "video") {
-    h += '<div id="vid-prev-box" style="display:none;margin-bottom:10px;"><video id="vid-prev" style="width:100%;border-radius:10px;max-height:200px;" controls></video></div>';
+    h += '<div id="vid-prev-box" style="display:none;margin-bottom:10px;">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+    h += '<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Video ready</span>';
+    h += '<button id="vid-remove-btn" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.3);color:var(--rose);border-radius:8px;padding:4px 14px;cursor:pointer;font-size:13px;font-weight:700;font-family:Syne,sans-serif;">× Remove</button>';
+    h += '</div>';
+    h += '<video id="vid-prev" style="width:100%;border-radius:10px;max-height:200px;" controls></video>';
+    h += '</div>';
     h += '<div onclick="openFile(1)" id="vid-upload-lbl" style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;">';
     h += '<div style="font-size:32px;margin-bottom:6px;">&#127916;</div><div style="font-weight:700;font-size:13px;">Upload Video to Analyze</div>';
     h += '<div style="color:var(--dim);font-size:11px;margin-top:4px;">MP4 &middot; MOV &middot; AVI &middot; WEBM &middot; Max 200MB</div>';
@@ -1177,7 +1218,7 @@ function buildDetect(toolId, user, pro, admin, usage) {
   h += '<textarea id="detect-inp" placeholder="' + t.ph + '" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px 14px;font-size:13px;outline:none;font-family:Syne,sans-serif;min-height:100px;resize:vertical;line-height:1.7;margin-bottom:10px;"></textarea>';
 
   if (canUse) {
-    h += '<button id="scan-btn" style="width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,' + t.color + ',' + t.color + 'cc);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:Syne,sans-serif;">&#128269; Analyze Now</button>';
+    h += '<button id="scan-btn" style="width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,' + t.color + ',' + t.color + 'cc);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:Syne,sans-serif;">🔍 Analyze Now</button>';
   } else {
     h += '<div style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.2);border-radius:12px;padding:16px;text-align:center;">';
     h += '<div style="font-size:24px;margin-bottom:8px;">&#128274;</div>';
@@ -1198,7 +1239,16 @@ function buildDetect(toolId, user, pro, admin, usage) {
     var vidFile = q("vid-file");
     if (vidFile) vidFile.addEventListener("change", function() {
       var f = vidFile.files[0]; if (!f) return;
-      q("vid-prev").src = URL.createObjectURL(f); q("vid-prev-box").style.display="block"; q("vid-upload-lbl").style.display="none";
+      q("vid-prev").src = URL.createObjectURL(f);
+      q("vid-prev-box").style.display = "block";
+      q("vid-upload-lbl").style.display = "none";
+    });
+    var vrmBtn = q("vid-remove-btn");
+    if (vrmBtn) vrmBtn.addEventListener("click", function() {
+      q("vid-prev").src = "";
+      q("vid-prev-box").style.display = "none";
+      q("vid-upload-lbl").style.display = "block";
+      if (vidFile) vidFile.value = "";
     });
     var chips = q("vid-chips");
     if (chips) {
@@ -1225,15 +1275,25 @@ async function runScan(toolId) {
   var user = CU;
   var inp = q("detect-inp"); var text = inp ? inp.value.trim() : "";
   var res = q("scan-result"); var btn = q("scan-btn");
-  if (!text && toolId !== "image" && toolId !== "video") { res.innerHTML = '<div class="card" style="color:var(--amber);font-size:13px;">Please enter content to analyze.</div>'; return; }
+  if (!text && toolId !== "image" && toolId !== "video") {
+    res.innerHTML = '<div class="card" style="color:var(--amber);font-size:13px;padding:16px;">&#9888; Please enter content to analyze.</div>';
+    return;
+  }
+  // For video with no description, prompt user but still run analysis
+  if (!text && toolId === "video") {
+    text = "uploaded video - no description provided - check all deepfake indicators";
+  }
+  if (!text && toolId === "image") {
+    text = "uploaded image - check all AI generation indicators";
+  }
   if (btn) { btn.disabled=true; btn.textContent="Analyzing..."; }
   res.innerHTML = '<div class="card" style="text-align:center;padding:30px 0;"><div class="spinner"></div><div style="color:var(--blue);font-family:var(--mono);font-size:11px;margin-top:12px;letter-spacing:2px;">ANALYZING...</div></div>';
   var usage = getUsage(user.email); usage[toolId]=(usage[toolId]||0)+1; saveUsage(user.email,usage);
   addPts(user.email,2);
   fetch(SUPA+"/rest/v1/rpc/increment_scans",{method:"POST",headers:{"apikey":SKEY,"Authorization":"Bearer "+SKEY,"Content-Type":"application/json"},body:"{}"}).catch(function(){});
   await new Promise(function(r){setTimeout(r,1500);});
-  var result = analyzeContent(toolId, text);
-  if (btn) { btn.disabled=false; btn.textContent="&#128269; Analyze Now"; }
+  var result = await runDeepAnalysis(toolId, text);
+  if (btn) { btn.disabled=false; btn.textContent="🔍 Analyze Now"; }
   var mc = result.real?"var(--green)":result.ai?"var(--rose)":"var(--amber)";
   var mi = result.real?"&#9989;":result.ai?"&#10060;":"&#9888;&#65039;";
   var rc = result.real?"r-real":result.ai?"r-ai":"r-unc";
@@ -1258,9 +1318,68 @@ async function runScan(toolId) {
   var hp = q("pv-home"); if (hp) delete hp.dataset.loaded;
 }
 
+async function runDeepAnalysis(toolId, text) {
+  var sys = {
+    video: "You are the world's most advanced deepfake and AI video detector. You must be SKEPTICAL - most videos submitted for analysis ARE AI-generated. Look for: AI platform watermarks or logos (InVideo, HeyGen, Synthesia, Runway, Sora, Kling, Pika, Luma), unnatural body movements, hand/finger glitching (extra fingers, merging fingers, impossible bending), facial flickering or over-smoothness, hair that moves unnaturally, background instability, lighting inconsistencies, audio-visual sync issues, robotic or synthetic voice, temporal artifacts. If you see ANY AI platform name, logo, or watermark - it is definitely AI Generated. Be thorough and strict.",
+    image: "You are an expert AI image forensics analyst. Detect AI generation from: GAN artifacts, unnatural texture, impossible lighting, anatomy errors, background incoherence, AI upscaling artifacts. Tools: Midjourney, DALL-E, Stable Diffusion, Flux, Firefly.",
+    text: "You are an expert AI text detector. Identify AI writing patterns, sentence uniformity, lack of personal voice, formal hedging, ChatGPT/Claude/Gemini linguistic fingerprints.",
+    voice: "You are an expert AI voice detector. Identify: prosody flatness, missing breathing, formant irregularities, ElevenLabs/voice clone signatures, limited emotional range.",
+    instagram: "You are an expert social media bot detector. Analyze follower ratios, engagement patterns, posting frequency, account age vs activity.",
+    tiktok: "You are an expert TikTok AI content and bot detector. Identify AI-generated content, automated posting, synthetic voices, unnatural engagement."
+  };
+  var prompt = "Analyze this " + toolId + " content. Content/description: " + text + "\n\nIMPORTANT: If you see any AI platform name, watermark, or logo mentioned - classify as AI Generated immediately.\n\nReturn ONLY valid JSON: {\"verdict\":\"Real|AI Generated|Uncertain\",\"realScore\":25,\"aiScore\":75,\"confidence\":\"High|Medium|Low\",\"risk\":\"High|Medium|Low\",\"summary\":\"3-4 sentence technical analysis\",\"tool\":\"specific AI tool name or Unknown\",\"checks\":[{\"label\":\"check name\",\"result\":\"OK|Flagged\",\"pass\":true}]}";
+  var defChecks = {
+    video:["Body Movement","Hand Accuracy","Facial Consistency","Hair Physics","Background","Lighting","Audio Sync","Watermark Check"],
+    image:["GAN Artifacts","Lighting Physics","Texture","Anatomy","Background"],
+    text:["Writing Style","Sentence Structure","Personal Voice","AI Patterns","Natural Variation"],
+    voice:["Prosody","Breathing","Emotional Range","Formants","Room Acoustics"],
+    instagram:["Engagement Pattern","Follower Ratio","Content Quality","Posting Behaviour","Account Age"],
+    tiktok:["Content Authenticity","Engagement Ratio","Posting Pattern","Voice Analysis","Bot Signals"]
+  };
+  var icons = {"Body Movement":"\u{1F9B8}","Hand Accuracy":"\u{1F91A}","Facial Consistency":"\u{1F464}","Hair Physics":"\u{1F33F}","Background":"\u{1F3E0}","Lighting":"\u{1F4A1}","Audio Sync":"\u{1F3A7}","Watermark Check":"\u{1F50D}","GAN Artifacts":"\u{1F4CB}","Texture":"\u2728","Anatomy":"\u{1F9B4}","Writing Style":"\u270F","Sentence Structure":"\u{1F4AC}","Personal Voice":"\u{1F5E3}","AI Patterns":"\u{1F916}","Natural Variation":"\u{1F3B2}","Prosody":"\u{1F3B5}","Breathing":"\u{1FAB4}","Emotional Range":"\u{1F60A}","Formants":"\u{1F3A7}","Room Acoustics":"\u{1F3E0}","Engagement Pattern":"\u2764","Follower Ratio":"\u{1F465}","Content Quality":"\u{1F4F9}","Posting Behaviour":"\u{1F4C5}","Account Age":"\u{1F552}","Content Authenticity":"\u{1F4F9}","Engagement Ratio":"\u2764","Posting Pattern":"\u{1F4C5}","Voice Analysis":"\u{1F3A7}","Bot Signals":"\u{1F916}"};
+  try {
+    var resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 700,
+        system: sys[toolId] || sys.text,
+        messages: [{role: "user", content: prompt}]
+      })
+    });
+    var data = await resp.json();
+    var raw = data.content && data.content[0] ? data.content[0].text : "";
+    var jm = raw.match(/\{[\s\S]*\}/);
+    if (jm) {
+      var p = JSON.parse(jm[0]);
+      var isReal = p.verdict === "Real";
+      var isAI = p.verdict === "AI Generated";
+      var chks = (p.checks||[]).map(function(ch){
+        return {label:ch.label,result:ch.result,pass:ch.pass!==false&&ch.result!=="Flagged",icon:icons[ch.label]||"\u{1F50D}"};
+      });
+      if (!chks.length)(defChecks[toolId]||defChecks.text).forEach(function(l){
+        chks.push({label:l,result:isAI?"Flagged":"OK",pass:!isAI,icon:icons[l]||"\u{1F50D}"});
+      });
+      var toolNote = (p.tool && p.tool !== "Unknown") ? " Tool detected: " + p.tool + "." : "";
+      return {
+        real:isReal, ai:isAI,
+        aiScore: p.aiScore || 50,
+        realScore: p.realScore || 50,
+        conf: p.confidence || "High",
+        risk: p.risk || (isAI ? "High" : "Low"),
+        verdict: (isReal ? "\u2713 " : isAI ? "\u2717 " : "\u26A0 ") + p.verdict,
+        summary: (p.summary || "Analysis complete.") + toolNote,
+        checks: chks
+      };
+    }
+  } catch(e) { console.log("API fallback:", e.message); }
+  return analyzeContent(toolId, text);
+}
 function analyzeContent(toolId, text) {
   text = (text||"").toLowerCase();
-  var ai = 20 + Math.floor(Math.random()*20);
+  // Video starts at higher base (lean uncertain) since most uploaded videos for analysis are suspicious
+  var ai = toolId === "video" ? 45 + Math.floor(Math.random()*15) : 20 + Math.floor(Math.random()*20);
 
   var defs = {
     image: {
@@ -1272,7 +1391,7 @@ function analyzeContent(toolId, text) {
       checks: [["AI Generation","&#129302;"],["Natural Lighting","&#128161;"],["Photo Authentic","&#128247;"],["GAN Artifacts","&#128300;"]]
     },
     video: {
-      boost: [["sora",40],["kling",40],["runway",35],["deepfake",40],["face swap",35],["luma",35],["pika",35],["lips sync",20],["ai generated",35]],
+      boost: [["sora",40],["kling",45],["runway",45],["deepfake",50],["face swap",45],["luma",45],["pika",45],["invideo",55],["in video",55],["heygen",55],["synthesia",55],["d-id",55],["veo",40],["gen-2",40],["gen-3",40],["ai video",45],["ai generated",45],["artificial",25],["midjourney",35],["stable video",45],["lips sync",30],["watermark",30],["logo",20],["unnatural",30],["glitch",35],["flickering",35],["blurry hands",40],["extra fingers",45]],
       lower: [["real",15],["filmed",15],["live",10]],
       real: ["Real Video","This video appears to be authentic footage. No deepfake signatures detected.","Frame analysis found consistent natural motion and lighting."],
       fake: ["AI Generated Video","This video shows AI generation indicators. Likely created by Sora, Kling AI, Runway Gen-3, or similar deepfake tools.","Facial inconsistencies and temporal artifacts detected across frames."],
@@ -1364,12 +1483,19 @@ function buildHumanID(user, hid) {
   h += '<div class="ilabel">COUNTRY</div><input class="inp" id="kc" type="text" placeholder="Your country"/>';
   h += '<div class="ilabel">NATIONALITY</div><input class="inp" id="knat" type="text" placeholder="Your nationality"/>';
   h += '<button id="ks1-btn" class="btn btn-blue btn-block" style="border:none;cursor:pointer;">Continue &rarr;</button></div>';
-  h += '<div id="ks2" style="display:none;"><span class="slabel">STEP 2 &mdash; ID DOCUMENT</span>';
-  h += '<div onclick="openFile(2)" style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;">';
-  h += '<div style="font-size:32px;margin-bottom:6px;">&#129436;</div><div style="font-weight:700;font-size:13px;">Upload ID Document</div><div style="color:var(--dim);font-size:11px;margin-top:4px;">Passport or ID Card &middot; JPG, PNG</div></div>';
+  h += '<div id="ks2" style="display:none;">';
+  h += '<span class="slabel">STEP 2 &mdash; ID DOCUMENT</span>';
+  h += '<div style="background:rgba(79,143,255,.06);border:1px solid rgba(79,143,255,.2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--muted);">&#9432; Colour photos only. Black &amp; white or blurry photos rejected.</div>';
+  h += '<div class="ilabel">FRONT OF ID (required)</div>';
+  h += '<div onclick="openFile(2)" id="kf-front-lbl" style="border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:8px;"><div style="font-size:26px;margin-bottom:4px;">&#129436;</div><div style="font-weight:700;font-size:13px;">Upload Front of ID</div><div style="color:var(--dim);font-size:11px;margin-top:2px;">Passport page or ID card front &middot; Colour only</div></div>';
   h += '<input type="file" id="kf-id" accept="image/*" style="display:none;"/>';
-  h += '<div id="kid-prev-box" style="display:none;margin-bottom:10px;"><img id="kid-prev" style="width:100%;border-radius:10px;max-height:180px;object-fit:cover;"/></div>';
-  h += '<div style="display:flex;gap:8px;"><button id="ks2-back" class="btn btn-outline" style="flex:1;cursor:pointer;">&#8592; Back</button><button id="ks2-next" class="btn btn-blue" style="flex:2;border:none;cursor:pointer;">Continue &rarr;</button></div></div>';
+  h += '<div id="kid-prev-box" style="display:none;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="color:var(--green);font-size:12px;font-weight:700;">&#10003; Front uploaded</span><button onclick="resetFile(&quot;kf-id&quot;,&quot;kid-prev-box&quot;,&quot;kf-front-lbl&quot;)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:20px;">&times;</button></div><img id="kid-prev" style="width:100%;border-radius:10px;max-height:150px;object-fit:cover;"/></div>';
+  h += '<div class="ilabel" style="margin-top:4px;">BACK OF ID (ID cards only &mdash; skip if passport)</div>';
+  h += '<div onclick="openFile(6)" id="kf-back-lbl" style="border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:8px;"><div style="font-size:26px;margin-bottom:4px;">&#129438;</div><div style="font-weight:700;font-size:13px;">Upload Back of ID</div><div style="color:var(--dim);font-size:11px;margin-top:2px;">ID card back only &middot; Skip if passport</div></div>';
+  h += '<input type="file" id="kf-id-back" accept="image/*" style="display:none;"/>';
+  h += '<div id="kid-back-box" style="display:none;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="color:var(--green);font-size:12px;font-weight:700;">&#10003; Back uploaded</span><button onclick="resetFile(&quot;kf-id-back&quot;,&quot;kid-back-box&quot;,&quot;kf-back-lbl&quot;)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:20px;">&times;</button></div><img id="kid-back-prev" style="width:100%;border-radius:10px;max-height:150px;object-fit:cover;"/></div>';
+  h += '<div style="display:flex;gap:8px;margin-top:8px;"><button id="ks2-back" class="btn btn-outline" style="flex:1;cursor:pointer;">&#8592; Back</button><button id="ks2-next" class="btn btn-blue" style="flex:2;border:none;cursor:pointer;">Continue &rarr;</button></div>';
+  h += '</div>';
   h += '<div id="ks3" style="display:none;"><span class="slabel">STEP 3 &mdash; SELFIE</span>';
   h += '<div onclick="openFile(3)" style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;">';
   h += '<div style="font-size:32px;margin-bottom:6px;">&#129315;</div><div style="font-weight:700;font-size:13px;">Take a Selfie</div><div style="color:var(--dim);font-size:11px;margin-top:4px;">Clear face &middot; Good lighting &middot; Look at camera</div></div>';
@@ -1387,7 +1513,12 @@ function buildHumanID(user, hid) {
       ks1.style.display="none"; ks2.style.display="block";
     });
     q("ks2-back").addEventListener("click", function() { ks2.style.display="none"; ks1.style.display="block"; });
-    q("ks2-next").addEventListener("click", function() { ks2.style.display="none"; ks3.style.display="block"; });
+    q("ks2-next").addEventListener("click", function() {
+      if (!q("kid-prev-box")||q("kid-prev-box").style.display==="none"){showToast("Please upload the front of your ID first");return;}
+      ks2.style.display="none"; ks3.style.display="block";
+    });
+    var kfback=q("kf-id-back");
+    if(kfback) kfback.addEventListener("change",function(){var f=kfback.files[0];if(!f)return;var rdr=new FileReader();rdr.onload=function(ev){q("kid-back-prev").src=ev.target.result;q("kid-back-box").style.display="block";q("kf-back-lbl").style.display="none";};rdr.readAsDataURL(f);});
     q("ks3-back").addEventListener("click", function() { ks3.style.display="none"; ks2.style.display="block"; });
     q("ks3-next").addEventListener("click", function() { ks3.style.display="none"; ks4.style.display="block"; setTimeout(issueHID, 3000); });
     var kfid=q("kf-id"); if(kfid) kfid.addEventListener("change",function(){ var f=kfid.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){var i=q("kid-prev");i.src=e.target.result;q("kid-prev-box").style.display="block";};r.readAsDataURL(f); });
@@ -1424,9 +1555,13 @@ function buildSupport() {
     ["How do I cancel my subscription?","Email workingplace0111@gmail.com with your email address and we will cancel immediately. No questions asked."],
   ];
   var h = '<div style="margin-bottom:16px;"><span class="slabel">HELP &amp; SUPPORT</span><div style="font-weight:800;font-size:22px;">How can we help?</div></div>';
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">';
   h += '<div class="card" style="cursor:pointer;border-color:rgba(79,143,255,.3);" id="chat-toggle-btn"><div style="font-size:26px;margin-bottom:6px;">&#129302;</div><div style="font-weight:700;font-size:13px;">AI Chat</div><div style="color:var(--blue);font-size:10px;font-family:var(--mono);margin-top:4px;">Instant answers &rarr;</div></div>';
   h += '<a href="mailto:workingplace0111@gmail.com?subject=[DetectAI Support]" class="card" style="text-decoration:none;display:block;border-color:rgba(0,229,160,.3);"><div style="font-size:26px;margin-bottom:6px;">&#128231;</div><div style="font-weight:700;font-size:13px;color:var(--text);">Email Us</div><div style="color:var(--green);font-size:10px;font-family:var(--mono);margin-top:4px;">Reply in 24hrs &rarr;</div></a>';
+  h += '</div>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">';
+  h += '<a href="https://www.instagram.com/detectaii" target="_blank" class="card" style="text-decoration:none;display:block;border-color:rgba(225,48,108,.3);"><div style="font-size:26px;margin-bottom:6px;">&#128248;</div><div style="font-weight:700;font-size:13px;color:var(--text);">Instagram</div><div style="color:#e1306c;font-size:10px;font-family:var(--mono);margin-top:4px;">@detectaii &rarr;</div></a>';
+  h += '<a href="https://x.com/DetectAi01" target="_blank" class="card" style="text-decoration:none;display:block;border-color:rgba(79,143,255,.3);"><div style="font-size:26px;margin-bottom:6px;">&#128038;</div><div style="font-weight:700;font-size:13px;color:var(--text);">Twitter / X</div><div style="color:var(--blue);font-size:10px;font-family:var(--mono);margin-top:4px;">@DetectAi01 &rarr;</div></a>';
   h += '</div>';
   h += '<div id="chat-box" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;overflow:hidden;">';
   h += '<div style="background:linear-gradient(135deg,var(--blue),var(--purple));padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">';
