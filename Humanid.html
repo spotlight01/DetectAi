@@ -1,0 +1,88 @@
+<!-- === UPGRADED DIGITAL HUMAN IDENTITY SECTION === -->
+<section id="human-id" style="padding: 80px 20px; background: linear-gradient(to bottom, #111, #000); color: white; text-align: center;">
+  <div style="max-width: 1000px; margin: 0 auto;">
+    <h2 style="font-size: 42px; margin-bottom: 10px;">Digital Human Identity</h2>
+    <p style="font-size: 20px; color: #ccc; margin-bottom: 40px;">Prove you're real — upgrade to Humanity Protocol ZK palm verification</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 30px; max-width: 900px; margin: 0 auto;">
+      
+      <!-- Level 1 Card -->
+      <div style="background: #1a1a1a; border: 2px solid #444; border-radius: 24px; padding: 40px 30px;">
+        <div style="font-size: 60px; margin-bottom: 20px;">📄📸</div>
+        <h3 style="font-size: 28px; margin-bottom: 8px;">Level 1 — KYC Verified</h3>
+        <p style="color: #4ade80; font-size: 18px; margin-bottom: 20px;">82% Humanity Score • Centralized</p>
+        <p style="color: #aaa; margin-bottom: 30px;">Passport + Selfie<br>Good for basic platforms</p>
+        <button onclick="keepCurrentKYC()" style="width: 100%; padding: 18px; background: #333; color: white; border: none; border-radius: 16px; font-size: 18px; cursor: pointer;">
+          Keep Current ID
+        </button>
+      </div>
+
+      <!-- Level 2 Upgrade Card (Z K PoH) -->
+      <div style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: black; border-radius: 24px; padding: 40px 30px; position: relative; box-shadow: 0 20px 40px rgba(245, 158, 11, 0.4);">
+        <div style="position: absolute; top: 20px; right: 20px; background: white; color: black; font-size: 12px; padding: 6px 16px; border-radius: 9999px; font-weight: bold;">RECOMMENDED</div>
+        
+        <div style="font-size: 70px; margin-bottom: 20px;">✋🔒</div>
+        <h3 style="font-size: 32px; margin-bottom: 8px;">Level 2 — ZK PoH Verified</h3>
+        <p style="font-size: 19px; margin-bottom: 25px;">98%+ Humanity Score • Decentralized Palm Biometrics</p>
+        
+        <ul style="text-align: left; display: inline-block; margin: 0 auto 30px; font-size: 17px; line-height: 1.6;">
+          <li>✅ Zero-Knowledge Proof (no data shared)</li>
+          <li>✅ Sybil & deepfake resistant</li>
+          <li>✅ Works on DeFi, DAOs, anywhere</li>
+          <li>✅ Unlocks Diamond Tier rewards</li>
+        </ul>
+
+        <button onclick="startHumanityVerification()" 
+                style="width: 100%; padding: 22px; background: #000; color: white; border: none; border-radius: 16px; font-size: 20px; font-weight: bold; cursor: pointer;">
+          Upgrade with Humanity Protocol
+        </button>
+      </div>
+    </div>
+
+    <!-- Status area (updates after success) -->
+    <div id="verification-status" style="margin-top: 60px; display: none;"></div>
+  </div>
+</section>
+
+<script>
+// Your Client ID is already inserted below
+const CLIENT_ID = "app_118754427bfa0cf1383b05090293abdb";
+const REDIRECT_URI = "https://spotlight01.github.io/DetectAi/callback.html";
+const ENVIRONMENT = "sandbox"; // change to "production" later
+
+function startHumanityVerification() {
+  const codeVerifier = generateCodeVerifier();
+  const codeChallenge = generateCodeChallenge(codeVerifier);
+  
+  localStorage.setItem("humanity_code_verifier", codeVerifier);
+  
+  const authUrl = `https://auth.${ENVIRONMENT === 'production' ? '' : 'sandbox.'}humanity.org/oauth/authorize?` +
+    `client_id=${CLIENT_ID}&` +
+    `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
+    `response_type=code&` +
+    `scope=openid%20preset:verify&` +   // or identity:read if needed
+    `code_challenge=${codeChallenge}&` +
+    `code_challenge_method=S256&` +
+    `state=detectai-${Date.now()}`;
+  
+  window.location.href = authUrl;
+}
+
+function generateCodeVerifier() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function generateCodeChallenge(verifier) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function keepCurrentKYC() {
+  alert("Keeping your current passport + selfie KYC for now. You can upgrade anytime!");
+}
+</script>
