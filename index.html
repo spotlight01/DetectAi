@@ -1,0 +1,91 @@
+<!-- DIGITAL HUMAN ID SECTION - Updated with Humanity ZK Upgrade -->
+<div style="padding: 60px 20px; background: #0a0a0a; color: white; text-align: center;">
+  <h2 style="font-size: 42px; margin-bottom: 10px;">Your Identity Card</h2>
+  <p style="font-size: 20px; color: #aaa;">KYC Verified • Upgrade to ZK Palm Biometrics for stronger proof</p>
+
+  <!-- Your Current Platinum Card (exactly matches screenshot) -->
+  <div style="background: linear-gradient(145deg, #052e16, #0a3d21); border: 2px solid #4ade80; border-radius: 24px; padding: 40px; max-width: 620px; margin: 40px auto; box-shadow: 0 0 40px rgba(74, 222, 128, 0.3);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div>
+        <span style="color: #4ade80; font-size: 14px; font-weight: bold;">DETECT AI • HUMAN ID</span>
+      </div>
+      <div style="background: #4ade80; color: black; padding: 6px 16px; border-radius: 9999px; font-size: 14px; font-weight: bold;">KYC VERIFIED ✓</div>
+    </div>
+
+    <div style="text-align: left;">
+      <p style="color: #4ade80; font-size: 15px; margin: 0;">Platinum TIER • 85% HUMANITY</p>
+      <h3 style="font-size: 36px; margin: 10px 0 5px;">Erick kimani</h3>
+      <p style="color: #aaa; margin-bottom: 30px;">Kenyan • Kenya</p>
+
+      <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
+        <div>
+          <p style="color: #666; font-size: 13px;">ISSUED</p>
+          <p style="font-size: 18px;">March 18, 2026</p>
+        </div>
+        <div>
+          <p style="color: #666; font-size: 13px;">VALID UNTIL</p>
+          <p style="font-size: 18px;">March 18, 2027</p>
+        </div>
+      </div>
+
+      <div style="background: rgba(0,0,0,0.4); padding: 18px; border-radius: 16px; margin-bottom: 20px;">
+        <p style="color: #666; font-size: 13px;">HUMAN ID NUMBER</p>
+        <p style="color: #4ade80; font-size: 22px; font-weight: bold; letter-spacing: 2px;">HID-W9GR-HH6D-NG3U</p>
+      </div>
+
+      <div style="background: rgba(0,0,0,0.4); padding: 18px; border-radius: 16px;">
+        <p style="color: #666; font-size: 13px;">SHA-256 HASH</p>
+        <p style="font-size: 14px; word-break: break-all; color: #aaa;">3cf2e5b4b29d0efcc3ce0cf9455ce94f430598cbc4fb2f1844567c97eea9b86</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW UPGRADE CARD - Humanity ZK PoH -->
+  <div style="max-width: 620px; margin: 60px auto; background: linear-gradient(145deg, #1f2937, #111827); border: 2px solid #f59e0b; border-radius: 24px; padding: 40px; box-shadow: 0 0 40px rgba(245, 158, 11, 0.3);">
+    <div style="font-size: 70px; margin-bottom: 25px;">✋🔒</div>
+    <h3 style="font-size: 32px; color: #fbbf24;">Upgrade to ZK PoH Verified</h3>
+    <p style="color: #fcd34d; font-size: 20px; margin: 15px 0 30px;">Stronger than KYC — Palm Scan + Zero-Knowledge Proof</p>
+
+    <ul style="text-align: left; max-width: 420px; margin: 0 auto 40px; font-size: 17px;">
+      <li style="margin: 10px 0;">✅ Sybil-resistant & deepfake-proof</li>
+      <li style="margin: 10px 0;">✅ Your biometrics never leave Humanity</li>
+      <li style="margin: 10px 0;">✅ Portable proof for any Web3 platform</li>
+      <li style="margin: 10px 0;">✅ Unlocks Diamond Tier rewards</li>
+    </ul>
+
+    <button onclick="startHumanityVerification()" 
+            style="width: 100%; padding: 22px; background: linear-gradient(to right, #f59e0b, #ef4444); color: black; border: none; border-radius: 16px; font-size: 21px; font-weight: bold;">
+      Upgrade with Humanity Protocol
+    </button>
+  </div>
+
+  <div id="verification-status" style="margin-top: 40px;"></div>
+</div>
+
+<script>
+const CLIENT_ID = "app_118754427bfa0cf1383b05090293abdb";
+const REDIRECT_URI = "https://spotlight01.github.io/DetectAi/callback.html";
+
+function generateCodeVerifier() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function generateCodeChallenge(verifier) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+async function startHumanityVerification() {
+  const codeVerifier = generateCodeVerifier();
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+  localStorage.setItem("humanity_code_verifier", codeVerifier);
+
+  const authUrl = `https://auth.sandbox.humanity.org/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20preset:verify&code_challenge=${codeChallenge}&code_challenge_method=S256&state=detectai-${Date.now()}`;
+  window.location.href = authUrl;
+}
+  </script>
